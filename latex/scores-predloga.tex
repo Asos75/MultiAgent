@@ -130,7 +130,7 @@
 
 %%
 %% The "title" command has an optional parameter,
-%% allowing the author to define a "short title" to be used in page headers.
+%% allowing the author to define a šhort title" to be used in page headers.
 \title{Predloga za izdelavo prispevkov za SCORES v sistemu \LaTeX}
 
 
@@ -185,22 +185,22 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-    Pri"cujo"ci dokument podaja predlogo dokumenta v sistemu \LaTeX, ki
+    Pričujoči dokument podaja predlogo dokumenta v sistemu \LaTeX, ki
     ustreza slogovnim smernicam zbornika konference \scores\ in služi kot
     vodič k pripravi prispevka za to konferenco.  Avtorji so poskušali zajeti
-    ve"cino pogosto uporabljenih elementov, kot so naslovi in podnaslovi,
-    no"zne opombe, sklici, enačbe, tabele, slike, seznami, algoritmi itd.
+    večino pogosto uporabljenih elementov, kot so naslovi in podnaslovi,
+    nožne opombe, sklici, enačbe, tabele, slike, seznami, algoritmi itd.
     Izvorno kodo dokumenta (datoteko \texttt{.tex}) prevedite z ukazoma
     \texttt{pdflatex} in \texttt{bibtex} in dobljeni izhodni dokument
-    (datoteko \texttt{.pdf}) primerjajte z referen"cnim.
+    (datoteko \texttt{.pdf}) primerjajte z referenčnim.
 \end{abstract}
 
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{zbornik, \LaTeX, ozna"cevanje besedila\footnote{Navedite od tri do
+\keywords{zbornik, \LaTeX, označevanje besedila\footnote{Navedite od tri do
 deset ključnih besed, ki so specifične za vaš prispevek, a se znotraj
-(o"zjega) podro"cja va"sega dela kljub temu pogosto uporabljajo.}}
+(ožjega) področja vašega dela kljub temu pogosto uporabljajo.}}
 
 %%
 %% This command processes the author and affiliation and title
@@ -211,32 +211,32 @@ deset ključnih besed, ki so specifične za vaš prispevek, a se znotraj
 
 \emph{Zbornik} je zbirka prispevkov, predstavljenih na konferenci.
 Organizacijski odbor konference \scores\ se trudi za slogovno poenotenost in
-tipografsko kakovost prispevkov, zato dolo"ca nekaj strogih pravil za njihovo
+tipografsko kakovost prispevkov, zato določa nekaj strogih pravil za njihovo
 oblikovanje.  Tako je med drugim predpisana osnovna oblika dokumenta
-(dvostolp"cni format), pisava in njena velikost, dol"zina posameznih robov,
+(dvostolpčni format), pisava in njena velikost, dolžina posameznih robov,
 širina stolpca in razmak med stolpcema.
 
-K sre"ci za vse našteto poskrbi sistem \LaTeX.  Avtorji se morate zgolj
-dr"zati nekaj preprostih pravil in zagotoviti, da izhodni dokument PDF ne
-presega \textbf{"stirih strani}.
+K sreči za vse našteto poskrbi sistem \LaTeX.  Avtorji se morate zgolj
+držati nekaj preprostih pravil in zagotoviti, da izhodni dokument PDF ne
+presega \textbf{štirih strani}.
 
 V preostanku tega dokumenta predstavljamo izbor \LaTeX{}ovih ukazov za
-dolo"citev zgradbe va"sega dokumenta.  Namesto da bi vsak ukaz posebej
-natan"cno opisali ali pojasnili, smo se raje odlo"cili za predstavitev ukazov
-s pomo"cjo primerov v kontekstu vzor"cnega dokumenta.
+določitev zgradbe vašega dokumenta.  Namesto da bi vsak ukaz posebej
+natančno opisali ali pojasnili, smo se raje odločili za predstavitev ukazov
+s pomočjo primerov v kontekstu vzorčnega dokumenta.
 
-\section{\emph{Jedro} "clanka}
+\section{\emph{Jedro} članka}
 
-Jedro članka je obi"cajno organizirano v hierarhično strukturo z oštevilčenimi
+Jedro članka je običajno organizirano v hierarhično strukturo z oštevilčenimi
 ali neoštevilčenimi razdelki, podrazdelki, pod-podrazdelki itd.  Ukaz
 \texttt{\textbackslash{}section} pred tem odstavkom je del take hierarhije.
 Ob uporabi ustreznih ukazov sistem \LaTeX{} sam poskrbi za to, da so naslovi
-pravilno oštevilčeni in ume"s"ceni.  Če želite, da je naslov neoštevilčen,
+pravilno oštevilčeni in umeščeni.  Če želite, da je naslov neoštevilčen,
 preprosto dodajte zvezdico k imenu ukaza.  Primeri oštevilčenih in
 neoštevilčenih naslovov se bodo v tem dokumentu vseskozi
-pojavljali.\footnote{To je druga opomba. Ne podaja ni"cesar vsebinskega,
+pojavljali.\footnote{To je druga opomba. Ne podaja ničesar vsebinskega,
 temveč služi samo prikazu, kako delujejo in izgledajo opombe.  Opomba je
-precej dolga, da lahko vidite, kako se takšna dolga opomba prikaže v kon"cnem
+precej dolga, da lahko vidite, kako se takšna dolga opomba prikaže v končnem
 dokumentu.}
 
 Ker je celoten članek vsebovan v okolju \textbf{document}, lahko začetek
@@ -244,9 +244,9 @@ novega odstavka označite z prazno vrstico (ta stavek je zato v novem odstavku).
 
 \subsection{Spremembe pisave in \emph{posebni} znaki}
 
-Nekaj sprememb pisave smo v tem dokumentu "ze videli.  V svojem besedilu lahko
+Nekaj sprememb pisave smo v tem dokumentu že videli.  V svojem besedilu lahko
 besede ali besedne zveze z ukazom \texttt{\textbackslash{}emph} ali
-\texttt{\textbackslash{}textit} prika"zete \emph{le"ze"ce}, z ukazom
+\texttt{\textbackslash{}textit} prikažete \emph{ležeče}, z ukazom
 \texttt{\textbackslash{}textbf} \textbf{krepko}, z ukazom
 \texttt{\textbackslash{}texttt} pa \texttt{v slogu pisalnega stroja} (na
 primer za programsko kodo).  Ne pozabite, da za spremembe pisave, ki so del
@@ -260,41 +260,41 @@ Guide}~\cite{Lamport:LaTeX}.
 
 \subsection{Matematične enačbe}
 
-Matematične enačbe lahko prikažete v treh različnih slogih:\ vrsti"cni (ang.\
-\emph{inline}), oštevilčen blo"cni ali neoštevilčen blo"cni.  V naslednjih
+Matematične enačbe lahko prikažete v treh različnih slogih:\ vrstični (ang.\
+\emph{inline}), oštevilčen bločni ali neoštevilčen bločni.  V naslednjih
 razdelkih podrobneje obravnavamo vse naštete sloge.
 
-\subsubsection{Vrsti"cne enačbe}
+\subsubsection{Vrstične enačbe}
 
-Enačba, ki se pojavi znotraj vrstice besedila, se imenuje vrsti"cna enačba.
-Izdelamo jo z uporabo okolja \textbf{math}, ki ga lahko prikli"cemo z
-obi"cajnim konstruktom
+Enačba, ki se pojavi znotraj vrstice besedila, se imenuje vrstična enačba.
+Izdelamo jo z uporabo okolja \textbf{math}, ki ga lahko prikličemo z
+običajnim konstruktom
 \texttt{\textbackslash{}begin}--\texttt{\textbackslash{}end} ali pa preprosto
 z \textbf{\$$\ldots$\$}.  Uporabljate lahko katerekoli simbole in konstrukte,
 ki so na voljo v sistemu \LaTeX~\cite{Lamport:LaTeX}, od $\alpha$ do $\omega$.
 
-Vrsti"cni prikaz ni povsem enakovreden blo"cnemu. Na primer, kot bomo videli
-v naslednjem razdelku, vrsti"cna enačba
+Vrstični prikaz ni povsem enakovreden bločnemu. Na primer, kot bomo videli
+v naslednjem razdelku, vrstična enačba
 \begin{math}\lim_{x\rightarrow \infty}\frac{1}{x}=0\end{math} 
-v blo"cnem prikazu izgleda nekoliko druga"ce.
+v bločnem prikazu izgleda nekoliko drugače.
 
-\subsubsection{Blo"cne enačbe}
+\subsubsection{Bločne enačbe}
 
-Oštevilčeno blo"cno enačbo --- takšno, ki je navpično odmaknjena od besedila
+Oštevilčeno bločno enačbo --- takšno, ki je navpično odmaknjena od besedila
 in vodoravno poravnana --- izdelamo z uporabo okolja \textbf{equation}.
-Neoštevilčene blo"cne enačbe vpeljemo z uporabo okolja \textbf{displaymath}.
+Neoštevilčene bločne enačbe vpeljemo z uporabo okolja \textbf{displaymath}.
 
 Tudi v teh dveh okoljih uporabljate poljubne simbole in konstrukte, ki so na
-voljo v sistemu \LaTeX. Ta odsek prikazuje zgolj nekaj primerov blo"cnih
+voljo v sistemu \LaTeX. Ta odsek prikazuje zgolj nekaj primerov bločnih
 enačb.
 
-Najprej si oglejmo enačbo, ki je bila prej prikazana v vrsti"cnem načinu: 
+Najprej si oglejmo enačbo, ki je bila prej prikazana v vrstičnem načinu: 
 %
 \begin{equation}
 \lim_{x\rightarrow \infty}\frac{1}{x}=0.
 \end{equation}
 %
-Lahko vidimo, da je izgled v okolju \textbf{displaymath} drugačen od vrsti"cnega
+Lahko vidimo, da je izgled v okolju \textbf{displaymath} drugačen od vrstičnega
 prikaza.  Sedaj pa izdelajmo neoštevilčeno enačbo
 %
 \begin{displaymath}
@@ -310,11 +310,11 @@ ki ji sledi še oštevilčena:
 
 Sledi primer neoštevilčene enačbe, ki ni definirana v okolju
 \textbf{displaymath}, temveč v kratki obliki (\textbf{\$\$$\ldots$\$\$}).  Ko $a
-\ne 0$, ima enačba $ax^2 + bx + c = 0$ dve re"sitvi, in sicer:
+\ne 0$, ima enačba $ax^2 + bx + c = 0$ dve rešitvi, in sicer:
 %
 $$x_{1, 2} = \frac{-b \pm \sqrt{b^2-4ac}}{2a}.$$
 
-Oglejmo si "se primer sklicevanja na enačbo. Enačba~(\ref{equ:yannibel})
+Oglejmo si še primer sklicevanja na enačbo. Enačba~(\ref{equ:yannibel})
 prikazuje, kako v sistemu \LaTeX{} zapisujemo pogoje.
 %
 \begin{equation}
@@ -331,7 +331,7 @@ prikazuje, kako v sistemu \LaTeX{} zapisujemo pogoje.
 \subsubsection{Dolge enačbe}
 
 Kadar je enačba predolga za en stolpec, uporabite okolje \textbf{aligned}
-znotraj okolja \textbf{equation}.  Za poravnavo ena"cbe v okolju
+znotraj okolja \textbf{equation}.  Za poravnavo enačbe v okolju
 \textbf{aligned} uporabite znak \textbf{\&}, kot je razvidno iz
 enačbe~(\ref{equ:ho}).
 %
@@ -347,14 +347,14 @@ enačbe~(\ref{equ:ho}).
 
 \subsection{Citiranje}
 
-V svojem "clanku boste najbr"z pogosto citirali članke \cite{lecun2015deep,
+V svojem članku boste najbrž pogosto citirali članke \cite{lecun2015deep,
 braams:babel, herlihy:methodology}, konferenčne zbornike
 \cite{vrbancic2019transfer, clark:pct} ali knjige \cite{salas:calculus,
-Lamport:LaTeX, fister2019computational}.  "Clanek se mora zaklju"citi s
+Lamport:LaTeX, fister2019computational}.  članek se mora zaključiti s
 seznamom vseh citiranih del (razdelek Bibliografija).  Tega seznama nikar ne
-izdelujte ro"cno, pa"c pa uporabite ukaz \texttt{bibtex}.  Pri vsakem sklicu
+izdelujte ročno, pač pa uporabite ukaz \texttt{bibtex}.  Pri vsakem sklicu
 na bibliografski vir morate zgolj uporabiti enega od ukazov za citiranje.
-Ukazu kot parameter podate oznako, ki vir enoli"cno dolo"ca (t.i.\ klju"c
+Ukazu kot parameter podate oznako, ki vir enolično določa (t.i.\ ključ
 vira).  V tem dokumentu za ključ uporabljamo avtorjev priimek in besedo iz
 naslova vira.  Ključ vira je definiran pri vsakem vnosu v datoteki
 \texttt{.bib} vašega članka.
@@ -363,14 +363,14 @@ Podrobnosti ustvarjanja datoteke \texttt{.bib} presegajo okvir tega dokumenta.
 Več informacij lahko najdete v \emph{Author's Guide} in \emph{\LaTeX{} User's
 Guide} \cite{Lamport:LaTeX}.
 
-V pri"cujo"cem dokumentu uporabljamo samo najosnovnejši ukaz za citiranje
-(\texttt{\textbackslash{}cite}).  Ta na"cin je dejansko edini, ki je skladen s
+V pričujočem dokumentu uporabljamo samo najosnovnejši ukaz za citiranje
+(\texttt{\textbackslash{}cite}).  Ta način je dejansko edini, ki je skladen s
 smernicami v specifikacijah ACM\@.
 
 \subsection{Tabele}
 
-Ker tabele ni mogoče razdeliti na več strani, jo obi"cajno umestimo na vrh
-strani v bli"zino prvega sklica nanjo.  Da zagotovite pravilno umestitev in
+Ker tabele ni mogoče razdeliti na več strani, jo običajno umestimo na vrh
+strani v bližino prvega sklica nanjo.  Da zagotovite pravilno umestitev in
 poravnavo tabel, uporabite okolje \textbf{table} in vanj postavite vsebino in
 naslov tabele.  Sama vsebina tabele se mora nahajati znotraj okolja
 \textbf{tabular}, ki poskrbi za pravilno poravnavo vrstic in stolpcev.
@@ -396,10 +396,10 @@ dokumenta PDF\@.
     \end{tabular}
 \end{table}
 
-Če želite širšo tabelo (tak"sno, ki zavzame celotno širino delovnega območja
+Če želite širšo tabelo (takšno, ki zavzame celotno širino delovnega območja
 na strani), uporabite okolje \textbf{table*}.  Kot pri tabeli z enim stolpcem
 bo tudi ta samodejno umeščena na ustrezno mesto.  Tabela~\ref{tab:table2} je
-vstavljena takoj za tem stavkom; vnovi"c primerjajte umestitev tabele v
+vstavljena takoj za tem stavkom; vnovič primerjajte umestitev tabele v
 izvorni datoteki z umestitvijo v izhodnem dokumentu PDF\@.
 
 \begin{table*}
@@ -419,8 +419,8 @@ izvorni datoteki z umestitvijo v izhodnem dokumentu PDF\@.
 
 \subsection{Slike}
 
-Tako kot tabele se tudi slike ne morejo raztezati prek ve"c strani. Tudi slike
-je najbolje umestiti na vrh ali dno strani v bli"zino prvega sklica
+Tako kot tabele se tudi slike ne morejo raztezati prek več strani. Tudi slike
+je najbolje umestiti na vrh ali dno strani v bližino prvega sklica
 nanje.\footnote{Četrta (in zadnja) opomba.}  Da zagotovite ustrezno umestitev,
 uporabite okolje \textbf{figure} ter vanj postavite sliko in njen opis.
 
@@ -441,20 +441,20 @@ sliki~\ref{fig:star} pa datoteka v formatu PNG\@.
     \label{fig:star}
 \end{figure}
 
-Tudi slike se lahko raztezajo čez oba stolpca.  To lahko dose"zete z uporabo
+Tudi slike se lahko raztezajo čez oba stolpca.  To lahko dosežete z uporabo
 okolja \textbf{figure*}.  Tak primer prikazuje slika~\ref{fig:spin}.
 
 \begin{figure*}
     \centering
     \includegraphics[scale=0.8]{spin.png}
-    \caption{Slika, ki se razteza "cez oba stolpca.}
+    \caption{Slika, ki se razteza čez oba stolpca.}
     \label{fig:spin}
 \end{figure*}
 
 \subsection{Seznami}
 
-"Ce "zelite svoje ideje predstaviti po postavkah, uporabite seznam.  Seznam
-ustvarite s pomo"cjo okolja \textbf{itemize}.  Oglejmo si primer:
+če želite svoje ideje predstaviti po postavkah, uporabite seznam.  Seznam
+ustvarite s pomočjo okolja \textbf{itemize}.  Oglejmo si primer:
 
 \begin{itemize}
     \item prvi element,
@@ -463,7 +463,7 @@ ustvarite s pomo"cjo okolja \textbf{itemize}.  Oglejmo si primer:
 \end{itemize}
 
 Včasih se avtorji želijo sklicevati na posamezne postavke seznama.  V ta namen
-lahko uporabite okolje \textbf{enumerate}, ki proizvede o"stevi"cem seznam.
+lahko uporabite okolje \textbf{enumerate}, ki proizvede oštevičem seznam.
 Na primer:
 
 \begin{enumerate}
@@ -472,13 +472,13 @@ Na primer:
     \item \ldots
 \end{enumerate}
 
-Postavka \ref{list:item} nam pove, "cesa se moramo lotiti, ko odkljukamo
+Postavka \ref{list:item} nam pove, česa se moramo lotiti, ko odkljukamo
 predhodno postavko.
 
 \subsection{Algoritmi}
 
 Če želite v svojem prispevku prikazati algoritem, uporabite okolje
-\textbf{algorithm}.  Na algoritme se lahko sklicujemo na podoben na"cin kot na
+\textbf{algorithm}.  Na algoritme se lahko sklicujemo na podoben način kot na
 tabele in slike (npr.\ algoritem~\ref{algo:sample}).
 
 \begin{algorithm}
@@ -486,7 +486,7 @@ tabele in slike (npr.\ algoritem~\ref{algo:sample}).
     \KwData{tukaj je tekst}
     \KwResult{kako pisati algoritme v sistemu \LaTeX}
     inicializacija\;
-    \tcc{tukaj se pri"cne glavni del kode}
+    \tcc{tukaj se prične glavni del kode}
     \While{ni konec dokumenta}{\label{algo:sample:while}
         preberi del dokumenta\;
         \eIf{razumeš}{
@@ -514,7 +514,7 @@ Ta odstavek končuje jedro tega vzorčnega dokumenta.  Morda boste dodali še
 zahvalo (kratek primer sledi v nadaljevanju).  Urediti morate tudi
 bibliografijo.  Za konec naj povemo, da so bibliografske enote, navedene v tem
 dokumentu, z izjemo knjige o sistemu \LaTeX{} povsem nepovezane z obravnavano
-temo in slu"zijo zgolj kot primeri.
+temo in služijo zgolj kot primeri.
 
 \begin{acks}
     Ta razdelek ni obvezen.  Na tem mestu se lahko zahvalite za morebitna
