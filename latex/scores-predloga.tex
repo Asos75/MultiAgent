@@ -130,8 +130,8 @@
 
 %%
 %% The "title" command has an optional parameter,
-%% allowing the author to define a šhort title" to be used in page headers.
-\title{Predloga za izdelavo prispevkov za SCORES v sistemu \LaTeX}
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Večagentno iskanje poti}
 
 
 %%
@@ -180,8 +180,8 @@
     \country{Slovenia}
 }
 
-
-%%
+\begin{comment}
+    %%
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
@@ -195,12 +195,12 @@
     (datoteko \texttt{.pdf}) primerjajte z referenčnim.
 \end{abstract}
 
+\end{comment}
+
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{zbornik, \LaTeX, označevanje besedila\footnote{Navedite od tri do
-deset ključnih besed, ki so specifične za vaš prispevek, a se znotraj
-(ožjega) področja vašega dela kljub temu pogosto uporabljajo.}}
+\keywords{zbornik, \LaTeX, označevanje besedila}
 
 %%
 %% This command processes the author and affiliation and title
@@ -209,38 +209,45 @@ deset ključnih besed, ki so specifične za vaš prispevek, a se znotraj
 
 \section{Uvod}
 
-\emph{Zbornik} je zbirka prispevkov, predstavljenih na konferenci.
-Organizacijski odbor konference \scores\ se trudi za slogovno poenotenost in
-tipografsko kakovost prispevkov, zato določa nekaj strogih pravil za njihovo
-oblikovanje.  Tako je med drugim predpisana osnovna oblika dokumenta
-(dvostolpčni format), pisava in njena velikost, dolžina posameznih robov,
-širina stolpca in razmak med stolpcema.
+V tem članku obrvnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MPAF),
+ki se pojavlja tudi v resničnem svetu, kot so roboti v skladiščih, avtonomna vozila in podobnih 
+logističnih sistemih.
 
-K sreči za vse našteto poskrbi sistem \LaTeX.  Avtorji se morate zgolj
-držati nekaj preprostih pravil in zagotoviti, da izhodni dokument PDF ne
-presega \textbf{štirih strani}.
+Cilj problema je načrtovati poti za več agentov v skupnem prostoru tako, da se izognejo konfliktom
+in hkrati optimizirajo določeno metriko, kot je skupni čas ali dolžina poti. 
 
-V preostanku tega dokumenta predstavljamo izbor \LaTeX{}ovih ukazov za
-določitev zgradbe vašega dokumenta.  Namesto da bi vsak ukaz posebej
-natančno opisali ali pojasnili, smo se raje odločili za predstavitev ukazov
-s pomočjo primerov v kontekstu vzorčnega dokumenta.
+Repozitorij z izvorno kodo je na voljo na naslovu: \url{https://github.com/Asos75/MultiAgent}.
 
-\section{\emph{Jedro} članka}
+Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne 
+pristope k reševanju MAPF problema. Osredotočili se bomo na primerjavo centraliziranih algoritmov, 
+kot je Conflict-Based Search (CBS), ter decentraliziranih pristopov, ki temeljijo na učenju ali 
+lokalnem odločanju agentov, kot je PRIMAL.
 
-Jedro članka je običajno organizirano v hierarhično strukturo z oštevilčenimi
-ali neoštevilčenimi razdelki, podrazdelki, pod-podrazdelki itd.  Ukaz
-\texttt{\textbackslash{}section} pred tem odstavkom je del take hierarhije.
-Ob uporabi ustreznih ukazov sistem \LaTeX{} sam poskrbi za to, da so naslovi
-pravilno oštevilčeni in umeščeni.  Če želite, da je naslov neoštevilčen,
-preprosto dodajte zvezdico k imenu ukaza.  Primeri oštevilčenih in
-neoštevilčenih naslovov se bodo v tem dokumentu vseskozi
-pojavljali.\footnote{To je druga opomba. Ne podaja ničesar vsebinskega,
-temveč služi samo prikazu, kako delujejo in izgledajo opombe.  Opomba je
-precej dolga, da lahko vidite, kako se takšna dolga opomba prikaže v končnem
-dokumentu.}
+\section{Definicija problema}
 
-Ker je celoten članek vsebovan v okolju \textbf{document}, lahko začetek
-novega odstavka označite z prazno vrstico (ta stavek je zato v novem odstavku).
+
+Problem več-agentnega iskanja poti (Multi-Agent Path Finding -- MAPF) definiramo kot n-terico
+\[
+\langle G, s, t \rangle,
+\]
+kjer je \( G = (V, E) \) neusmerjen graf, pri čemer \( V \) predstavlja množico vozlišč, \( E \) 
+pa množico povezav.
+
+Podana je množica agentov \( A = \{1, 2, \dots, k\} \). Funkcija
+\[
+s : \{1, \dots, k\} \rightarrow V
+\]
+preslika vsakega agenta v njegovo začetno vozlišče, funkcija
+\[
+t : \{1, \dots, k\} \rightarrow V
+\]
+pa v njegovo ciljno vozlišče.
+
+\section{Sorodna dela}
+
+Na področju MAPF obstajata dva pristopa centralizirani in decentralizirani.
+
+\section{Pregled ovrednotenja}
 
 \subsection{Spremembe pisave in \emph{posebni} znaki}
 
