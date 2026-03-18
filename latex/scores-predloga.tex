@@ -209,7 +209,7 @@
 
 \section{Uvod}
 
-V tem članku obrvnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MPAF),
+V tem članku obravnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF),
 ki se pojavlja tudi v resničnem svetu, kot so roboti v skladiščih, avtonomna vozila in podobnih 
 logističnih sistemih.
 
@@ -219,10 +219,22 @@ in hkrati optimizirajo določeno metriko, kot je skupni čas ali dolžina poti.
 Repozitorij z izvorno kodo je na voljo na naslovu: \url{https://github.com/Asos75/MultiAgent}.
 
 Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne 
-pristope k reševanju MAPF problema. Primerjali bomo centralizirane metode, kot sta LaCAM~\cite{okumura2023lacam} 
-in PBS~\cite{li2019pbs}, z decentraliziranimi pristopi, kot sta Follower~\cite{andreychuk2024follower} 
-in MATS-LP~\cite{skrynnik2023mats_arxiv}.
+pristope k reševanju problema več-agentnega iskanja poti (MAPF). Kot osnovo za definicijo 
+problema uporabljamo delo \textit{Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks}~\cite{stern2019multiagent}, 
+ki sistematično opredeli različice problema in standardne metrike.
 
+V nadaljevanju bomo primerjali centralizirane metode, kot sta 
+\textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam} 
+in \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs}, 
+ki načrtujeta poti za vse agente z uporabo globalnega pogleda na problem.
+
+Poleg tega bomo analizirali tudi decentralizirane pristope, kot sta 
+\textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower} 
+in \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2023mats_arxiv}, 
+kjer agenti sprejemajo odločitve lokalno brez centralnega nadzora.
+
+Na ta način bomo lahko primerjali prednosti in slabosti centraliziranih in decentraliziranih pristopov 
+z vidika učinkovitosti, skalabilnosti in kakovosti rešitev.
 \section{Definicija problema}
 
 Stern et al.~\cite{stern2019multiagent} definirajo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF)
@@ -251,299 +263,28 @@ kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$. \
 Po Okamura~\cite{okumura2023lacam} se mora agent izogibati naslednjim vrstam konfliktov:
 
 \begin{itemize}
-    \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. vertexconflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
-    vozlišče v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t] $. \cite{stern2019multiagent}
+    \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. vertex conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
+    vozlišče v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t] $.~\cite{stern2019multiagent}
     \item \textbf{Zamenjalni konflikt:} Do zamenjalnega konflikta (ang. swap conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zamenjati svoji
     poziciji v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t+1] \wedge \pi_i[t+1] = \pi_j[t] $. \cite{stern2019multiagent}
 \end{itemize}
 
 Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
- $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer agent doseže cilj.
+ $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer agent doseže cilj.~\cite{okumura2023lacam}
  
 \section{Sorodna dela}
 
-Na področju MAPF obstajata dva pristopa centralizirani in decentralizirani.
+Na področju MAPF obstajata dva pristopa centralizirani in decentralizirani. Centralizirani pristopi imajo centralnega načrtovalca, ki ima globalni pogled na
+okolje, medtem ko decentralizirani pristopi vsakega agenta usposabljajo, da se odloča samostojno na podlagi lokalnih opazovanj.
+
+\subsection{Centralizirani pristopi}
+
+\subsection{Decentralizirani pristopi}
+
 
 \section{Pregled ovrednotenja}
 
-\subsection{Spremembe pisave in \emph{posebni} znaki}
 
-Nekaj sprememb pisave smo v tem dokumentu že videli.  V svojem besedilu lahko
-besede ali besedne zveze z ukazom \texttt{\textbackslash{}emph} ali
-\texttt{\textbackslash{}textit} prikažete \emph{ležeče}, z ukazom
-\texttt{\textbackslash{}textbf} \textbf{krepko}, z ukazom
-\texttt{\textbackslash{}texttt} pa \texttt{v slogu pisalnega stroja} (na
-primer za programsko kodo).  Ne pozabite, da za spremembe pisave, ki so del
-\emph{strukturnih elementov} (kot so na primer naslovi razdelkov), poskrbi
-sistem sam.
-
-V svojem dokumentu lahko uporabljate poljubne simbole, posebne znake
-ali tuje znake.\footnote{Tretja opomba. Ta je precej kratka.} Seznam vseh
-razpoložljivih simbolov najdete v  emph{\LaTeX{} User's
-Guide}~\cite{Lamport:LaTeX}.
-
-\subsection{Matematične enačbe}
-
-Matematične enačbe lahko prikažete v treh različnih slogih:\ vrstični (ang.\
-\emph{inline}), oštevilčen bločni ali neoštevilčen bločni.  V naslednjih
-razdelkih podrobneje obravnavamo vse naštete sloge.
-
-\subsubsection{Vrstične enačbe}
-
-Enačba, ki se pojavi znotraj vrstice besedila, se imenuje vrstična enačba.
-Izdelamo jo z uporabo okolja \textbf{math}, ki ga lahko prikličemo z
-običajnim konstruktom
-\texttt{\textbackslash{}begin}--\texttt{\textbackslash{}end} ali pa preprosto
-z \textbf{\$$\ldots$\$}.  Uporabljate lahko katerekoli simbole in konstrukte,
-ki so na voljo v sistemu \LaTeX~\cite{Lamport:LaTeX}, od $\alpha$ do $\omega$.
-
-Vrstični prikaz ni povsem enakovreden bločnemu. Na primer, kot bomo videli
-v naslednjem razdelku, vrstična enačba
-\begin{math}\lim_{x\rightarrow \infty}\frac{1}{x}=0\end{math} 
-v bločnem prikazu izgleda nekoliko drugače.
-
-\subsubsection{Bločne enačbe}
-
-Oštevilčeno bločno enačbo --- takšno, ki je navpično odmaknjena od besedila
-in vodoravno poravnana --- izdelamo z uporabo okolja \textbf{equation}.
-Neoštevilčene bločne enačbe vpeljemo z uporabo okolja \textbf{displaymath}.
-
-Tudi v teh dveh okoljih uporabljate poljubne simbole in konstrukte, ki so na
-voljo v sistemu \LaTeX. Ta odsek prikazuje zgolj nekaj primerov bločnih
-enačb.
-
-Najprej si oglejmo enačbo, ki je bila prej prikazana v vrstičnem načinu: 
-%
-\begin{equation}
-\lim_{x\rightarrow \infty}\frac{1}{x}=0.
-\end{equation}
-%
-Lahko vidimo, da je izgled v okolju \textbf{displaymath} drugačen od vrstičnega
-prikaza.  Sedaj pa izdelajmo neoštevilčeno enačbo
-%
-\begin{displaymath}
-    \sum_{i=1}^{\infty} \frac{1}{x^2} = \frac{\pi^2}{6},
-\end{displaymath}
-%
-ki ji sledi še oštevilčena:
-%
-\begin{equation}
-    \int_{0}^{\pi/2} \cos x\,dx = \sin x\bigg\rvert_{0}^{\pi/2} = \sin
-    \frac{\pi}{2} - \sin 0 = 1.
-\end{equation}
-
-Sledi primer neoštevilčene enačbe, ki ni definirana v okolju
-\textbf{displaymath}, temveč v kratki obliki (\textbf{\$\$$\ldots$\$\$}).  Ko $a
-\ne 0$, ima enačba $ax^2 + bx + c = 0$ dve rešitvi, in sicer:
-%
-$$x_{1, 2} = \frac{-b \pm \sqrt{b^2-4ac}}{2a}.$$
-
-Oglejmo si še primer sklicevanja na enačbo. Enačba~(\ref{equ:yannibel})
-prikazuje, kako v sistemu \LaTeX{} zapisujemo pogoje.
-%
-\begin{equation}
-    \begin{aligned} 
-        \mathrm{nr}(G_i,r) & = \label{equ:yannibel}
-        \begin{cases}
-            1,  & \text{če $r$ igra en član iz $G_i$};\\
-            -2, & \text{če $r$ ne igra nobeden član iz $G_i$}; \\
-            -p, & \text{če $r$ igra $p$ članov iz $G_i$}.\\
-        \end{cases}
-    \end{aligned}
-\end{equation}
-
-\subsubsection{Dolge enačbe}
-
-Kadar je enačba predolga za en stolpec, uporabite okolje \textbf{aligned}
-znotraj okolja \textbf{equation}.  Za poravnavo enačbe v okolju
-\textbf{aligned} uporabite znak \textbf{\&}, kot je razvidno iz
-enačbe~(\ref{equ:ho}).
-%
-\begin{equation}
-    \begin{aligned}
-        O_{\max}& = w_1 \sum_{a=1}^{m} \sum_{b=a+1}^{n} (-\lvert\text{CPT}_a 
-        -\text{CPT}_b\rvert)\\ 
-        &\quad + w_2 \sum_{j=1}^{m} (\text{DIF}_j) + w_3 \sum_{j=1}^{m} 
-        (\text{INT}_j/\sum_{x=1}^{n} x_{ij})
-    \end{aligned}
-    \label{equ:ho}
-\end{equation}
-
-\subsection{Citiranje}
-
-V svojem članku boste najbrž pogosto citirali članke \cite{lecun2015deep,
-braams:babel, herlihy:methodology}, konferenčne zbornike
-\cite{vrbancic2019transfer, clark:pct} ali knjige \cite{salas:calculus,
-Lamport:LaTeX, fister2019computational}.  članek se mora zaključiti s
-seznamom vseh citiranih del (razdelek Bibliografija).  Tega seznama nikar ne
-izdelujte ročno, pač pa uporabite ukaz \texttt{bibtex}.  Pri vsakem sklicu
-na bibliografski vir morate zgolj uporabiti enega od ukazov za citiranje.
-Ukazu kot parameter podate oznako, ki vir enolično določa (t.i.\ ključ
-vira).  V tem dokumentu za ključ uporabljamo avtorjev priimek in besedo iz
-naslova vira.  Ključ vira je definiran pri vsakem vnosu v datoteki
-\texttt{.bib} vašega članka.
-
-Podrobnosti ustvarjanja datoteke \texttt{.bib} presegajo okvir tega dokumenta.
-Več informacij lahko najdete v \emph{Author's Guide} in \emph{\LaTeX{} User's
-Guide} \cite{Lamport:LaTeX}.
-
-V pričujočem dokumentu uporabljamo samo najosnovnejši ukaz za citiranje
-(\texttt{\textbackslash{}cite}).  Ta način je dejansko edini, ki je skladen s
-smernicami v specifikacijah ACM\@.
-
-\subsection{Tabele}
-
-Ker tabele ni mogoče razdeliti na več strani, jo običajno umestimo na vrh
-strani v bližino prvega sklica nanjo.  Da zagotovite pravilno umestitev in
-poravnavo tabel, uporabite okolje \textbf{table} in vanj postavite vsebino in
-naslov tabele.  Sama vsebina tabele se mora nahajati znotraj okolja
-\textbf{tabular}, ki poskrbi za pravilno poravnavo vrstic in stolpcev.
-Podrobnejša navodila so ponovno dostopna v \emph{\LaTeX{} User's Guide}.
-    
-Tabela~\ref{tab:table1} je vstavljena takoj za tem odstavkom.  Primerjajte
-umestitev tabele znotraj izvorne datoteke z umestitvijo znotraj izhodnega
-dokumenta PDF\@.
-
-\begin{table}
-    \centering
-    \caption{Frekvence posebnih znakov.}
-    \label{tab:table1}
-    \begin{tabular}{ccl}
-        \toprule
-        Simbol&Frekvenca&Komentar\\
-        \midrule
-        \O & 1 na 1,000& Švedska imena.\\
-        $\pi$ & 1 na 5& V matematiki.\\
-        \$ & 4 na 5 & V ekonomiji.\\
-        $\Psi^2_1$ & 1 na 40,000& Nepojasnjeno. \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-Če želite širšo tabelo (takšno, ki zavzame celotno širino delovnega območja
-na strani), uporabite okolje \textbf{table*}.  Kot pri tabeli z enim stolpcem
-bo tudi ta samodejno umeščena na ustrezno mesto.  Tabela~\ref{tab:table2} je
-vstavljena takoj za tem stavkom; vnovič primerjajte umestitev tabele v
-izvorni datoteki z umestitvijo v izhodnem dokumentu PDF\@.
-
-\begin{table*}
-    \centering
-    \caption{Nekaj tipičnih ukazov.}
-    \label{tab:table2}
-    \begin{tabular}{ccl}
-        \toprule
-        Ukaz&Numerična vrednost&Komentar\\
-        \midrule
-        \texttt{\textbackslash{}imagespath} & 200 & Mapa, kjer se nahajajo slike dokumenta. \\
-        \texttt{\textbackslash{}table} & 300 & Za tabele.\\
-        \texttt{\textbackslash{}table*} & 400& Za široke tabele.\\
-        \bottomrule
-    \end{tabular}
-\end{table*}
-
-\subsection{Slike}
-
-Tako kot tabele se tudi slike ne morejo raztezati prek več strani. Tudi slike
-je najbolje umestiti na vrh ali dno strani v bližino prvega sklica
-nanje.\footnote{Četrta (in zadnja) opomba.}  Da zagotovite ustrezno umestitev,
-uporabite okolje \textbf{figure} ter vanj postavite sliko in njen opis.
-
-Na sliki~\ref{fig:circles} je prikazana datoteka v formatu PDF, na
-sliki~\ref{fig:star} pa datoteka v formatu PNG\@.
-
-\begin{figure}
-    \centering
-    \includegraphics[scale=0.5]{circles.pdf}
-    \caption{Krogi (format PDF).}
-    \label{fig:circles}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics[scale=0.5]{star.png}
-    \caption{Zvezda (format PNG).}
-    \label{fig:star}
-\end{figure}
-
-Tudi slike se lahko raztezajo čez oba stolpca.  To lahko dosežete z uporabo
-okolja \textbf{figure*}.  Tak primer prikazuje slika~\ref{fig:spin}.
-
-\begin{figure*}
-    \centering
-    \includegraphics[scale=0.8]{spin.png}
-    \caption{Slika, ki se razteza čez oba stolpca.}
-    \label{fig:spin}
-\end{figure*}
-
-\subsection{Seznami}
-
-če želite svoje ideje predstaviti po postavkah, uporabite seznam.  Seznam
-ustvarite s pomočjo okolja \textbf{itemize}.  Oglejmo si primer:
-
-\begin{itemize}
-    \item prvi element,
-    \item drugi element in
-    \item tretji element.
-\end{itemize}
-
-Včasih se avtorji želijo sklicevati na posamezne postavke seznama.  V ta namen
-lahko uporabite okolje \textbf{enumerate}, ki proizvede oštevičem seznam.
-Na primer:
-
-\begin{enumerate}
-    \item prva točka,
-    \item\label{list:item} druga točka,
-    \item \ldots
-\end{enumerate}
-
-Postavka \ref{list:item} nam pove, česa se moramo lotiti, ko odkljukamo
-predhodno postavko.
-
-\subsection{Algoritmi}
-
-Če želite v svojem prispevku prikazati algoritem, uporabite okolje
-\textbf{algorithm}.  Na algoritme se lahko sklicujemo na podoben način kot na
-tabele in slike (npr.\ algoritem~\ref{algo:sample}).
-
-\begin{algorithm}
-    \SetAlgoLined
-    \KwData{tukaj je tekst}
-    \KwResult{kako pisati algoritme v sistemu \LaTeX}
-    inicializacija\;
-    \tcc{tukaj se prične glavni del kode}
-    \While{ni konec dokumenta}{\label{algo:sample:while}
-        preberi del dokumenta\;
-        \eIf{razumeš}{
-            pojdi na naslednji razdelek\;
-            ta razdelek postane trenutni razdelek\;
-        }{
-            vrni se na začetek trenutnega razdelka\;
-        }
-    }
-    \caption{Kako pisati algoritme.}
-    \label{algo:sample}
-\end{algorithm}
-
-Kot je razvidno iz naslednjega stavka, se lahko sklicujete tudi na posamezne
-vrstice algoritma.  Primer zanke \textbf{while} je viden v
-vrstici~\ref{algo:sample:while}.
-
-Podrobnejša navodila glede okolja
-\textbf{algorithm} lahko najdete v dokumentu
-\url{http://tug.ctan.org/macros/latex/contrib/algorithm2e/doc/algorithm2e.pdf}.
-
-\section{Zaključek}
-
-Ta odstavek končuje jedro tega vzorčnega dokumenta.  Morda boste dodali še
-zahvalo (kratek primer sledi v nadaljevanju).  Urediti morate tudi
-bibliografijo.  Za konec naj povemo, da so bibliografske enote, navedene v tem
-dokumentu, z izjemo knjige o sistemu \LaTeX{} povsem nepovezane z obravnavano
-temo in služijo zgolj kot primeri.
-
-\begin{acks}
-    Ta razdelek ni obvezen.  Na tem mestu se lahko zahvalite za morebitna
-    sredstva, financiranja, pomoč ali kaj drugega.
-\end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
