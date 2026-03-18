@@ -131,7 +131,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Večagentno iskanje poti}
+\title{Primerjava centraliziranega in distribuiranega večagentnega iskanja poti}
 
 
 %%
@@ -180,27 +180,10 @@
     \country{Slovenia}
 }
 
-\begin{comment}
-    %%
-%% The abstract is a short summary of the work to be presented in the
-%% article.
-\begin{abstract}
-    Pričujoči dokument podaja predlogo dokumenta v sistemu \LaTeX, ki
-    ustreza slogovnim smernicam zbornika konference \scores\ in služi kot
-    vodič k pripravi prispevka za to konferenco.  Avtorji so poskušali zajeti
-    večino pogosto uporabljenih elementov, kot so naslovi in podnaslovi,
-    nožne opombe, sklici, enačbe, tabele, slike, seznami, algoritmi itd.
-    Izvorno kodo dokumenta (datoteko \texttt{.tex}) prevedite z ukazoma
-    \texttt{pdflatex} in \texttt{bibtex} in dobljeni izhodni dokument
-    (datoteko \texttt{.pdf}) primerjajte z referenčnim.
-\end{abstract}
-
-\end{comment}
-
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{zbornik, \LaTeX, označevanje besedila}
+\keywords{centralizirano načrtovanje poti, distribuirano načrtovanje poti, usklajevanje agentov, izogibanje trkom, optimizacija poti}
 
 %%
 %% This command processes the author and affiliation and title
@@ -308,13 +291,41 @@ kar zmanjša pogostost zastojev pri visokih gostotah agentov.
 
 \section{Pregled ovrednotenja}
 
-
 Za primerjavo izbranih algoritmov bomo uporabili standardne metrike s področja 
 MAPF, ki so uveljavljene v obstoječi literaturi~\cite{stern2019multiagent, 
 skrynnik2024pogema}. Vrednotenje bo potekalo na dveh standardnih zbirkah 
 testnih instanc: MovingAI MAPF benchmark~\cite{stern2019multiagent} in 
 POGEMA benchmark~\cite{skrynnik2024pogema}.
 
+\subsection{Metrike}
+
+\textbf{Sum-of-Costs (SoC)} je vsota časovnih korakov, ki jih vsi agenti
+skupaj porabijo za dosego ciljev~\cite{stern2019multiagent}:
+\[
+    \text{SoC} = \sum_{i=1}^{k} |\pi_i|,
+\]
+kjer je $|\pi_i|$ dolžina poti agenta $i$. Nižja vrednost pomeni učinkovitejšo
+rešitev. To metriko bomo uporabili pri vrednotenju LaCAM in PBS na MovingAI
+zbirki za one-shot MAPF scenarije.
+
+\textbf{Makespan} je čas, ki ga porabi najdaljša pot med vsemi agenti, torej
+maksimum nad vsemi $|\pi_i|$~\cite{stern2019multiagent}:
+\[
+    \text{makespan} = \max_{i \in \{1,\dots,k\}} |\pi_i|.
+\]
+Metrika odraža skupno trajanje reševanja instance in je primerna za scenarije,
+kjer je ključen vzporedni zaključek vseh agentov.
+
+\textbf{Stopnja uspeha (Success Rate)} meri delež instanc, pri katerih vsi
+agenti uspešno dosežejo svoje cilje znotraj predvidenega časovnega
+horizonta~\cite{skrynnik2024pogema}. Skupaj s throughputom tvori osnovo za
+vrednotenje decentraliziranih metod na POGEMA platformi.
+
+\textbf{Čas načrtovanja} merimo kot skupni čas izvajanja algoritma na
+posamezni instanci. Ta metrika je posebej relevantna za primerjavo med
+kategorijama, saj centralizirani planner tipično porabi več časa za globalno
+načrtovanje, medtem ko decentralizirani agenti odločitve sprejemajo lokalno
+in vzporedno.
 
 
 \bibliographystyle{ACM-Reference-Format}
