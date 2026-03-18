@@ -279,10 +279,41 @@ okolje, medtem ko decentralizirani pristopi vsakega agenta usposabljajo, da se o
 
 \subsection{Centralizirani pristopi}
 
+Med centraliziranimi pristopi je skupina algoritmov, ki temelji na iskanju v prostoru
+omejitev. \textit{EECBS}~\cite{li2021eecbs} pohitri klasično CBS-iskanje z uporabo
+\textit{Explicit Estimation Search} na visoki ravni in \textit{focal search} na nizki
+ravni. Za razliko od optimalnih metod zagotavlja le garantiran suboptimalnostni faktor
+$w$, kar mu v zameno omogoča bistveno hitrejše reševanje pri večjem številu agentov.
+
+Alternativno smer predstavlja \textit{RHCR}~\cite{li2021rhcr}, ki naslavlja lifelong
+različico problema, kjer agenti neprekinjeno prejemajo nove cilje. Problem razgradi na
+zaporedje omejenih MAPF instanc, pri čemer vsaka zajema le naslednje $W$ časovnih
+korakov. Ta pristop omogoča hitro ponovni načrt brez reševanja celotnega horizonta
+in je posebej primeren za dinamična skladiščna okolja.
+
 \subsection{Decentralizirani pristopi}
+
+Pionirsko delo na področju učenja decentraliziranih politik je
+\textit{PRIMAL2}~\cite{damani2021primal2}, ki razširja izvirni PRIMAL z eksplicitnim
+modeliranjem hodniških situacij in podporo za lifelong scenarije.
+PRIMAL2 je porazdeljen okvir za spodbujevalno učenje pri LMAPF, kjer se agenti
+naučijo popolnoma decentraliziranih politik za reaktivno načrtovanje poti v delno
+opazljivem svetu, kar mu omogoča razširljivost do 2048 agentov. 
+
+Na tej osnovi je bil razvit \textit{SCRIMP}~\cite{wang2023scrimp}, ki doda globalni
+in lokalni komunikacijski mehanizem na osnovi modificiranega transformerja. Agenti
+se učijo individualnih politik, ki hkrati izkoriščajo bližnje in oddaljene informacije,
+kar zmanjša pogostost zastojev pri visokih gostotah agentov. 
 
 
 \section{Pregled ovrednotenja}
+
+
+Za primerjavo izbranih algoritmov bomo uporabili standardne metrike s področja 
+MAPF, ki so uveljavljene v obstoječi literaturi~\cite{stern2019multiagent, 
+skrynnik2024pogema}. Vrednotenje bo potekalo na dveh standardnih zbirkah 
+testnih instanc: MovingAI MAPF benchmark~\cite{stern2019multiagent} in 
+POGEMA benchmark~\cite{skrynnik2024pogema}.
 
 
 
