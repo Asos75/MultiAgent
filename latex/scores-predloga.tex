@@ -219,14 +219,14 @@ in hkrati optimizirajo določeno metriko, kot je skupni čas ali dolžina poti.
 Repozitorij z izvorno kodo je na voljo na naslovu: \url{https://github.com/Asos75/MultiAgent}.
 
 Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne 
-pristope k reševanju MAPF problema. Osredotočili se bomo na primerjavo centraliziranih algoritmov, 
-kot je Conflict-Based Search (CBS), ter decentraliziranih pristopov, ki temeljijo na učenju ali 
-lokalnem odločanju agentov, kot je PRIMAL.
+pristope k reševanju MAPF problema. Primerjali bomo centralizirane metode, kot sta LaCAM~\cite{okumura2023lacam} 
+in PBS~\cite{li2019pbs}, z decentraliziranimi pristopi, kot sta Follower~\cite{andreychuk2024follower} 
+in MATS-LP~\cite{skrynnik2023mats_arxiv}.
 
 \section{Definicija problema}
 
-
-Problem več-agentnega iskanja poti (Multi-Agent Path Finding -- MAPF) definiramo kot n-terico
+Stern et al.~\cite{stern2019multiagent} definirajo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF)
+ kot n-terico
 \[
 \langle G, s, t \rangle,
 \]
@@ -243,6 +243,23 @@ t : \{1, \dots, k\} \rightarrow V
 \]
 pa v njegovo ciljno vozlišče.
 
+Naj bo $\pi_i[t]\in V$ položaj agenta $i$ v diskretnem času $t\in\mathbb{N}_{\ge 0}$. Pri vsakem koraku $t$ se agent $i$ lahko 
+premakne v sosednje vozlišče ali ostane na trenutnem, tj.
+\[\pi_i[t+1]\in\mathrm{neigh}(\pi_i[t])\cup\{\pi_i[t]\},\]
+kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$. \cite{okumura2023lacam}
+
+Po Okamura~\cite{okumura2023lacam} se mora agent izogibati naslednjim vrstam konfliktov:
+
+\begin{itemize}
+    \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. vertexconflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
+    vozlišče v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t] $. \cite{stern2019multiagent}
+    \item \textbf{Zamenjalni konflikt:} Do zamenjalnega konflikta (ang. swap conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zamenjati svoji
+    poziciji v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t+1] \wedge \pi_i[t+1] = \pi_j[t] $. \cite{stern2019multiagent}
+\end{itemize}
+
+Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
+ $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer agent doseže cilj.
+ 
 \section{Sorodna dela}
 
 Na področju MAPF obstajata dva pristopa centralizirani in decentralizirani.
@@ -262,7 +279,7 @@ sistem sam.
 
 V svojem dokumentu lahko uporabljate poljubne simbole, posebne znake
 ali tuje znake.\footnote{Tretja opomba. Ta je precej kratka.} Seznam vseh
-razpoložljivih simbolov najdete v \emph{\LaTeX{} User's
+razpoložljivih simbolov najdete v  emph{\LaTeX{} User's
 Guide}~\cite{Lamport:LaTeX}.
 
 \subsection{Matematične enačbe}
