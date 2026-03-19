@@ -117,6 +117,7 @@
 \usepackage[slovene]{babel}
 \usepackage{verbatim}
 \usepackage{booktabs}
+\usepackage{float}
 \usepackage[linesnumbered, boxed, resetcount]{algorithm2e}
 \SetAlgorithmName{Algoritem}{Algoritem}
 
@@ -340,7 +341,102 @@ Primerjavo bomo izvedli na dveh ravneh:
     prej navedene metrike.
 \end{enumerate}
 
-\section{Načrt razvoja}
+\section{Načrt rešitve}
+
+V tem poglavju so navedena opravila, potrebna za implementacijo projekta, ki so razdeljena v štiri razvojne iteracije (sprinte). Predstavljena sta tudi časovni razpored v obliki Ganttovega diagrama ter opis predlagane rešitve s spremljajočimi UML diagrami.
+
+\subsection{Razvojne iteracije (Sprinti)}
+
+Delo bo potekalo v štirih zaporednih iteracijah z naslednjo delitvijo nalog, prilagojeno naši evalvaciji večagentnega iskanja poti (MAPF):
+
+\begin{itemize}
+    \item \textbf{Sprint 1:}
+    \begin{itemize}
+        \item Ustvarjanje repozitorija Git za nalaganje in usklajevanje programske kode.
+        \item Pisanje osnutka poglavja \textit{Uvod} (predstavitev problema MAPF).
+        \item Pisanje osnutka poglavja \textit{Sorodna dela} (pregled algoritmov LaCAM, PBS, Follower in MATS-LP).
+        \item Pridobivanje izvorne kode izbranih centraliziranih in decentraliziranih algoritmov.
+        \item Priprava eksperimentalnega okolja (namestitev knjižnic za POGEMA, orodij za C++ prevajanje in Python okolja).
+    \end{itemize}
+    
+    \item \textbf{Sprint 2:}
+    \begin{itemize}
+        \item Dokončanje poglavij \textit{Uvod} in \textit{Sorodna dela}.
+        \item Pisanje poglavja \textit{Metodologija} (definicija protokola in metrik: \textit{SoC, makespan, uspešnost, čas}).
+        \item Pisanje začetnega dela poglavja \textit{Eksperiment in analiza rezultatov}.
+        \item Reprodukcija osnovnih rezultatov avtorjev algoritmov na manjših instancah (za potrditev delovanja).
+        \item Implementacija lastne ideje: priprava enotnega evalvacijskega ogrodja (ang. \textit{pipeline}) za pravično primerjavo.
+        \item Implementacija ogrodja in skript za avtomatiziran zagon eksperimentov.
+    \end{itemize}
+    
+    \item \textbf{Sprint 3:}
+    \begin{itemize}
+        \item Dokončanje poglavja \textit{Metodologija}.
+        \item Nadaljevanje dela na poglavju \textit{Eksperiment in analiza rezultatov}.
+        \item Dokončna implementacija lastnega evalvacijskega ogrodja in integracija vseh štirih algoritmov.
+        \item Programska implementacija in izračun izbranih metrik znotraj ogrodja.
+        \item Zagon lastnega eksperimenta:
+        \begin{itemize}
+            \item na izbranih problemskih instancah iz zbirk MovingAI in POGEMA z različnimi gostotami agentov.
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Sprint 4:}
+    \begin{itemize}
+        \item Dokončanje poglavja \textit{Eksperimenti in analiza rezultatov}.
+        \item Pisanje poglavja \textit{Zaključek} z glavno ugotovitvijo primerjave.
+        \item Pisanje poglavja \textit{Povzetek}.
+        \item Analiza zbranih rezultatov na podlagi predlaganih metrik ter izdelava vizualizacij (grafi in tabele uspešnosti).
+    \end{itemize}
+\end{itemize}
+
+\subsection{Ganttov diagram}
+
+% Opomba: Ganttov diagram je zgolj aproksimacija tedenstkih enot v okviru 4 sprintov. Številke lahko prilagodite dejanskemu urniku.
+\begin{table}[htbp]
+    \centering
+    \caption{Ganttov diagram razvoja po sprintih.}
+    \label{tab:gantt_diagram}
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l *{8}{c}}
+        \toprule
+        \textbf{Naloga} & \multicolumn{8}{c}{\textbf{Tedni}} \\
+        \cmidrule(lr){2-9}
+        & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} \\
+        \midrule
+        \textbf{Sprint 1} & & & & & & & & \\
+        Vzpostavitev okolja (koda in repozitorij) & $\blacksquare$ & & & & & & & \\
+        Priprava uvodnih poglavij & $\blacksquare$ & $\blacksquare$ & & & & & & \\
+        \midrule
+        \textbf{Sprint 2} & & & & & & & & \\
+        Metodologija in testna reprodukcija & & & $\blacksquare$ & $\blacksquare$ & & & & \\
+        Razvoj enotnega evalvacijskega ogrodja & & & & $\blacksquare$ & & & & \\
+        \midrule
+        \textbf{Sprint 3} & & & & & & & & \\
+        Implementacija metrik in integracija & & & & & $\blacksquare$ & & & \\
+        Masovni zagon na MovingAI/POGEMA & & & & & $\blacksquare$ & $\blacksquare$ & & \\
+        \midrule
+        \textbf{Sprint 4} & & & & & & & & \\
+        Analiza grafov, metrik in primerjava & & & & & & & $\blacksquare$ & $\blacksquare$ \\
+        Zaključek in oblikovanje članka & & & & & & & & $\blacksquare$ \\
+        \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+\subsection{Opis rešitve}
+
+V tem delu je podrobneje opisana struktura predlagane rešitve. Delovanje sistema, komunikacija med posameznimi moduli in objekti ter splošna arhitektura so razvidni iz priloženih UML diagramov. 
+
+% Tu vstavite pot do dejanske slike vašega UML diagrama. 
+% Pazite, da slike predhodno naložite v vašo LaTeX strukturo (npr. v mapo slike/).
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.85\linewidth]{slike/uml_diagram.pdf} ali .png / .jpg
+    \includegraphics[width=0.95\linewidth]{slike/uml_diagram_načrta.pdf}
+    \caption{UML diagram (diagram primera uporabe / diagram razredov / sekvenčni diagram) predlagane rešitve.}
+    \label{fig:uml_resitev}
+\end{figure}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
