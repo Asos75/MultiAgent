@@ -255,35 +255,39 @@ Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
  
 \section{Sorodna dela}
 
-Na področju MAPF obstajata dva glavna pristopa: centralizirani in decentralizirani. Pri centraliziranem pristopu centralni načrtovalec razpolaga z globalnim pogledom na okolje in načrtuje poti za vse agente hkrati, medtem ko pri decentraliziranem pristopu vsak agent sprejema odločitve samostojno na podlagi lokalnih opazovanj.
+V tem razdelku izpostavimo ključna dela, relevantna za naš problem MAPF,
+ter njihov pomen za naš prispevek.
 
 \subsection{Centralizirani pristopi}
 
-Med centraliziranimi pristopi je skupina algoritmov, ki temelji na iskanju v prostoru
-omejitev. \textit{EECBS}~\cite{li2021eecbs} pohitri klasično CBS-iskanje z uporabo
-\textit{Explicit Estimation Search} na visoki ravni in \textit{focal search} na nizki
-ravni. Za razliko od optimalnih metod zagotavlja le garantiran suboptimalnostni faktor
-$w$, kar mu v zameno omogoča bistveno hitrejše reševanje pri večjem številu agentov.
+\textit{EECBS}~\cite{li2021eecbs} uvaja suboptimalno različico CBS z
+uporabo Explicit Estimation Search in dosega boljšo skalabilnost pri večjem
+številu agentov. Predstavlja pomembno referenco za kompromis med optimalnostjo
+in učinkovitostjo, ki je ključen pri primerjavi z algoritmi, kot sta LaCAM in PBS.
 
-Alternativno smer predstavlja \textit{RHCR}~\cite{li2021rhcr}, ki naslavlja lifelong
-različico problema, kjer agenti neprekinjeno prejemajo nove cilje. Problem razgradi na
-zaporedje omejenih MAPF instanc, pri čemer vsaka zajema le naslednje $W$ časovnih
-korakov. Ta pristop omogoča hitro ponovni načrt brez reševanja celotnega horizonta
-in je posebej primeren za dinamična skladiščna okolja.
+\textit{RHCR}~\cite{li2021rhcr} razdeli lifelong MAPF na zaporedje krajših
+problemov z omejenim časovnim horizontom, kar omogoča učinkovito ponovno
+načrtovanje. Gre za standarden centraliziran pristop za lifelong scenarije,
+primerljive z našimi eksperimentalnimi nastavitvami.
 
 \subsection{Decentralizirani pristopi}
 
-Pionirsko delo na področju učenja decentraliziranih politik je
-\textit{PRIMAL2}~\cite{damani2021primal2}, ki razširja izvirni PRIMAL z eksplicitnim
-modeliranjem hodniških situacij in podporo za lifelong scenarije.
-PRIMAL2 je porazdeljen okvir za spodbujevalno učenje pri LMAPF, kjer se agenti
-naučijo popolnoma decentraliziranih politik za reaktivno načrtovanje poti v delno
-opazljivem svetu, kar mu omogoča razširljivost do 2048 agentov. 
+\textit{PRIMAL2}~\cite{damani2021primal2} združuje podkrepitveno učenje in
+posnemanje za delovanje na podlagi lokalnih opazovanj brez centralnega
+koordinatorja. Predstavlja zgodnji in vpliven pristop, ki osvetljuje razvoj
+sodobnih decentraliziranih metod.
 
-Na tej osnovi je bil razvit \textit{SCRIMP}~\cite{wang2023scrimp}, ki doda globalni
-in lokalni komunikacijski mehanizem na osnovi modificiranega transformerja. Agenti
-se učijo individualnih politik, ki hkrati izkoriščajo bližnje in oddaljene informacije,
-kar zmanjša pogostost zastojev pri visokih gostotah agentov. 
+\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijo med agenti z uporabo
+transformerjev, kar omogoča koordinacijo kljub omejenemu vidnemu polju.
+Predstavlja alternativen pristop k usklajevanju agentov v primerjavi z metodami
+brez eksplicitne komunikacije.
+
+\subsection{Primerjalne platforme}
+
+\textit{POGEMA}~\cite{skrynnik2024pogema} ponuja standardizirano platformo za
+evalvacijo MAPF algoritmov, vključno z generatorjem instanc in enotnimi
+metrikami. Omogoča pošteno in ponovljivo primerjavo različnih pristopov,
+kar je ključno za našo eksperimentalno analizo.
 
 
 \section{Pregled ovrednotenja}
