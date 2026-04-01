@@ -389,66 +389,64 @@ ter UML diagram predlagane rešitve~(\autoref{fig:uml_resitev}).
 \begin{itemize}
     \item \textbf{Sprint 1:}
     \begin{itemize}
-        \item Ustvarjanje repozitorija Git za nalaganje in usklajevanje programske kode.
-        \item Pisanje osnutka poglavja \textit{Uvod} (predstavitev problema MAPF).
+        \item Ustvarjanje repozitorija Git za nalaganje, verzioniranje in usklajevanje programske kode.
+        \item Pisanje osnutka poglavja \textit{Uvod} (predstavitev problema MAPF in motivacije).
         \item Pisanje osnutka poglavja \textit{Sorodna dela} (pregled algoritmov LaCAM, PBS, Follower in MATS-LP).
-        \item Pregled dodatne literature ter identifikacija ključnih razlik med centraliziranimi in decentraliziranimi pristopi.
-        \item Definicija raziskovalnih vprašanj in začetnih hipotez.
-        \item Pridobivanje izvorne kode izbranih centraliziranih in decentraliziranih algoritmov.
-        \item Analiza strukture in zahtev posameznih implementacij.
-        \item Priprava eksperimentalnega okolja (namestitev knjižnic za POGEMA, orodij za C++ prevajanje in Python okolja).
+        \item Pridobivanje in prenos izvorne kode izbranih centraliziranih in decentraliziranih algoritmov.
+        \item Osnovna analiza strukture implementacij.
+        \item Priprava eksperimentalnega okolja (namestitev POGEMA, nastavitev C++ in Python okolja).
     \end{itemize}
-    
+
     \item \textbf{Sprint 2:}
     \begin{itemize}
         \item Dokončanje poglavij \textit{Uvod} in \textit{Sorodna dela}.
-        \item Pisanje poglavja \textit{Metodologija} (definicija protokola in metrik: \textit{SoC, makespan, uspešnost, čas}).
-        \item Načrt eksperimentalnega protokola (izbor instanc, parametrov, število ponovitev).
-        \item Reprodukcija osnovnih rezultatov avtorjev algoritmov na manjših instancah (za potrditev delovanja).
-        \item Implementacija lastne ideje: priprava enotnega evalvacijskega ogrodja (ang. \textit{pipeline}) za pravično primerjavo.
-        \item Definicija skupnega vmesnika za integracijo različnih algoritmov.
-        \item Implementacija ogrodja in skript za avtomatiziran zagon eksperimentov.
-        \item Osnovno testiranje ogrodja in odpravljanje napak.
+        \item Pisanje poglavja \textit{Metodologija} (definicija metrik: \textit{SoC, makespan, uspešnost, čas}).
+        \item Začetek poglavja \textit{Eksperiment in analiza rezultatov} (opis eksperimentalnega protokola, instanc in parametrov).
+        \item Reprodukcija rezultatov iz izbranih člankov na manjših instancah (validacija implementacij).
+        \item Implementacija lastne ideje:
+        \begin{itemize}
+            \item zasnova enotnega evalvacijskega ogrodja (\textit{pipeline}),
+            \item definicija skupnega vmesnika za integracijo algoritmov.
+        \end{itemize}
+        \item Implementacija eksperimentalnega ogrodja in osnovnih skript za zagon eksperimentov.
     \end{itemize}
-    
+
     \item \textbf{Sprint 3:}
     \begin{itemize}
         \item Dokončanje poglavja \textit{Metodologija}.
-        \item Pisanje poglavja \textit{Eksperiment in analiza rezultatov}.
-        \item Dokončna implementacija lastnega evalvacijskega ogrodja in integracija vseh štirih algoritmov.
-        \item Programska implementacija in izračun izbranih metrik znotraj ogrodja.
-        \item Implementacija lastne izboljšave:
+        \item Nadaljevanje poglavja \textit{Eksperiment in analiza rezultatov}.
+        \item Nadaljnja implementacija lastne ideje:
         \begin{itemize}
             \item razdelitev agentov v lokalne skupine,
             \item določitev lokalnih vodij,
             \item implementacija lokalne koordinacije in reševanja konfliktov.
         \end{itemize}
-        \item Integracija izboljšave v obstoječe ogrodje.
-        \item Validacija pravilnosti delovanja (primerjava z referenčnimi rezultati).
+        \item Implementacija metrik znotraj ogrodja (SoC, makespan, uspešnost, čas izvajanja).
+        \item Integracija vseh algoritmov v skupno ogrodje.
         \item Zagon lastnega eksperimenta:
         \begin{itemize}
-            \item na izbranih problemskih instancah iz zbirk MovingAI in POGEMA,
+            \item na lastni izboljšavi,
+            \item na izbranih instancah iz zbirk MovingAI in POGEMA,
             \item pri različnih gostotah agentov in velikostih map.
         \end{itemize}
     \end{itemize}
-    
+
     \item \textbf{Sprint 4:}
     \begin{itemize}
         \item Dokončanje poglavja \textit{Eksperimenti in analiza rezultatov}.
-        \item Pisanje poglavja \textit{Zaključek} z glavno ugotovitvijo primerjave.
+        \item Pisanje poglavja \textit{Zaključek}.
         \item Pisanje poglavja \textit{Povzetek}.
-        \item Obsežna analiza zbranih rezultatov na podlagi predlaganih metrik.
+        \item Podrobna analiza rezultatov na podlagi definiranih metrik.
         \item Primerjava centraliziranih, decentraliziranih in hibridnega pristopa.
         \item Identifikacija prednosti, slabosti in omejitev posameznih pristopov.
-        \item Izdelava vizualizacij (grafi in tabele uspešnosti).
+        \item Izdelava vizualizacij (grafi in tabele).
         \item Končna revizija članka in priprava za oddajo.
     \end{itemize}
 \end{itemize}
 
-% Opomba: Ganttov diagram je zgolj aproksimacija tedenstkih enot v okviru 4 sprintov. Številke lahko prilagodite dejanskemu urniku.
 \begin{table}[htbp]
     \centering
-    \caption{Ganttov diagram razvoja po sprintih (razširjena verzija).}
+    \caption{Ganttov diagram razvoja po sprintih.}
     \label{tab:gantt_diagram}
     \resizebox{\columnwidth}{!}{%
     \begin{tabular}{l *{8}{c}}
@@ -458,34 +456,31 @@ ter UML diagram predlagane rešitve~(\autoref{fig:uml_resitev}).
         & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} \\
         \midrule
         \textbf{Sprint 1} & & & & & & & & \\
-        Ustvarjanje repozitorija Git & $\blacksquare$ & & & & & & & \\
-        Priprava uvodnega poglavja (\textit{Uvod}) & $\blacksquare$ & $\blacksquare$ & & & & & & \\
-        Priprava poglavja (\textit{Sorodna dela}) & $\blacksquare$ & $\blacksquare$ & & & & & & \\
-        Pregled literature in identifikacija raziskovalnih vprašanj & $\blacksquare$ & $\blacksquare$ & & & & & & \\
-        Pridobivanje in analiza izvorne kode algoritmov & $\blacksquare$ & & & & & & & \\
+        Ustvarjanje Git repozitorija & $\blacksquare$ & & & & & & & \\
+        Pisanje poglavja \textit{Uvod} & $\blacksquare$ & $\blacksquare$ & & & & & & \\
+        Pisanje poglavja \textit{Sorodna dela} & $\blacksquare$ & $\blacksquare$ & & & & & & \\
+        Pridobivanje programske kode & $\blacksquare$ & & & & & & & \\
         Priprava eksperimentalnega okolja & $\blacksquare$ & & & & & & & \\
         \midrule
         \textbf{Sprint 2} & & & & & & & & \\
-        Dokončanje poglavij \textit{Uvod} in \textit{Sorodna dela} & & $\blacksquare$ & $\blacksquare$ & & & & & \\
-        Pisanje poglavja \textit{Metodologija} & & & $\blacksquare$ & $\blacksquare$ & & & & \\
-        Definicija eksperimentalnega protokola & & & $\blacksquare$ & & & & & \\
-        Reprodukcija osnovnih rezultatov avtorjev & & & & $\blacksquare$ & & & & \\
-        Razvoj enotnega evalvacijskega ogrodja (\textit{pipeline}) & & & & $\blacksquare$ & $\blacksquare$ & & & \\
-        Implementacija avtomatiziranih skript za zagon eksperimentov & & & & & $\blacksquare$ & & & \\
+        Dokončanje \textit{Uvod} in \textit{Sorodna dela} & & $\blacksquare$ & $\blacksquare$ & & & & & \\
+        Pisanje \textit{Metodologija} & & & $\blacksquare$ & $\blacksquare$ & & & & \\
+        Opis eksperimenta & & & $\blacksquare$ & $\blacksquare$ & & & & \\
+        Reprodukcija rezultatov & & & & $\blacksquare$ & & & & \\
+        Razvoj evalvacijskega ogrodja & & & & $\blacksquare$ & $\blacksquare$ & & & \\
         \midrule
         \textbf{Sprint 3} & & & & & & & & \\
-        Dokončanje poglavja \textit{Metodologija} & & & & & $\blacksquare$ & & & \\
-        Integracija vseh algoritmov v ogrodje & & & & & $\blacksquare$ & & & \\
-        Implementacija metrik in lokalnih vodij & & & & & $\blacksquare$ & $\blacksquare$ & & \\
-        Masovni zagon eksperimentov na MovingAI/POGEMA & & & & & & $\blacksquare$ & $\blacksquare$ & \\
-        Validacija rezultatov in odprava napak & & & & & & $\blacksquare$ & & \\
+        Dokončanje \textit{Metodologija} & & & & & $\blacksquare$ & & & \\
+        Implementacija ideje in metrik & & & & & $\blacksquare$ & $\blacksquare$ & & \\
+        Integracija algoritmov & & & & & $\blacksquare$ & & & \\
+        Zagon eksperimentov (MovingAI/POGEMA) & & & & & & $\blacksquare$ & $\blacksquare$ & \\
         \midrule
         \textbf{Sprint 4} & & & & & & & & \\
-        Dokončanje poglavja \textit{Eksperimenti in analiza rezultatov} & & & & & & & $\blacksquare$ & $\blacksquare$ \\
-        Analiza grafov, metrik in primerjava pristopov & & & & & & & $\blacksquare$ & $\blacksquare$ \\
-        Pisanje poglavja \textit{Zaključek} & & & & & & & & $\blacksquare$ \\
-        Pisanje poglavja \textit{Povzetek} & & & & & & & & $\blacksquare$ \\
-        Končna revizija članka in priprava za oddajo & & & & & & & & $\blacksquare$ \\
+        Dokončanje \textit{Eksperimenti in analiza} & & & & & & & $\blacksquare$ & $\blacksquare$ \\
+        Analiza rezultatov & & & & & & & $\blacksquare$ & $\blacksquare$ \\
+        Pisanje \textit{Zaključek} & & & & & & & & $\blacksquare$ \\
+        Pisanje \textit{Povzetek} & & & & & & & & $\blacksquare$ \\
+        Revizija in oddaja & & & & & & & & $\blacksquare$ \\
         \bottomrule
     \end{tabular}%
     }
