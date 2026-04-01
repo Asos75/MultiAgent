@@ -193,49 +193,71 @@
 
 \section{Uvod}
 
-V tem članku obravnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF), ki se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila in drugi logistični sistemi.
+V tem članku obravnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding / MAPF), 
+ki se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
+inteligentni transportni sistemi in drugi logistični sistemi. Gre za temeljni problem koordinacije 
+več avtonomnih enot v skupnem prostoru, kjer mora vsak agent doseči svoj cilj brez trkov z 
+drugimi agenti ali ovirami.
 
-Cilj problema je načrtovati poti za množico agentov v skupnem prostoru tako, da se izognemo medsebojnim konfliktom in hkrati optimiziramo določeno metriko, kot sta skupni čas izvajanja ali dolžina prepotovane poti. 
+Cilj problema je načrtovati poti za množico agentov v diskretnem prostoru tako, da se izognemo 
+medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni čas izvajanja 
+(ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs}). Zaradi kombinatorne 
+narave problema MAPF hitro postane računsko zahteven, še posebej pri večjem številu agentov, 
+kar predstavlja pomemben izziv pri razvoju učinkovitih algoritmov.
 
 Repozitorij z izvorno kodo projekta je na voljo na naslovu: \url{https://github.com/Asos75/MultiAgent}.
 
-Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne 
-pristope k reševanju problema več-agentnega iskanja poti (MAPF). Kot osnovo za definicijo 
-problema uporabljamo delo \textit{Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks}~\cite{stern2019multiagent}, 
-ki sistematično opredeli različice problema in standardne metrike.
+Kot osnovo za formalno definicijo problema in uporabljene metrike uporabljamo delo 
+\textit{Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks}~\cite{stern2019multiagent}. 
+Poudarjamo, da omenjeni članek ne predstavlja konkretnega algoritma, temveč služi kot referenčni okvir 
+za definicije problema MAPF, njegove različice ter standardne metrike, ki jih uporabljajo v 
+nadaljevanju omenjeni članki in katere bomo uporabili tudi mi.
 
-V nadaljevanju bomo primerjali centralizirane metode, kot sta 
-\textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam} 
-in \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs}, 
-ki načrtujeta poti za vse agente z uporabo globalnega pogleda na problem.
+Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne pristope k 
+reševanju problema MAPF. Izbrane članke so identificirali posamezni člani skupine:
+\begin{itemize}
+    \item \textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam} (Šošterič),
+    \item \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs} (Lipavec),
+    \item \textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower} (Teršek),
+    \item \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2024mats} (Fras).
+\end{itemize}
 
-Poleg tega bomo analizirali tudi decentralizirane pristope, kot sta 
-\textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower} 
-in \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2024mats}, 
-kjer agenti sprejemajo odločitve lokalno brez centralnega nadzora.
+V nadaljevanju bomo primerjali centralizirane metode, katerih predstavnika sta LaCAM in PBS, 
+ki načrtujejo poti za vse agente z uporabo globalnega pogleda na problem, ter decentralizirane 
+pristope, kot sta Follower in MATS-LP, kjer posamezni agenti sprejemajo odločitve lokalno brez 
+centralnega nadzora in imajo pregled le nad svojo okolico.
 
-Na ta način bomo lahko primerjali prednosti in slabosti centraliziranih in decentraliziranih pristopov 
-z vidika učinkovitosti, skalabilnosti in kakovosti rešitev.
+Na ta način bomo analizirali ključne razlike med obema paradigmama z vidika učinkovitosti, 
+skalabilnosti in kakovosti rešitev. Centralizirani pristopi praviloma zagotavljajo bolj 
+optimalne rešitve, vendar slabše skalirajo z naraščajočim številom agentov, medtem ko 
+decentralizirani pristopi omogočajo boljšo razširljivost, vendar pogosto na račun kakovosti 
+rešitev.
 
-Kot glavni članek izberemo delo 
+Kot glavni referenčni algoritem izberemo delo 
 \textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam}, 
-ki predstavlja sodoben centraliziran pristop k reševanju problema MAPF.
+ki predstavlja sodoben in učinkovit centraliziran pristop k reševanju problema MAPF. Izbrani 
+članek služi kot referenčna osnova za našo analizo, saj ponuja dobro ravnovesje med 
+učinkovitostjo in skalabilnostjo ter omogoča relativno enostavno reprodukcijo eksperimentov.
 
-Izbrani članek služi kot referenčna osnova za našo analizo, saj ponuja učinkovito 
-in skalabilno metodo globalnega načrtovanja poti za več agentov. Poleg tega 
-je algoritem zasnovan kot iskalni postopek, kar omogoča relativno enostavno 
-reprodukcijo eksperimentov in primerjavo z drugimi pristopi.
+LaCAM bomo uporabili kot predstavnika centraliziranih metod, s katerim bomo primerjali 
+decentralizirane pristope, kot sta Follower in MATS-LP, ter tako sistematično analizirali 
+razlike med globalnim in lokalnim načrtovanjem poti.
 
-LaCAM bomo uporabili kot predstavnika centraliziranih metod, s katerim bomo 
-primerjali decentralizirane pristope, kot sta Follower in MATS-LP, ter tako 
-analizirali razlike med globalnim in lokalnim načrtovanjem poti.
+\subsection{Uvedba lokalnih vodij}
 
-Poleg analize obstoječih pristopov bomo v okviru projekta predlagali tudi lastno izboljšavo, 
-ki uvaja koncept \textit{lokalnih vodij} (ang. \textit{local leaders}). 
+Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
+\textit{lokalnih vodij}. Gre za hibridni pristop med centraliziranim in decentraliziranim 
+načrtovanjem, kjer je množica agentov razdeljena na lokalne skupine.
 
-Gre za hibridni pristop med centraliziranim in decentraliziranim načrtovanjem, kjer je 
-množica agentov razdeljena na lokalne skupine. Vsako skupino nadzira izbrani agent, lokalni vodja,
-ki koordinira gibanje agentov v svoji neposredni okolici in rešuje konflikte na lokalni ravni.
+Vsako skupino nadzira izbrani agent, lokalni vodja, ki koordinira gibanje agentov v svoji 
+neposredni okolici in rešuje konflikte na lokalni ravni. Vodja nima globalnega pogleda, 
+temveč ima pogled le nad okolico, ki jo vidijo njegovi agenti. S tem zmanjšamo potrebo 
+po globalni koordinaciji, hkrati pa ohranimo določeno stopnjo usklajenosti med agenti.
+
+S predlaganim pristopom želimo združiti prednosti obeh paradigem: visoko kakovost rešitev, 
+značilno za centralizirane metode, ter boljšo skalabilnost in robustnost, značilno za 
+decentralizirane pristope. V eksperimentalnem delu bomo preverili, ali tak hibridni pristop 
+dejansko izboljša učinkovitost reševanja problema MAPF v različnih scenarijih.
 
 \section{Definicija problema}
 
