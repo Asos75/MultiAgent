@@ -319,6 +319,14 @@ primerljive z našimi eksperimentalnimi nastavitvami.
 
 \subsection{Decentralizirani pristopi}
 
+\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop k reševanju problema lifelong MAPF, ki temelji na kombinaciji hevristično načrtovane poti in naučene politike sledenja. Sistem je sestavljen iz dveh komplementarnih modulov.
+
+Hevristični načrtovalec poti za vsakega agenta neodvisno zgradi pot od trenutne lokacije do cilja z algoritmom A*. Pri tem upošteva le statične ovire, ne pa tudi ostalih agentov, saj se izogibanje trkom prepusti drugemu modulu. Ključna lastnost načrtovalca je, da ne išče najkrajše poti, temveč enakomerno razpršene poti, s čimer zmanjša zasičenost na ozkih mestih karte (hodniki, vrata). To doseže z dvonivojskimi stroški prehoda: statični stroški temeljijo na topologiji karte in penalizirajo pogosto uporabljena vozlišča, dinamični stroški pa se tekom epizode posodabljajo glede na agentove lastne opazovalne izkušnje.
+
+Modul za sledenje poti implementira naučeno politiko, ki agenta vodi vzdolž konstruirane poti in hkrati zagotavlja izogibanje trkom z ostalimi agenti. Politiko aproksimira globoka nevronska mreža, ki kot vhod sprejme lokalno opazovanje agenta v obliki 2D tenzorja dimenzije 2×m×m. Tenzor kodira lokacije statičnih ovir, trenutno pot in položaje ostalih agentov. Arhitektura mreže sestoji iz prostorskega koderja, ki mu sledita dve veji – akterska in kritična – obe z rekurenčnimi bloki GRU za modeliranje zgodovine opazovanj.
+
+Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent preveč oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim sklepanjem vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov brez potrebe po centralnem koordinatorju ali ekspertnih podatkih za učenje.
+
 \textit{PRIMAL2}~\cite{damani2021primal2} združuje podkrepitveno učenje in
 posnemanje za delovanje na podlagi lokalnih opazovanj brez centralnega
 koordinatorja. Predstavlja zgodnji in vpliven pristop, ki osvetljuje razvoj
