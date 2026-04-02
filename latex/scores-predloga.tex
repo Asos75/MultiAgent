@@ -323,14 +323,15 @@ ki uvaja napredne hevristike za učinkovitejše preiskovanje iskalnega prostora.
 Ključna ideja je uporaba informiranih ocen stroška, ki upoštevajo strukturo konfliktov
 med agenti, kar omogoča boljše usmerjanje iskanja.
 
-Algoritem dodatno uporablja tehniko razčlenjevanja konfliktov (ang. disjoint splitting),
-ki zmanjša redundanco v iskalnem drevesu in s tem izboljša časovno učinkovitost.
-V primerjavi z osnovnim CBS dosega CBSH2 bistveno boljšo skalabilnost, zlasti pri
-instancah z večjim številom agentov.
+Algoritem uporablja tehniko razčlenjevanja konfliktov (ang. disjoint splitting),
+ki odpravlja pomanjkljivost klasičnega CBS, kjer lahko različne veje vsebujejo
+iste kandidatne rešitve. Z uvedbo pozitivnih omejitev ustvari dve disjunktni veji:
+v eni agentu prepove biti v konfliktni točki, v drugi pa ga tja prisili. S tem se
+izognemo podvajanju iskanja.
 
-Zaradi teh lastnosti CBSH2 predstavlja enega izmed standardnih sodobnih
-centraliziranih pristopov za reševanje MAPF problema ter se pogosto uporablja
-kot referenčna metoda pri primerjavi novejših algoritmov, kot sta LaCAM in PBS.
+Posledično se zmanjša velikost iskalnega drevesa in število obravnavanih vozlišč,
+kar vodi do boljše časovne učinkovitosti in skalabilnosti v primerjavi z osnovnim CBS,
+zlasti pri večjem številu agentov.
 
 \subsection{Decentralizirani pristopi}
 
@@ -375,23 +376,25 @@ Avtorji so metodo ovrednotili na standardnih MAPF okoljih, vključno z naključn
 Rezultati so pokazali, da kombinacija nevronsko vodenega MCTS in lahke naučene politike izboljša pretočnost sistema in koordinacijo 
 agentov, pri čemer presega zmogljivosti obstoječih decentraliziranih rešitev.
 
-\textit{PRIMAL2}~\cite{damani2021primal2} predstavlja enega prvih uspešnih poskusov uporabe globokega podkrepitvenega
-učenja za MAPF. Nadgrajuje originalni PRIMAL z izboljšanimi mehanizmi učenja, vključno s kombinacijo 
-\textit{imitation learning} (na podlagi optimalnih rešitev) in \textit{reinforcement learning}.
+\textit{PRIMAL2}~\cite{damani2021primal2} predstavlja enega prvih uspešnih poskusov uporabe globokega podkrepitvenega učenja za 
+MAPF. Nadgrajuje originalni PRIMAL z izboljšanimi mehanizmi učenja, vključno s kombinacijo \textit{imitation learning} 
+(na podlagi centraliziranih načrtovalcev) in \textit{reinforcement learning}.
 
-Ključna značilnost je učenje politike na osnovi lokalnih opazovanj, kar omogoča decentralizirano izvajanje. 
-Vendar pa PRIMAL2 pogosto trpi zaradi omejene generalizacije na večje ali gostejše scenarije, saj lokalne 
-informacije niso vedno zadostne za globalno koordinacijo. Kljub temu ostaja pomemben mejnik, saj je pokazal, 
-da je mogoče doseči konkurenčne rezultate brez centralnega načrtovalca.
+Ključna značilnost je učenje politike na osnovi lokalnih opazovanj, kar omogoča popolnoma decentralizirano izvajanje in zelo 
+dobro skalabilnost tudi za velike sisteme agentov. PRIMAL2 dosega konkurenčne rezultate z obstoječimi metodami, zlasti v 
+velikih in gostih okoljih, kjer centralizirani pristopi postanejo neučinkoviti.
 
-\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijski mehanizem med agenti z uporabo transformer 
-arhitekture. Vsak agent si z drugimi izmenjuje informacije o svojem stanju preko pozornostnega mehanizma, 
-kar omogoča implicitno koordinacijo na večji razdalji, kljub omejenemu vidnemu polju.
+Slabost pristopa je predvsem v slabši optimalnosti poti in občasnih neusklajenostih med agenti, saj lokalne informacije ne 
+omogočajo popolne globalne koordinacije.
 
-Ta pristop presega omejitve metod, ki temeljijo izključno na lokalnih opazovanjih, saj omogoča agentom, da 
-upoštevajo širši kontekst. Vendar pa komunikacija prinaša dodatne stroške in kompleksnost, kar lahko omejuje 
-uporabo v realnočasovnih sistemih ali pri zelo velikem številu agentov. SCRIMP tako predstavlja zanimiv 
-kompromis med popolnoma decentraliziranimi metodami brez komunikacije in centraliziranimi pristopi.
+\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijski mehanizem med agenti na osnovi transformer arhitekture. 
+Agenti si izmenjujejo informacije preko pozornostnega mehanizma, kar omogoča učinkovito koordinacijo tudi 
+pri zelo omejenem vidnem polju (npr. 3×3).
+
+S tem pristop presega omejitve metod, ki temeljijo zgolj na lokalnih opazovanjih, saj agentom omogoča 
+upoštevanje širšega konteksta. Posebej zasnovan komunikacijski mehanizem hkrati ohranja skalabilnost 
+in zmanjšuje vpliv šuma v komunikaciji, kar vodi do boljše uspešnosti v primerjavi z obstoječimi 
+učenimi pristopi.
 
 \subsection{Primerjalne platforme}
 
