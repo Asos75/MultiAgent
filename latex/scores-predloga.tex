@@ -351,15 +351,29 @@ opazovanje agenta v obliki 2D tenzorja dimenzije 2×m×m. Tenzor kodira lokacije
 položaje ostalih agentov. Arhitektura mreže sestoji iz prostorskega koderja, ki mu sledita dve veji – akterska 
 in kritična – obe z rekurenčnimi bloki GRU za modeliranje zgodovine opazovanj.
 
-Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent preveč oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim sklepanjem vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov brez potrebe po centralnem koordinatorju ali ekspertnih podatkih za učenje.
+Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent preveč 
+oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim sklepanjem 
+vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov brez potrebe po 
+centralnem koordinatorju ali ekspertnih podatkih za učenje.
 
-\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} predlaga decentralizirano rešitev problema lifelong MAPF v pogojih delne opazljivosti, kjer agenti nimajo dostopa do globalnega stanja okolja in zaznavajo le omejeno lokalno okolico. Namesto centraliziranega načrtovanja vsak agent samostojno zgradi intrinzični Markov odločitveni proces (ang. intrinsic MDP), ki predstavlja lokalno aproksimacijo večagentnega sistema na podlagi lokalnih opazovanj.
+\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
+predlaga decentralizirano rešitev problema lifelong MAPF v pogojih delne opazljivosti, kjer agenti nimajo dostopa do 
+globalnega stanja okolja in zaznavajo le omejeno lokalno okolico. Namesto centraliziranega načrtovanja vsak agent 
+samostojno zgradi intrinzični Markov odločitveni proces (ang. intrinsic MDP), ki predstavlja lokalno aproksimacijo 
+večagentnega sistema na podlagi lokalnih opazovanj.
 
-Na tako definiranem modelu agent izvaja prilagojeno različico Monte Carlo Tree Search (MCTS), podprto z nevronsko mrežo. Naučena politika usmerja raziskovanje možnih akcij, medtem ko simulacije v iskalnem drevesu omogočajo kratkoročno napovedovanje interakcij z bližnjimi agenti. Kombinacija iskalnega načrtovanja in podkrepitvenega učenja omogoča, da odločitve agentov niso zgolj reaktivne, temveč temeljijo na predvidenih prihodnjih stanjih okolja.
+Na tako definiranem modelu agent izvaja prilagojeno različico Monte Carlo Tree Search (MCTS), podprto z nevronsko mrežo.
+ Naučena politika usmerja raziskovanje možnih akcij, medtem ko simulacije v iskalnem drevesu omogočajo kratkoročno napovedovanje
+  interakcij z bližnjimi agenti. Kombinacija iskalnega načrtovanja in podkrepitvenega učenja omogoča, da odločitve agentov 
+  niso zgolj reaktivne, temveč temeljijo na predvidenih prihodnjih stanjih okolja.
 
-Koordinacija med agenti nastaja implicitno skozi simulacije v intrinzičnem MDP-ju, brez potrebe po globalnem koordinatorju ali eksplicitni komunikaciji. Kljub omejenim informacijam simulacije spodbujajo izogibanje trkom in kooperativno vedenje, kar zagotavlja dobro skalabilnost pri večjem številu agentov v dinamičnih scenarijih lifelong MAPF.
+Koordinacija med agenti nastaja implicitno skozi simulacije v intrinzičnem MDP-ju, brez potrebe po globalnem koordinatorju 
+ali eksplicitni komunikaciji. Kljub omejenim informacijam simulacije spodbujajo izogibanje trkom in kooperativno vedenje, 
+kar zagotavlja dobro skalabilnost pri večjem številu agentov v dinamičnih scenarijih lifelong MAPF.
 
-Avtorji so metodo ovrednotili na standardnih MAPF okoljih, vključno z naključnimi mrežami, labirinti in skladiščnimi scenariji. Rezultati so pokazali, da kombinacija nevronsko vodenega MCTS in lahke naučene politike izboljša pretočnost sistema in koordinacijo agentov, pri čemer presega zmogljivosti obstoječih decentraliziranih rešitev.
+Avtorji so metodo ovrednotili na standardnih MAPF okoljih, vključno z naključnimi mrežami, labirinti in skladiščnimi scenariji. 
+Rezultati so pokazali, da kombinacija nevronsko vodenega MCTS in lahke naučene politike izboljša pretočnost sistema in koordinacijo 
+agentov, pri čemer presega zmogljivosti obstoječih decentraliziranih rešitev.
 
 \textit{PRIMAL2}~\cite{damani2021primal2} predstavlja enega prvih uspešnih poskusov uporabe globokega podkrepitvenega
 učenja za MAPF. Nadgrajuje originalni PRIMAL z izboljšanimi mehanizmi učenja, vključno s kombinacijo 
