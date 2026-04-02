@@ -307,35 +307,71 @@ ki dopolnjujejo in razširjajo pogled iz uvoda.
 
 \subsection{Centralizirani pristopi}
 
-\textit{EECBS}~\cite{li2021eecbs} uvaja suboptimalno različico CBS z
-uporabo Explicit Estimation Search in dosega boljšo skalabilnost pri večjem
-številu agentov. Predstavlja pomembno referenco za kompromis med optimalnostjo
-in učinkovitostjo, ki je ključen pri primerjavi z algoritmi, kot sta LaCAM in PBS.
+\textit{EECBS}~\cite{li2021eecbs} predstavlja nadgradnjo klasičnega algoritma CBS (Conflict Based Search)
+pri čimer ohranja klasičen dvonivojski pristop, vendar uvaja uporabo \textit{Explicit Estimation Search} (EES)
 
-\textit{RHCR}~\cite{li2021rhcr} razdeli lifelong MAPF na zaporedje krajših
-problemov z omejenim časovnim horizontom, kar omogoča učinkovito ponovno
-načrtovanje. Gre za standarden centraliziran pristop za lifelong scenarije,
-primerljive z našimi eksperimentalnimi nastavitvami.
+Algoritem omogoča nadzorovano suboptimalnost z uporabo uteži kar pomeni, da lahko uporabnik eksplicitno 
+določi kompromis med kakovostjo rešitve in časom izvajanja. Rezulatati pa pokažejo, da algoritem presega 
+klasični CBS pri večjih instancah (več sto agentov), pri čemer so rezultati dokazljivo slabši za največ 2 
+odstotka. Zaradi tega predstavlja pomembno referenčno točko pri primerjavi z novejšimi algoritmi, kot so 
+LaCAM in PBS, ki prav tako ciljajo na izboljšano skalabilnost.
+
+
+\textit{CBSH2}~\cite{li2019disjoint} predstavlja izboljšano različico algoritma CBS,
+ki uvaja napredne hevristike za učinkovitejše preiskovanje iskalnega prostora.
+Ključna ideja je uporaba informiranih ocen stroška, ki upoštevajo strukturo konfliktov
+med agenti, kar omogoča boljše usmerjanje iskanja.
+
+Algoritem dodatno uporablja tehniko razčlenjevanja konfliktov (ang. disjoint splitting),
+ki zmanjša redundanco v iskalnem drevesu in s tem izboljša časovno učinkovitost.
+V primerjavi z osnovnim CBS dosega CBSH2 bistveno boljšo skalabilnost, zlasti pri
+instancah z večjim številom agentov.
+
+Zaradi teh lastnosti CBSH2 predstavlja enega izmed standardnih sodobnih
+centraliziranih pristopov za reševanje MAPF problema ter se pogosto uporablja
+kot referenčna metoda pri primerjavi novejših algoritmov, kot sta LaCAM in PBS.
 
 \subsection{Decentralizirani pristopi}
 
-\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop k reševanju problema lifelong MAPF, ki temelji na kombinaciji hevristično načrtovane poti in naučene politike sledenja. Sistem je sestavljen iz dveh komplementarnih modulov.
+\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop k reševanju problema lifelong MAPF, 
+ki temelji na kombinaciji hevristično načrtovane poti in naučene politike sledenja. Sistem je sestavljen iz dveh 
+komplementarnih modulov.
 
-Hevristični načrtovalec poti za vsakega agenta neodvisno zgradi pot od trenutne lokacije do cilja z algoritmom A*. Pri tem upošteva le statične ovire, ne pa tudi ostalih agentov, saj se izogibanje trkom prepusti drugemu modulu. Ključna lastnost načrtovalca je, da ne išče najkrajše poti, temveč enakomerno razpršene poti, s čimer zmanjša zasičenost na ozkih mestih karte (hodniki, vrata). To doseže z dvonivojskimi stroški prehoda: statični stroški temeljijo na topologiji karte in penalizirajo pogosto uporabljena vozlišča, dinamični stroški pa se tekom epizode posodabljajo glede na agentove lastne opazovalne izkušnje.
+Hevristični načrtovalec poti za vsakega agenta neodvisno zgradi pot od trenutne lokacije do cilja z algoritmom A*. 
+Pri tem upošteva le statične ovire, ne pa tudi ostalih agentov, saj se izogibanje trkom prepusti drugemu modulu. 
+Ključna lastnost načrtovalca je, da ne išče najkrajše poti, temveč enakomerno razpršene poti, s čimer zmanjša 
+zasičenost na ozkih mestih karte (hodniki, vrata). To doseže z dvonivojskimi stroški prehoda: statični stroški 
+temeljijo na topologiji karte in penalizirajo pogosto uporabljena vozlišča, dinamični stroški pa se tekom epizode 
+posodabljajo glede na agentove lastne opazovalne izkušnje.
 
-Modul za sledenje poti implementira naučeno politiko, ki agenta vodi vzdolž konstruirane poti in hkrati zagotavlja izogibanje trkom z ostalimi agenti. Politiko aproksimira globoka nevronska mreža, ki kot vhod sprejme lokalno opazovanje agenta v obliki 2D tenzorja dimenzije 2×m×m. Tenzor kodira lokacije statičnih ovir, trenutno pot in položaje ostalih agentov. Arhitektura mreže sestoji iz prostorskega koderja, ki mu sledita dve veji – akterska in kritična – obe z rekurenčnimi bloki GRU za modeliranje zgodovine opazovanj.
+Modul za sledenje poti implementira naučeno politiko, ki agenta vodi vzdolž konstruirane poti in hkrati zagotavlja 
+izogibanje trkom z ostalimi agenti. Politiko aproksimira globoka nevronska mreža, ki kot vhod sprejme lokalno 
+opazovanje agenta v obliki 2D tenzorja dimenzije 2×m×m. Tenzor kodira lokacije statičnih ovir, trenutno pot in 
+položaje ostalih agentov. Arhitektura mreže sestoji iz prostorskega koderja, ki mu sledita dve veji – akterska 
+in kritična – obe z rekurenčnimi bloki GRU za modeliranje zgodovine opazovanj.
 
-Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent preveč oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim sklepanjem vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov brez potrebe po centralnem koordinatorju ali ekspertnih podatkih za učenje.
+Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent 
+preveč oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim 
+sklepanjem vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov 
+brez potrebe po centralnem koordinatorju ali ekspertnih podatkih za učenje.
 
-\textit{PRIMAL2}~\cite{damani2021primal2} združuje podkrepitveno učenje in
-posnemanje za delovanje na podlagi lokalnih opazovanj brez centralnega
-koordinatorja. Predstavlja zgodnji in vpliven pristop, ki osvetljuje razvoj
-sodobnih decentraliziranih metod.
+\textit{PRIMAL2}~\cite{damani2021primal2} predstavlja enega prvih uspešnih poskusov uporabe globokega podkrepitvenega
+učenja za MAPF. Nadgrajuje originalni PRIMAL z izboljšanimi mehanizmi učenja, vključno s kombinacijo 
+\textit{imitation learning} (na podlagi optimalnih rešitev) in \textit{reinforcement learning}.
 
-\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijo med agenti z uporabo
-transformerjev, kar omogoča koordinacijo kljub omejenemu vidnemu polju.
-Predstavlja alternativen pristop k usklajevanju agentov v primerjavi z metodami
-brez eksplicitne komunikacije.
+Ključna značilnost je učenje politike na osnovi lokalnih opazovanj, kar omogoča decentralizirano izvajanje. 
+Vendar pa PRIMAL2 pogosto trpi zaradi omejene generalizacije na večje ali gostejše scenarije, saj lokalne 
+informacije niso vedno zadostne za globalno koordinacijo. Kljub temu ostaja pomemben mejnik, saj je pokazal, 
+da je mogoče doseči konkurenčne rezultate brez centralnega načrtovalca.
+
+\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijski mehanizem med agenti z uporabo transformer 
+arhitekture. Vsak agent si z drugimi izmenjuje informacije o svojem stanju preko pozornostnega mehanizma, 
+kar omogoča implicitno koordinacijo na večji razdalji, kljub omejenemu vidnemu polju.
+
+Ta pristop presega omejitve metod, ki temeljijo izključno na lokalnih opazovanjih, saj omogoča agentom, da 
+upoštevajo širši kontekst. Vendar pa komunikacija prinaša dodatne stroške in kompleksnost, kar lahko omejuje 
+uporabo v realnočasovnih sistemih ali pri zelo velikem številu agentov. SCRIMP tako predstavlja zanimiv 
+kompromis med popolnoma decentraliziranimi metodami brez komunikacije in centraliziranimi pristopi.
 
 \subsection{Primerjalne platforme}
 
