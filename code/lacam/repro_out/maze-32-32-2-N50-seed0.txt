@@ -1,0 +1,12 @@
+agents=50
+map_file=maze-32-32-2.map
+solver=planner
+solved=1
+soc=4058
+soc_lb=3007
+makespan=130
+makespan_lb=129
+sum_of_loss=3668
+sum_of_loss_lb=3007
+comp_time=3
+seed=0

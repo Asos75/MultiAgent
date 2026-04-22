@@ -1,0 +1,7 @@
+map,scen,N,seed,solved,soc,makespan,comp_time_ms,output_file
+random-32-32-10,random-32-32-10-random-1.scen,50,0,1,1393,59,3,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/random-32-32-10-N50-seed0.txt
+random-32-32-10,random-32-32-10-random-1.scen,100,0,1,3268,65,3,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/random-32-32-10-N100-seed0.txt
+maze-32-32-2,maze-32-32-2-random-1.scen,50,0,1,4058,130,3,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/maze-32-32-2-N50-seed0.txt
+maze-32-32-2,maze-32-32-2-random-1.scen,100,0,1,9966,139,5,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/maze-32-32-2-N100-seed0.txt
+room-32-32-4,room-32-32-4-random-1.scen,50,0,1,1714,54,2,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/room-32-32-4-N50-seed0.txt
+room-32-32-4,room-32-32-4-random-1.scen,100,0,1,4586,67,3,/home/andraz/Documents/GitHub/MultiAgent/code/lacam/repro_out/room-32-32-4-N100-seed0.txt

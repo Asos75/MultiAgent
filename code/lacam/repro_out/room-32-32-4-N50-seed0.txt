@@ -1,0 +1,12 @@
+agents=50
+map_file=room-32-32-4.map
+solver=planner
+solved=1
+soc=1714
+soc_lb=1320
+makespan=54
+makespan_lb=48
+sum_of_loss=1580
+sum_of_loss_lb=1320
+comp_time=2
+seed=0

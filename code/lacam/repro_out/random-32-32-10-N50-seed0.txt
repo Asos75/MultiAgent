@@ -1,0 +1,12 @@
+agents=50
+map_file=random-32-32-10.map
+solver=planner
+solved=1
+soc=1393
+soc_lb=1113
+makespan=59
+makespan_lb=53
+sum_of_loss=1244
+sum_of_loss_lb=1113
+comp_time=3
+seed=0
