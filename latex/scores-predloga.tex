@@ -404,67 +404,6 @@ metrikami. Omogoča pošteno in ponovljivo primerjavo različnih pristopov,
 kar je ključno za našo eksperimentalno analizo.
 
 
-\section{Pregled ovrednotenja}
-
-Za primerjavo izbranih algoritmov bomo uporabili standardne metrike s področja 
-MAPF, ki so uveljavljene v obstoječi literaturi~\cite{stern2019multiagent, 
-skrynnik2025pogema}. Vrednotenje bo potekalo na dveh standardnih zbirkah 
-testnih instanc: MovingAI MAPF benchmark~\cite{stern2019multiagent} in 
-POGEMA benchmark~\cite{skrynnik2025pogema}.
-
-\subsection{Metrike}
-
-\textbf{Sum-of-Costs (SoC)} je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
-\[
-    \text{SoC} = \sum_{i=1}^{k} |\pi_i|,
-\]
-kjer je $|\pi_i|$ dolžina poti agenta $i$. Nižja vrednost pomeni učinkovitejšo
-rešitev. 
-\vspace{0.5em}
-
-SoC je ena izmed najpogosteje uporabljenih metrik v MAPF literaturi~\cite{stern2019multiagent}, kar omogoča neposredno primerjavo z obstoječimi deli. Metrika meri skupni strošek kot vsoto dolžin poti vseh agentov in s tem neposredno zajame celostno učinkovitost sistema.
-
-Metrika je še posebej primerna za one-shot scenarije, saj minimizacija SoC ustreza cilju minimizacije skupne porabe časa oziroma virov. Hkrati kaznuje neučinkovite poti posameznih agentov, kar spodbuja iskanje globalno učinkovitih rešitev. SoC bomo zato uporabili za vrednotenje algoritmov LaCAM in PBS na zbirki MovingAI.
-
-\vspace{0.5em}
-\noindent
-\textbf{Makespan} je čas, ki ga porabi najdaljša pot med vsemi agenti, torej
-maksimum nad vsemi $|\pi_i|$~\cite{stern2019multiagent}:
-\[
-    \text{makespan} = \max_{i \in \{1,\dots,k\}} |\pi_i|.
-\]
-
-Metrika odraža skupno trajanje reševanja instance in je primerna za scenarije, kjer je ključen vzporedni zaključek vseh agentov. Makespan je uveljavljena metrika v MAPF literaturi~\cite{stern2019multiagent} in je še posebej relevantna v praktičnih aplikacijah, kjer je ključen vzporedni zaključek vseh agentov. 
-
-Makespan je pri primerjavi centraliziranih algoritmov nujna dopolnitev k SoC, saj sama vsota stroškov namreč ne razkrije, ali posamezen agent morda bistveno zavlačuje celotno skupino. Z vključitvijo obeh metrik tako dobimo celovitejšo in bolj zanesljivo oceno učinkovitosti algoritma v realnih pogojih.
-
-\vspace{0.5em}
-\noindent
-\textbf{Stopnja uspeha (Success Rate)} meri delež instanc, pri katerih vsi
-agenti uspešno dosežejo svoje cilje znotraj predvidenega časovnega
-horizonta~\cite{skrynnik2025pogema}. 
-
-Stopnja uspeha je primarna metrika platforme POGEMA in skupaj s pretokom (ang.\ throughput) tvori osnovo za vrednotenje na tej platformi~\cite{skrynnik2025pogema}. Zasnovana je posebej za vrednotenje decentraliziranih metod v delno opazljivih okoljih. Metrika je za naš eksperiment ključna, saj za razliko od SoC in makespana meri tudi robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši kljub omejenim lokalnim opazovanjem.
-
-\vspace{0.5em}
-\noindent
-\textbf{Čas načrtovanja} merimo kot skupni čas izvajanja algoritma na
-posamezni instanci. Ta metrika je še posebej pomembna pri primerjavi med kategorijama, saj centralizirani načrtovalec tipično porabi več časa za globalno načrtovanje, kot decentralizirani agenti. 
-
-Čas načrtovanja je v praktičnih aplikacijah enako pomemben kot kakovost rešitve, saj algoritem z optimalno potjo, a dolgim časom načrtovanja, v realnih sistemih ni uporaben. Ta metrika nam tako omogoča primerjavo med pristopoma z vidika razširljivosti in praktične uporabnosti.
-
-\subsection{Protokol primerjave}
-Primerjavo bomo izvedli na dveh ravneh:
-\begin{enumerate}
-    \item \textbf{Znotraj kategorije:} LaCAM in PBS primerjamo na 
-    MovingAI zbirki po metrikah SoC, makespan in čas načrtovanja. 
-    Follower in MATS-LP primerjamo na POGEMA zbirki po metrikah 
-    throughput in stopnja uspeha.
-    
-    \item \textbf{Med kategorijama na skupni zbirki:} Obe katergoriji 
-    bomo primerjali med seboj na skupni zbirki, kjer bomo primerjali 
-    prej navedene metrike.
-\end{enumerate}
 
 \section{Načrt rešitve}
 
@@ -584,6 +523,94 @@ ter UML diagram predlagane rešitve~(\autoref{fig:uml_resitev}).
 \end{figure}
 
 \section{Metodologija}
+
+V tem poglavju bomo predstavili metodologijo vrednotenja in primerjanja izbranih algoritmov za problem večagentnega iskanja poti.
+Cilj eksperimentalnega dela je primerjati centralizirane pristope, kot sta LaCAM in PBS, z decentraliziranimi pristopi Follower 
+in MATS-LP ter ovrednotiti predlagani hibridni pristop z lokalnimi vodji.
+
+\subsection{Experimentalno okolje}
+
+Za primerjalno okolje bomo uporabili knjižnico POGEMA~\cite{skrynnik2025pogema}, ki omogoča standardizirano evalvacijo MAPF
+algoritmov v delno opazljivih okoljih, ter to kombinirali z MovingAI~\cite{stern2019multiagent} knjižnico zemljevidov za testiranje agentov.
+
+POGEMA je dostopna kot standardna Python knjižnica, medtem ko so implementacije posameznih algoritmov pridobljene iz uradnih repozitorijev 
+avtorjev izbranih člankov. Ker različni algoritmi uporabljajo različne vhodne formate in interne predstavitve okolja, je bilo potrebno za 
+vsako implementacijo razviti poseben prilagoditveni sloj (\textit{adapter}), ki omogoča vključitev algoritma v skupno evalvacijsko ogrodje.
+
+Kot primer integracije lahko izpostavimo algoritem LaCAM, ki je implementiran v C++, in uporablja lasten vhodni format na osnovi datotek
+\textit{.map} in \textit{.scen}. Ker pa POGEMA uporablja, drugačno predstavitev zemljevidov in agentov je bilo potrebno razviti poseben 
+prilagoditveni sloj (ang. \textit{adapter}), ki omogoča povezavo med obema sistemoma.
+
+Ta od POGEMA pridobi mrežo ovir in trenutno stanje agentov in njihove ciljne pozicije, nato pa te podatke pretvori v v MovingAI format, 
+ki ga zahteva LaCAM. Po pripravi vhodnih datotek se algoritem zažene kot zunanja binarna datoteka preko sistemskega klica.
+
+Po zaključku izvajanja adapter prebere rezultat iz izhodne datoteke, razčleni izračunane poti agentov skozi posamezne časovne korake ter 
+jih pretvori nazaj v zaporedje akcij, združljivo z okoljem POGEMA. Na ta način je mogoče centralizirani algoritem izvajati znotraj istega 
+eksperimentalnega ogrodja kot decentralizirane pristope, kar omogoča neposredno in pošteno primerjavo vseh metod.
+
+\subsection{Metrike}
+
+\textbf{Sum-of-Costs (SoC)} je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
+\[
+    \text{SoC} = \sum_{i=1}^{k} |\pi_i|,
+\]
+kjer je $|\pi_i|$ dolžina poti agenta $i$. Nižja vrednost pomeni učinkovitejšo
+rešitev. 
+\vspace{0.5em}
+
+SoC je ena izmed najpogosteje uporabljenih metrik v MAPF literaturi~\cite{stern2019multiagent}, kar omogoča neposredno primerjavo z obstoječimi deli. 
+Metrika meri skupni strošek kot vsoto dolžin poti vseh agentov in s tem neposredno zajame celostno učinkovitost sistema.
+
+Metrika je še posebej primerna za one-shot scenarije, saj minimizacija SoC ustreza cilju minimizacije skupne porabe časa oziroma virov. Hkrati 
+kaznuje neučinkovite poti posameznih agentov, kar spodbuja iskanje globalno učinkovitih rešitev. SoC bomo zato uporabili za vrednotenje algoritmov 
+LaCAM in PBS na zbirki MovingAI.
+
+\vspace{0.5em}
+\noindent
+\textbf{Makespan} je čas, ki ga porabi najdaljša pot med vsemi agenti, torej
+maksimum nad vsemi $|\pi_i|$~\cite{stern2019multiagent}:
+\[
+    \text{makespan} = \max_{i \in \{1,\dots,k\}} |\pi_i|.
+\]
+
+Metrika odraža skupno trajanje reševanja instance in je primerna za scenarije, kjer je ključen vzporedni zaključek vseh agentov. Makespan je 
+uveljavljena metrika v MAPF literaturi~\cite{stern2019multiagent} in je še posebej relevantna v praktičnih aplikacijah, kjer je ključen vzporedni 
+zaključek vseh agentov. 
+
+Makespan je pri primerjavi centraliziranih algoritmov nujna dopolnitev k SoC, saj sama vsota stroškov namreč ne razkrije, ali posamezen agent 
+morda bistveno zavlačuje celotno skupino. Z vključitvijo obeh metrik tako dobimo celovitejšo in bolj zanesljivo oceno učinkovitosti algoritma v realnih pogojih.
+
+\vspace{0.5em}
+\noindent
+\textbf{Stopnja uspeha (Success Rate)} meri delež instanc, pri katerih vsi
+agenti uspešno dosežejo svoje cilje znotraj predvidenega časovnega
+horizonta~\cite{skrynnik2025pogema}. 
+
+Stopnja uspeha je primarna metrika platforme POGEMA in skupaj s pretokom (ang.\ throughput) tvori osnovo za vrednotenje na tej platformi~\cite{skrynnik2025pogema}. 
+Zasnovana je posebej za vrednotenje decentraliziranih metod v delno opazljivih okoljih. Metrika je za naš eksperiment ključna, saj za razliko od SoC in makespana meri tudi 
+robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši kljub omejenim lokalnim opazovanjem.
+
+\vspace{0.5em}
+\noindent
+\textbf{Čas načrtovanja} merimo kot skupni čas izvajanja algoritma na
+posamezni instanci. Ta metrika je še posebej pomembna pri primerjavi med kategorijama, saj centralizirani načrtovalec tipično porabi več časa za globalno načrtovanje, 
+kot decentralizirani agenti. 
+
+Čas načrtovanja je v praktičnih aplikacijah enako pomemben kot kakovost rešitve, saj algoritem z optimalno potjo, a dolgim časom načrtovanja, v realnih sistemih ni uporaben. 
+Ta metrika nam tako omogoča primerjavo med pristopoma z vidika razširljivosti in praktične uporabnosti.
+
+\subsection{Protokol primerjave}
+Primerjavo bomo izvedli na dveh ravneh:
+\begin{enumerate}
+    \item \textbf{Znotraj kategorije:} LaCAM in PBS primerjamo na 
+    MovingAI zbirki po metrikah SoC, makespan in čas načrtovanja. 
+    Follower in MATS-LP primerjamo na POGEMA zbirki po metrikah 
+    throughput in stopnja uspeha.
+    
+    \item \textbf{Med kategorijama na skupni zbirki:} Obe katergoriji 
+    bomo primerjali med seboj na skupni zbirki, kjer bomo primerjali 
+    prej navedene metrike.
+\end{enumerate}
 
 \section{Eksperiment in analiza rezultatov}
 
