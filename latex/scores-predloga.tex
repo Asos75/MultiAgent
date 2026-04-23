@@ -248,15 +248,50 @@ Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uv
 \textit{lokalnih vodij}. Gre za hibridni pristop med centraliziranim in decentraliziranim 
 načrtovanjem, kjer je množica agentov razdeljena na lokalne skupine.
 
-Vsako skupino nadzira izbrani agent, lokalni vodja, ki koordinira gibanje agentov v svoji 
-neposredni okolici in rešuje konflikte na lokalni ravni. Vodja nima globalnega pogleda, 
-temveč ima pogled le nad okolico, ki jo vidijo njegovi agenti. S tem zmanjšamo potrebo 
-po globalni koordinaciji, hkrati pa ohranimo določeno stopnjo usklajenosti med agenti.
+Namesto popolnoma globalnega načrtovanja za vse agente ali popolnoma neodvisnega lokalnega odločanja
+predlagamo hierarhično razporeditev agentov v več lokalnih skupin. Vsaka od teh skupin ima lokalnega vodjo,
+to je agent, ki koordinira agente znotraj skupine, reševanje lokalnih konfliktov ter usklajevanje prehodov
+skozi kritične točke, kot so ozki hodniki, križišča ali območja z visoko gostoto agentov.
 
-S predlaganim pristopom želimo združiti prednosti obeh paradigem: visoko kakovost rešitev, 
-značilno za centralizirane metode, ter boljšo skalabilnost in robustnost, značilno za 
-decentralizirane pristope. V eksperimentalnem delu bomo preverili, ali tak hibridni pristop 
-dejansko izboljša učinkovitost reševanja problema MAPF v različnih scenarijih.
+Za lažje razmevanje algoritma je priložen diagram poteka~(\autoref{fig:flowchart}), ki prikazuje, 
+razdelitev agentov v skupine, izbiro lokalnih vodij ter postopek lokalnega reševanja konfliktov in
+medskupinske koordinacije.
+
+Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
+informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
+Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centraliziranimi
+algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
+decentraliziranih pristopih.
+
+Predlagamo dva pristopa pri izbiri lokalnih vodij:
+
+\begin{itemize}
+    \item \textbf{Statično}: Lokalni vodji so določeni vnaprej na podlagi kriterijev, kot so centralnost položaja,
+    \item \textbf{Dinamično}: Lokalni vodji se določajo adaptivno med izvajanjem, glede na trenutno gostoto agentov in potrebe po koordinaciji.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{slike/Flowchart.png}
+    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
+    \label{fig:flowchart}
+\end{figure}
+
+
+Ko pride do konflikta med agenti različnih skupin, lokalni vodije komunicirajo, med seboj 
+in uskladijo rešitev konflikta, kar omogoča učinkovito koordinacijo brez potrebe po centralnem 
+načrtovalcu. To zmanjša komunikacijsko obremenitev in poveča skalabilnost sistema.
+
+Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
+kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
+pristopi posebej. Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri
+decentraliziranih metodah ter bistveno krajši čas načrtovanja kot pri popolnoma
+centraliziranih algoritmih.
+
+V eksperimentalnem delu bomo preverili vpliv različnih strategij izbire lokalnih vodij,
+velikosti skupin ter gostote agentov na uspešnost reševanja problema MAPF.
+
+
 
 \section{Definicija problema}
 
