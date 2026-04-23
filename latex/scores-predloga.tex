@@ -679,7 +679,102 @@ Pri decentraliziranih metodah Follower~\cite{andreychuk2024follower} in MATS-LP~
 
 
 
+\subsection{Lastni eksperiment}
 
+Po začetni validaciji implementacij smo zasnovali lasten eksperiment, ki bo primerjal centralizirane,
+decentralizirane in hibridni pristop z lokalnimi vodji. Namen experimenta je preveriti ali lahko uvedba
+lokalnih vodij izboljša razmerje med kakovostjo rešitev in časom načrtovanja.
+
+Experimente izvajamo na standardiziranih zemlevidih iz zbirk MovingAI in POGEMA, na različnih velikostih 
+zemljevidov, gostotah agentov in scenarijih. Tu so najbolj zanimivi scenariji z visoko gostoto agentov, 
+kjer se razlike med rešitvami najbolj pokažejo.
+
+\subsubsection{Testne instance}
+
+Uporabljamo tri glavne tipe okolij:
+
+\begin{itemize}
+    \item \textbf{Odprte mreže} (\textit{random grids}) – okolja z malo ovirami, kjer 
+    je večina konfliktov posledica visoke gostote agentov.
+    
+    \item \textbf{Labirinti} (\textit{mazes}) – okolja z ozkimi prehodi in številnimi lokalnimi ozkimi 
+    grli, kjer je koordinacija agentov bistveno zahtevnejša.
+    
+    \item \textbf{Skladiščni scenariji} (\textit{warehouse maps}) – realistične postavitve, podobne 
+    robotiziranim skladiščem, kjer se agenti pogosto srečujejo na križiščih in v ozkih hodnikih.
+\end{itemize}
+
+Kot zanimiv prikaz dejanske uporabe pa uporabljamo tudi:
+
+\begin{itemize}
+    \item \textbf{Zemljevide mesta} (\textit{city maps}) – Resnični zemljevide mest, ki vključujejo ulice, 
+    zgradbe in druge ovire.
+
+    \item \textbf{Zemlevid videoiger} (\textit{game maps}) – Zemljevidi iz videoiger, ki pogosto vključujejo 
+    kompleksne strukture, hodnike in ovire.
+\end{itemize}
+
+Za vsako vrsto okolja izvajamo eksperimente pri različnih številih agentov (od 20 do 1000 agentov, odvisno od 
+velikosti zemljevida), z različnimi konfiguracijami. Vsaka konfiguracija se izvede večkrat z različnimi scenariji, 
+ki vključujejo začetne in ciljne pozicije agentov, rezultati pa se povprečijo, da zmanjšamo vpliv posameznih 
+naključnih primerov.
+
+\subsubsection{Predlagani hibridni pristop}
+
+Pri lastni izboljšavi uvedemo hierarhično razdelitev agentov v lokalne skupine. Skupine oblikujemo na podlagi
+prostorske bližine agentov ter njihove trenutne gostote v okolju.
+
+Vsaki skupini dodelimo lokalnega vodjo, ki prevzame odgovornost za:
+
+\begin{itemize}
+    \item koordinacijo gibanja znotraj skupine,
+    \item lokalno reševanje konfliktov,
+    \item usklajevanje prehodov skozi ozke prehode,
+    \item komunikacijo z drugimi lokalnimi vodji ob medskupinskih konfliktih.
+\end{itemize}
+
+Eksperimentalno preverjamo dve strategiji izbire lokalnih vodij:
+
+\begin{itemize}
+    \item \textbf{Statična izbira}, kjer vodje določimo pred začetkom izvajanja na podlagi centralnosti položaja;
+    
+    \item \textbf{Dinamična izbira}, kjer se vodje prilagajajo med izvajanjem glede na trenutno gostoto agentov in 
+    konfliktne situacije.
+\end{itemize}
+
+Dodatno analiziramo vpliv velikosti skupin na uspešnost algoritma, saj premajhne skupine zmanjšajo prednosti 
+koordinacije, prevelike pa povečajo lokalno kompleksnost načrtovanja.
+
+\subsubsection{Primerjalni kriteriji}
+
+Primerjavo izvajamo med tremi kategorijami pristopov:
+
+\begin{enumerate}
+    \item \textbf{Centralizirani pristopi} (LaCAM, PBS),
+    \item \textbf{Decentralizirani pristopi} (Follower, MATS-LP),
+    \item \textbf{Hibridni pristop} (lokalni vodje).
+\end{enumerate}
+
+Za vse metode spremljamo naslednje metrike:
+
+\begin{itemize}
+    \item \textbf{SoC},
+    \item \textbf{makespan},
+    \item \textbf{stopnja uspeha},
+    \item \textbf{čas načrtovanja}.
+\end{itemize}
+
+Pri decentraliziranih metodah dodatno spremljamo tudi \textit{throughput}, saj je ta metrika posebej pomembna pri lifelong MAPF scenarijih.
+
+Posebej nas zanima:
+
+\begin{itemize}
+    \item kako hitro začne kakovost centraliziranih metod padati zaradi časovne zahtevnosti,
+    \item pri kateri gostoti agentov decentralizirani pristopi izgubijo stabilnost,
+    \item ali hibridni pristop uspe ohraniti dobro kakovost rešitev ob bistveno krajšem času načrtovanja.
+\end{itemize}
+
+\subsection{Rezulatati}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
