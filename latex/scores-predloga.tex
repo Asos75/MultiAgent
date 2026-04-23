@@ -539,7 +539,7 @@ vsako implementacijo razviti poseben prilagoditveni sloj (\textit{adapter}), ki 
 
 Kot primer integracije lahko izpostavimo algoritem LaCAM, ki je implementiran v C++, in uporablja lasten vhodni format na osnovi datotek
 \textit{.map} in \textit{.scen}. Ker pa POGEMA uporablja, drugačno predstavitev zemljevidov in agentov je bilo potrebno razviti poseben 
-prilagoditveni sloj (ang. \textit{adapter}), ki omogoča povezavo med obema sistemoma.
+prilagoditveni sloj (ang. \textit{adapter}), ki omogoča povezavo med obema sistemoma (\autoref{fig:adapter}).
 
 Ta od POGEMA pridobi mrežo ovir in trenutno stanje agentov in njihove ciljne pozicije, nato pa te podatke pretvori v v MovingAI format, 
 ki ga zahteva LaCAM. Po pripravi vhodnih datotek se algoritem zažene kot zunanja binarna datoteka preko sistemskega klica.
@@ -547,6 +547,13 @@ ki ga zahteva LaCAM. Po pripravi vhodnih datotek se algoritem zažene kot zunanj
 Po zaključku izvajanja adapter prebere rezultat iz izhodne datoteke, razčleni izračunane poti agentov skozi posamezne časovne korake ter 
 jih pretvori nazaj v zaporedje akcij, združljivo z okoljem POGEMA. Na ta način je mogoče centralizirani algoritem izvajati znotraj istega 
 eksperimentalnega ogrodja kot decentralizirane pristope, kar omogoča neposredno in pošteno primerjavo vseh metod.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{slike/Adapter.png}
+    \caption{Shema adapterja za integracijo zunanjih MAPF implementacij v evalvacijsko ogrodje POGEMA.}
+    \label{fig:adapter}
+\end{figure}
 
 \subsection{Metrike}
 
@@ -613,6 +620,31 @@ Primerjavo bomo izvedli na dveh ravneh:
 \end{enumerate}
 
 \section{Eksperiment in analiza rezultatov}
+
+V tem poglavju predstavljamo eksperimentalni protokol, začetno reprodukcijo 
+rezultatov iz izbranih člankov ter zasnovo lastnega eksperimenta za primerjavo 
+centraliziranih, decentraliziranih in lastnega hibridnega pristopa reševanja problema MAPF.
+
+\subsection{Reprodukcija rezultatov iz literature}
+
+Pred izvedbo lastnih eksperimentov smo najprej reproducirali osnovne rezultate iz izbranih 
+člankov, saj je to potrebno za validacijo implementacij in preverjanje pravilnosti 
+eksperimentalnega okolja.
+
+Pri algoritmu LaCAM smo uporabili uradno implementacijo algoritma~\cite{okumura2023lacam} 
+ter testne primere iz zbirke MovingAI. Posebej smo preverjali metriki \textit{sum-of-costs} 
+in \textit{makespan} pri različnih gostotah agentov na standardnih grid zemljevidih. Cilj 
+reprodukcije ni bila popolna identčna rekonstrukcija vseh rezultatov članka, temveč preverjanje, 
+ali se dobljeni rezultati nahajajo v primerljivem območju glede kakovosti rešitev in časa izvajanja.
+
+Pri algoritmu PBS  % Nadaljuj tukaj za pbs
+
+Pri decentraliziranih metodah Follower~\cite{andreychuk2024follower} in MATS-LP~\cite{skrynnik2024mcts}
+% Nadaljuj tukaj na Follower in MATS-LP
+
+
+
+
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
