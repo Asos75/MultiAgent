@@ -132,8 +132,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Primerjava centraliziranega in distribuiranega več-agentnega iskanja poti}
-
+\title{Optimizacija več-agentnega iskanja poti z uvedbo lokalnih vodij}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -201,9 +200,9 @@ drugimi agenti ali ovirami.
 
 Cilj problema je načrtovati poti za množico agentov v diskretnem prostoru tako, da se izognemo 
 medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni čas izvajanja 
-(ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs}). \cite{stern2019multiagent}
+(ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs})~\cite{stern2019multiagent}.
 
-Repozitorij z izvorno kodo projekta je na voljo na naslovu: \url{https://github.com/Asos75/MultiAgent}.
+Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju: \footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
 Kot osnovo za formalno definicijo problema in uporabljene metrike uporabljamo delo 
 \textit{Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks}~\cite{stern2019multiagent}. 
@@ -215,10 +214,10 @@ nadaljevanju omenjeni članki in katere bomo uporabili tudi mi.
 Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne pristope k 
 reševanju problema MAPF. Izbrane članke so identificirali posamezni člani skupine:
 \begin{itemize}
-    \item \textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam} (Šošterič),
-    \item \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs} (Lipavec),
-    \item \textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower} (Teršek),
-    \item \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2024mcts} (Fras).
+    \item \textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam},
+    \item \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs},
+    \item \textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower},
+    \item \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2024mcts}.
 \end{itemize}
 
 V nadaljevanju bomo primerjali centralizirane metode, katerih predstavnika sta LaCAM in PBS, 
@@ -242,58 +241,7 @@ LaCAM bomo uporabili kot predstavnika centraliziranih metod, s katerim bomo prim
 decentralizirane pristope, kot sta Follower in MATS-LP, ter tako sistematično analizirali 
 razlike med globalnim in lokalnim načrtovanjem poti.
 
-\subsection{Uvedba lokalnih vodij}
-
-Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
-\textit{lokalnih vodij}. Gre za hibridni pristop med centraliziranim in decentraliziranim 
-načrtovanjem, kjer je množica agentov razdeljena na lokalne skupine.
-
-Namesto popolnoma globalnega načrtovanja za vse agente ali popolnoma neodvisnega lokalnega odločanja
-predlagamo hierarhično razporeditev agentov v več lokalnih skupin. Vsaka od teh skupin ima lokalnega vodjo,
-to je agent, ki koordinira agente znotraj skupine, reševanje lokalnih konfliktov ter usklajevanje prehodov
-skozi kritične točke, kot so ozki hodniki, križišča ali območja z visoko gostoto agentov.
-
-Za lažje razmevanje algoritma je priložen diagram poteka~(\autoref{fig:flowchart}), ki prikazuje, 
-razdelitev agentov v skupine, izbiro lokalnih vodij ter postopek lokalnega reševanja konfliktov in
-medskupinske koordinacije.
-
-Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
-informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
-Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centraliziranimi
-algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
-decentraliziranih pristopih.
-
-Predlagamo dva pristopa pri izbiri lokalnih vodij:
-
-\begin{itemize}
-    \item \textbf{Statično}: Lokalni vodji so določeni vnaprej na podlagi kriterijev, kot so centralnost položaja,
-    \item \textbf{Dinamično}: Lokalni vodji se določajo adaptivno med izvajanjem, glede na trenutno gostoto agentov in potrebe po koordinaciji.
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{slike/Flowchart.png}
-    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
-    \label{fig:flowchart}
-\end{figure}
-
-
-Ko pride do konflikta med agenti različnih skupin, lokalni vodije komunicirajo, med seboj 
-in uskladijo rešitev konflikta, kar omogoča učinkovito koordinacijo brez potrebe po centralnem 
-načrtovalcu. To zmanjša komunikacijsko obremenitev in poveča skalabilnost sistema.
-
-Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
-kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
-pristopi posebej. Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri
-decentraliziranih metodah ter bistveno krajši čas načrtovanja kot pri popolnoma
-centraliziranih algoritmih.
-
-V eksperimentalnem delu bomo preverili vpliv različnih strategij izbire lokalnih vodij,
-velikosti skupin ter gostote agentov na uspešnost reševanja problema MAPF.
-
-
-
-\section{Definicija problema}
+\subsection{Definicija problema}
 
 Stern et al.~\cite{stern2019multiagent} definirajo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF)
  kot trojico
@@ -318,7 +266,7 @@ pa v njegovo ciljno vozlišče.
 \noindent Naj bo $\pi_i[t]\in V$ položaj agenta $i$ v diskretnem času $t\in\mathbb{N}_{\ge 0}$. Pri vsakem koraku $t$ se agent $i$ lahko 
 premakne v sosednje vozlišče ali ostane na trenutnem, tj.
 \[\pi_i[t+1]\in\mathrm{neigh}(\pi_i[t])\cup\{\pi_i[t]\},\]
-kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$. \cite{okumura2023lacam}
+kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$~\cite{okumura2023lacam}.
 
 \vspace{0.5em}
 \noindent 
@@ -328,7 +276,7 @@ Po Okamuri~\cite{okumura2023lacam} se mora agent izogibati naslednjim vrstam kon
     \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. vertex conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
     vozlišče v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t] $.~\cite{stern2019multiagent}
     \item \textbf{Zamenjalni konflikt:} Do zamenjalnega konflikta (ang. swap conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zamenjati svoji
-    poziciji v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t+1] \wedge \pi_i[t+1] = \pi_j[t] $. \cite{stern2019multiagent}
+    poziciji v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t+1] \wedge \pi_i[t+1] = \pi_j[t] $~\cite{stern2019multiagent}.
 \end{itemize}
 
 \vspace{0.5em}
@@ -339,223 +287,68 @@ Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
 \section{Sorodna dela}
 
 V tem razdelku izpostavimo ključna dela s področja več-agentnega iskanja poti, 
-ki dopolnjujejo in razširjajo pogled iz uvoda.
+ki dopolnjujejo in razširjajo pogled iz uvoda. Pri vsakem delu na kratko povemo,
+kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 
 \subsection{Centralizirani pristopi}
 
-\textit{EECBS}~\cite{li2021eecbs} predstavlja nadgradnjo klasičnega algoritma CBS (Conflict Based Search)
-pri čimer ohranja klasičen dvonivojski pristop, vendar uvaja uporabo \textit{Explicit Estimation Search} (EES)
+	extit{EECBS}~\cite{li2021eecbs} je nadgradnja klasičnega CBS, ki ohrani dvonivojsko iskanje, hkrati pa z
+    \textit{Explicit Estimation Search} in uteževanjem omogoča nadzorovano suboptimalnost (uporabnik nastavi 
+    kompromis med kakovostjo in časom). Avtorji poročajo o bistveno boljši skalabilnosti na večjih instancah 
+    ob majhni, dokazljivo omejeni degradaciji kakovosti rešitve. \textbf{Doprinos k našemu eksperimentu:} 
+    EECBS uporabimo kot referenčno izhodišče za razumevanje kompromisa »hitrost vs. kvaliteta« pri centraliziranih 
+    metodah; njegove ideje utemeljijo, zakaj v evalvaciji poleg kakovosti (SoC/makespan) spremljamo tudi čas 
+    izvajanja in skalabilnost.
 
-Algoritem omogoča nadzorovano suboptimalnost z uporabo uteži kar pomeni, da lahko uporabnik eksplicitno 
-določi kompromis med kakovostjo rešitve in časom izvajanja. Rezulatati pa pokažejo, da algoritem presega 
-klasični CBS pri večjih instancah (več sto agentov), pri čemer so rezultati dokazljivo slabši za največ 2 
-odstotka. Zaradi tega predstavlja pomembno referenčno točko pri primerjavi z novejšimi algoritmi, kot so 
-LaCAM in PBS, ki prav tako ciljajo na izboljšano skalabilnost.
 
-
-\textit{CBSH2}~\cite{li2019disjoint} predstavlja izboljšano različico algoritma CBS,
-ki uvaja napredne hevristike za učinkovitejše preiskovanje iskalnega prostora.
-Ključna ideja je uporaba informiranih ocen stroška, ki upoštevajo strukturo konfliktov
-med agenti, kar omogoča boljše usmerjanje iskanja.
-
-Algoritem uporablja tehniko razčlenjevanja konfliktov (ang. disjoint splitting),
-ki odpravlja pomanjkljivost klasičnega CBS, kjer lahko različne veje vsebujejo
-iste kandidatne rešitve. Z uvedbo pozitivnih omejitev ustvari dve disjunktni veji:
-v eni agentu prepove biti v konfliktni točki, v drugi pa ga tja prisili. S tem se
-izognemo podvajanju iskanja.
-
-Posledično se zmanjša velikost iskalnega drevesa in število obravnavanih vozlišč,
-kar vodi do boljše časovne učinkovitosti in skalabilnosti v primerjavi z osnovnim CBS,
-zlasti pri večjem številu agentov.
+	extit{CBSH2}~\cite{li2019disjoint} izboljša CBS z močnejšimi hevristikami in tehniko \textit{disjoint splitting}, 
+    ki z uvedbo pozitivnih omejitev zmanjša podvajanje iskanja in s tem velikost iskalnega drevesa. Rezultat je 
+    hitrejše reševanje in boljša skalabilnost ob ohranjeni rešitveni kakovosti tipične za CBS-družino. 
+    \textbf{Doprinos k našemu eksperimentu:} CBSH2 obravnavamo kot dodatno referenco znotraj centraliziranih metod, 
+    ki pokaže, da so izboljšave pogosto posledica boljšega upravljanja konfliktov; to nam pomaga pri interpretaciji 
+    rezultatov LaCAM/PBS (kjer tudi ciljamo na učinkovitejšo obravnavo konfliktov), če opazimo razlike predvsem v 
+    času in ne v SoC.
 
 \subsection{Decentralizirani pristopi}
 
-\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop k reševanju problema lifelong MAPF, 
-ki temelji na kombinaciji hevristično načrtovane poti in naučene politike sledenja. Sistem je sestavljen iz dveh 
-komplementarnih modulov.
+	extit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop za \textit{lifelong} MAPF, ki 
+    kombinira (i) hevristični planer (npr. A* nad statičnimi ovirami), ki generira »razpršene« poti z namenom 
+    zmanjšanja zasičenosti ozkih grl, in (ii) naučeno politiko sledenja, ki lokalno reagira na druge agente in 
+    se izogiba trkom. Izvajanje je povsem lokalno (brez centralnega koordinatorja), zato metoda dobro skalira, 
+    vendar je kakovost poti odvisna od lokalnih informacij in stabilnosti naučene politike. \textbf{Doprinos k 
+    našemu eksperimentu:} Follower je eden naših glavnih decentraliziranih primerjalnih algoritmov; z njim 
+    ovrednotimo, kako se učeni, lokalni pristopi primerjajo s centraliziranima LaCAM/PBS in z našim hibridnim 
+    pristopom z lokalnimi vodji.
 
-Hevristični načrtovalec poti za vsakega agenta neodvisno zgradi pot od trenutne lokacije do cilja z algoritmom A*. 
-Pri tem upošteva le statične ovire, ne pa tudi ostalih agentov, saj se izogibanje trkom prepusti drugemu modulu. 
-Ključna lastnost načrtovalca je, da ne išče najkrajše poti, temveč enakomerno razpršene poti, s čimer zmanjša 
-zasičenost na ozkih mestih karte (hodniki, vrata). To doseže z dvonivojskimi stroški prehoda: statični stroški 
-temeljijo na topologiji karte in penalizirajo pogosto uporabljena vozlišča, dinamični stroški pa se tekom epizode 
-posodabljajo glede na agentove lastne opazovalne izkušnje.
+	extit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
+    predlaga decentralizirano reševanje \textit{lifelong} MAPF pri delni opazljivosti: vsak agent iz lokalnih opazovanj 
+    zgradi intrinzični (lokalni) MDP in na njem izvaja MCTS, ki ga dodatno usmerja nevronska politika. S simulacijami v 
+    drevesu agenti ocenjujejo kratkoročne interakcije z bližnjimi agenti, koordinacija pa nastaja implicitno (brez 
+    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. \textbf{Doprinos k 
+    našemu eksperimentu:} delo utemeljuje našo izbiro decentraliziranih primerjalnih metod na POGEMA (delna opazljivost) 
+    in je neposredno relevantno za komponento MATS-LP v naši primerjavi, kjer želimo videti, ali »lookahead« (MCTS) 
+    izboljša pretočnost in robustnost glede na bolj reaktivne politike.
 
-Modul za sledenje poti implementira naučeno politiko, ki agenta vodi vzdolž konstruirane poti in hkrati zagotavlja 
-izogibanje trkom z ostalimi agenti. Politiko aproksimira globoka nevronska mreža, ki kot vhod sprejme lokalno 
-opazovanje agenta v obliki 2D tenzorja dimenzije 2×m×m. Tenzor kodira lokacije statičnih ovir, trenutno pot in 
-položaje ostalih agentov. Arhitektura mreže sestoji iz prostorskega koderja, ki mu sledita dve veji – akterska 
-in kritična – obe z rekurenčnimi bloki GRU za modeliranje zgodovine opazovanj.
+	extit{PRIMAL2}~\cite{damani2021primal2} je zgodnje, vplivno delo, ki pokaže, da je mogoče MAPF reševati z 
+    decentraliziranimi politikami na osnovi lokalnih opazovanj, naučenimi s kombinacijo \textit{imitation learning} 
+    (iz centraliziranih planerjev) in \textit{reinforcement learning}. Pristop zelo dobro skali, vendar pogosto žrtvuje 
+    optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. \textbf{Doprinos k našemu eksperimentu:} PRIMAL2 
+    uporabljamo kot kontekst za interpretacijo rezultatov učenih decentraliziranih metod (Follower/MATS-LP/SCRIMP): če 
+    pri njih opazimo slabši SoC, je to pričakovan trade-off, ki ga literatura že izpostavlja.
 
-Sistem se uči z algoritmom PPO, kjer agent prejme nagrado za dosego naslednje točke na poti. Kadar se agent preveč 
-oddalji od poti ali se ji preveč približa, se hevristični načrtovalec ponovno aktivira. Med decentraliziranim sklepanjem 
-vsak agent uporablja kopijo naučenih uteži, kar omogoča enostavno skaliranje na poljubno število agentov brez potrebe po 
-centralnem koordinatorju ali ekspertnih podatkih za učenje.
-
-\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
-predlaga decentralizirano rešitev problema lifelong MAPF v pogojih delne opazljivosti, kjer agenti nimajo dostopa do 
-globalnega stanja okolja in zaznavajo le omejeno lokalno okolico. Namesto centraliziranega načrtovanja vsak agent 
-samostojno zgradi intrinzični Markov odločitveni proces (ang. intrinsic MDP), ki predstavlja lokalno aproksimacijo 
-večagentnega sistema na podlagi lokalnih opazovanj.
-
-Na tako definiranem modelu agent izvaja prilagojeno različico Monte Carlo Tree Search (MCTS), podprto z nevronsko mrežo.
- Naučena politika usmerja raziskovanje možnih akcij, medtem ko simulacije v iskalnem drevesu omogočajo kratkoročno napovedovanje
-  interakcij z bližnjimi agenti. Kombinacija iskalnega načrtovanja in podkrepitvenega učenja omogoča, da odločitve agentov 
-  niso zgolj reaktivne, temveč temeljijo na predvidenih prihodnjih stanjih okolja.
-
-Koordinacija med agenti nastaja implicitno skozi simulacije v intrinzičnem MDP-ju, brez potrebe po globalnem koordinatorju 
-ali eksplicitni komunikaciji. Kljub omejenim informacijam simulacije spodbujajo izogibanje trkom in kooperativno vedenje, 
-kar zagotavlja dobro skalabilnost pri večjem številu agentov v dinamičnih scenarijih lifelong MAPF.
-
-Avtorji so metodo ovrednotili na standardnih MAPF okoljih, vključno z naključnimi mrežami, labirinti in skladiščnimi scenariji. 
-Rezultati so pokazali, da kombinacija nevronsko vodenega MCTS in lahke naučene politike izboljša pretočnost sistema in koordinacijo 
-agentov, pri čemer presega zmogljivosti obstoječih decentraliziranih rešitev.
-
-\textit{PRIMAL2}~\cite{damani2021primal2} predstavlja enega prvih uspešnih poskusov uporabe globokega podkrepitvenega učenja za 
-MAPF. Nadgrajuje originalni PRIMAL z izboljšanimi mehanizmi učenja, vključno s kombinacijo \textit{imitation learning} 
-(na podlagi centraliziranih načrtovalcev) in \textit{reinforcement learning}.
-
-Ključna značilnost je učenje politike na osnovi lokalnih opazovanj, kar omogoča popolnoma decentralizirano izvajanje in zelo 
-dobro skalabilnost tudi za velike sisteme agentov. PRIMAL2 dosega konkurenčne rezultate z obstoječimi metodami, zlasti v 
-velikih in gostih okoljih, kjer centralizirani pristopi postanejo neučinkoviti.
-
-Slabost pristopa je predvsem v slabši optimalnosti poti in občasnih neusklajenostih med agenti, saj lokalne informacije ne 
-omogočajo popolne globalne koordinacije.
-
-\textit{SCRIMP}~\cite{wang2023scrimp} uvaja komunikacijski mehanizem med agenti na osnovi transformer arhitekture. 
-Agenti si izmenjujejo informacije preko pozornostnega mehanizma, kar omogoča učinkovito koordinacijo tudi 
-pri zelo omejenem vidnem polju (npr. 3×3).
-
-S tem pristop presega omejitve metod, ki temeljijo zgolj na lokalnih opazovanjih, saj agentom omogoča 
-upoštevanje širšega konteksta. Posebej zasnovan komunikacijski mehanizem hkrati ohranja skalabilnost 
-in zmanjšuje vpliv šuma v komunikaciji, kar vodi do boljše uspešnosti v primerjavi z obstoječimi 
-učenimi pristopi.
+	extit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo transformer arhitekture in 
+    pozornostnega mehanizma, kar omogoča učinkovitejšo koordinacijo tudi pri zelo omejenem vidnem polju. S tem pristop 
+    preseže omejitve povsem nekomunikacijskih lokalnih politik, hkrati pa ohrani decentralizirano izvajanje in dobro skalabilnost. 
+    \textbf{Doprinos k našemu eksperimentu:} SCRIMP služi kot motivacija za naš »hibridni« pogled (lokalni vodje): kaže, da lahko 
+    dodaten koordinacijski signal (komunikacija ali posredno usklajevanje) izboljša pretočnost; naš pristop to doseže z lažjim 
+    mehanizmom vodij, ki ga lahko primerjamo z relacijo med čisto lokalnimi in bolj koordiniranimi pristopi.
 
 \subsection{Primerjalne platforme}
 
-\textit{POGEMA}~\cite{skrynnik2025pogema} ponuja standardizirano platformo za
-evalvacijo MAPF algoritmov, vključno z generatorjem instanc in enotnimi
-metrikami. Omogoča pošteno in ponovljivo primerjavo različnih pristopov,
-kar je ključno za našo eksperimentalno analizo.
-
-
-
-\section{Načrt rešitve}
-
-V tem poglavju so navedena opravila, potrebna za implementacijo projekta, 
-ki so razdeljena v štiri razvojne iteracije (sprinte). Predstavljena sta 
-tudi časovni razpored v obliki Ganttovega~(\autoref{tab:gantt_diagram}) diagrama, 
-ter UML diagram predlagane rešitve~(\autoref{fig:uml_resitev}).
-
-\begin{itemize}
-    \item \textbf{Sprint 1:}
-    \begin{itemize}
-        \item Ustvarjanje repozitorija Git za nalaganje, verzioniranje in usklajevanje programske kode.
-        \item Pisanje osnutka poglavja \textit{Uvod} (predstavitev problema MAPF in motivacije).
-        \item Pisanje osnutka poglavja \textit{Sorodna dela} (pregled algoritmov LaCAM, PBS, Follower in MATS-LP).
-        \item Pridobivanje in prenos izvorne kode izbranih centraliziranih in decentraliziranih algoritmov.
-        \item Osnovna analiza strukture implementacij.
-        \item Priprava eksperimentalnega okolja (namestitev POGEMA, nastavitev C++ in Python okolja).
-    \end{itemize}
-
-    \item \textbf{Sprint 2:}
-    \begin{itemize}
-        \item Dokončanje poglavij \textit{Uvod} in \textit{Sorodna dela}.
-        \item Pisanje poglavja \textit{Metodologija} (definicija metrik: \textit{SoC, makespan, uspešnost, čas}).
-        \item Začetek poglavja \textit{Eksperiment in analiza rezultatov} (opis eksperimentalnega protokola, instanc in parametrov).
-        \item Reprodukcija rezultatov iz izbranih člankov na manjših instancah (validacija implementacij).
-        \item Implementacija lastne ideje:
-        \begin{itemize}
-            \item zasnova enotnega evalvacijskega ogrodja (\textit{pipeline}),
-            \item definicija skupnega vmesnika za integracijo algoritmov.
-        \end{itemize}
-        \item Implementacija eksperimentalnega ogrodja in osnovnih skript za zagon eksperimentov.
-    \end{itemize}
-
-    \item \textbf{Sprint 3:}
-    \begin{itemize}
-        \item Dokončanje poglavja \textit{Metodologija}.
-        \item Nadaljevanje poglavja \textit{Eksperiment in analiza rezultatov}.
-        \item Nadaljnja implementacija lastne ideje:
-        \begin{itemize}
-            \item razdelitev agentov v lokalne skupine,
-            \item določitev lokalnih vodij,
-            \item implementacija lokalne koordinacije in reševanja konfliktov.
-        \end{itemize}
-        \item Implementacija metrik znotraj ogrodja (SoC, makespan, uspešnost, čas izvajanja).
-        \item Integracija vseh algoritmov v skupno ogrodje.
-        \item Zagon lastnega eksperimenta:
-        \begin{itemize}
-            \item na lastni izboljšavi,
-            \item na izbranih instancah iz zbirk MovingAI in POGEMA,
-            \item pri različnih gostotah agentov in velikostih map.
-        \end{itemize}
-    \end{itemize}
-
-    \item \textbf{Sprint 4:}
-    \begin{itemize}
-        \item Dokončanje poglavja \textit{Eksperimenti in analiza rezultatov}.
-        \item Pisanje poglavja \textit{Zaključek}.
-        \item Pisanje poglavja \textit{Povzetek}.
-        \item Podrobna analiza rezultatov na podlagi definiranih metrik.
-        \item Primerjava centraliziranih, decentraliziranih in hibridnega pristopa.
-        \item Identifikacija prednosti, slabosti in omejitev posameznih pristopov.
-        \item Izdelava vizualizacij (grafi in tabele).
-        \item Končna revizija članka in priprava za oddajo.
-    \end{itemize}
-\end{itemize}
-
-\begin{table}[htbp]
-    \centering
-    \caption{Ganttov diagram razvoja po sprintih.}
-    \label{tab:gantt_diagram}
-    \resizebox{\columnwidth}{!}{%
-    \begin{tabular}{l *{8}{c}}
-        \toprule
-        \textbf{Naloga} & \multicolumn{8}{c}{\textbf{Tedni}} \\
-        \cmidrule(lr){2-9}
-        & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} \\
-        \midrule
-        \textbf{Sprint 1} & & & & & & & & \\
-        Ustvarjanje Git repozitorija & $\blacksquare$ & & & & & & & \\
-        Pisanje poglavja \textit{Uvod} & $\blacksquare$ & $\blacksquare$ & & & & & & \\
-        Pisanje poglavja \textit{Sorodna dela} & $\blacksquare$ & $\blacksquare$ & & & & & & \\
-        Pridobivanje programske kode & $\blacksquare$ & & & & & & & \\
-        Priprava eksperimentalnega okolja & $\blacksquare$ & & & & & & & \\
-        \midrule
-        \textbf{Sprint 2} & & & & & & & & \\
-        Dokončanje \textit{Uvod} in \textit{Sorodna dela} & & $\blacksquare$ & $\blacksquare$ & & & & & \\
-        Pisanje \textit{Metodologija} & & & $\blacksquare$ & $\blacksquare$ & & & & \\
-        Opis eksperimenta & & & $\blacksquare$ & $\blacksquare$ & & & & \\
-        Reprodukcija rezultatov & & & & $\blacksquare$ & & & & \\
-        Razvoj evalvacijskega ogrodja & & & & $\blacksquare$ & $\blacksquare$ & & & \\
-        \midrule
-        \textbf{Sprint 3} & & & & & & & & \\
-        Dokončanje \textit{Metodologija} & & & & & $\blacksquare$ & & & \\
-        Implementacija ideje in metrik & & & & & $\blacksquare$ & $\blacksquare$ & & \\
-        Integracija algoritmov & & & & & $\blacksquare$ & & & \\
-        Zagon eksperimentov (MovingAI/POGEMA) & & & & & & $\blacksquare$ & $\blacksquare$ & \\
-        \midrule
-        \textbf{Sprint 4} & & & & & & & & \\
-        Dokončanje \textit{Eksperimenti in analiza} & & & & & & & $\blacksquare$ & $\blacksquare$ \\
-        Analiza rezultatov & & & & & & & $\blacksquare$ & $\blacksquare$ \\
-        Pisanje \textit{Zaključek} & & & & & & & & $\blacksquare$ \\
-        Pisanje \textit{Povzetek} & & & & & & & & $\blacksquare$ \\
-        Revizija in oddaja & & & & & & & & $\blacksquare$ \\
-        \bottomrule
-    \end{tabular}%
-    }
-\end{table}
-
-% Tu vstavite pot do dejanske slike vašega UML diagrama. 
-% Pazite, da slike predhodno naložite v vašo LaTeX strukturo (npr. v mapo slike/).
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.85\linewidth]{slike/uml_diagram.pdf} ali .png / .jpg
-    \includegraphics[width=0.95\linewidth]{slike/uml_diagram_načrta.pdf}
-    \caption{UML diagram (diagram primera uporabe / diagram razredov / sekvenčni diagram) predlagane rešitve.}
-    \label{fig:uml_resitev}
-\end{figure}
+	extit{POGEMA}~\cite{skrynnik2025pogema} ponuja standardizirano platformo za evalvacijo MAPF algoritmov v (delno) opazljivih 
+    okoljih, z generatorjem instanc in enotnimi metrikami ter protokolom izvajanja. Omogoča pošteno in ponovljivo primerjavo 
+    različnih pristopov. \textbf{Doprinos k našemu eksperimentu:} POGEMA je naše glavno evalvacijsko ogrodje, zato se metodologija, 
+    metrike in primerjava rezultatov neposredno opirajo na to delo.
 
 \section{Metodologija}
 
@@ -571,24 +364,6 @@ algoritmov v delno opazljivih okoljih, ter to kombinirali z MovingAI~\cite{stern
 POGEMA je dostopna kot standardna Python knjižnica, medtem ko so implementacije posameznih algoritmov pridobljene iz uradnih repozitorijev 
 avtorjev izbranih člankov. Ker različni algoritmi uporabljajo različne vhodne formate in interne predstavitve okolja, je bilo potrebno za 
 vsako implementacijo razviti poseben prilagoditveni sloj (\textit{adapter}), ki omogoča vključitev algoritma v skupno evalvacijsko ogrodje.
-
-Kot primer integracije lahko izpostavimo algoritem LaCAM, ki je implementiran v C++, in uporablja lasten vhodni format na osnovi datotek
-\textit{.map} in \textit{.scen}. Ker pa POGEMA uporablja, drugačno predstavitev zemljevidov in agentov je bilo potrebno razviti poseben 
-prilagoditveni sloj (ang. \textit{adapter}), ki omogoča povezavo med obema sistemoma (\autoref{fig:adapter}).
-
-Ta od POGEMA pridobi mrežo ovir in trenutno stanje agentov in njihove ciljne pozicije, nato pa te podatke pretvori v v MovingAI format, 
-ki ga zahteva LaCAM. Po pripravi vhodnih datotek se algoritem zažene kot zunanja binarna datoteka preko sistemskega klica.
-
-Po zaključku izvajanja adapter prebere rezultat iz izhodne datoteke, razčleni izračunane poti agentov skozi posamezne časovne korake ter 
-jih pretvori nazaj v zaporedje akcij, združljivo z okoljem POGEMA. Na ta način je mogoče centralizirani algoritem izvajati znotraj istega 
-eksperimentalnega ogrodja kot decentralizirane pristope, kar omogoča neposredno in pošteno primerjavo vseh metod.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{slike/Adapter.png}
-    \caption{Shema adapterja za integracijo zunanjih MAPF implementacij v evalvacijsko ogrodje POGEMA.}
-    \label{fig:adapter}
-\end{figure}
 
 \subsection{Metrike}
 
@@ -654,32 +429,59 @@ Primerjavo bomo izvedli na dveh ravneh:
     prej navedene metrike.
 \end{enumerate}
 
+\subsection{Uvedba lokalnih vodij}
+
+Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
+\textit{lokalnih vodij}. Gre za hibridni pristop med centraliziranim in decentraliziranim 
+načrtovanjem, kjer je množica agentov razdeljena na lokalne skupine.
+
+Namesto popolnoma globalnega načrtovanja za vse agente ali popolnoma neodvisnega lokalnega odločanja
+predlagamo hierarhično razporeditev agentov v več lokalnih skupin. Vsaka od teh skupin ima lokalnega vodjo,
+to je agent, ki koordinira agente znotraj skupine, reševanje lokalnih konfliktov ter usklajevanje prehodov
+skozi kritične točke, kot so ozki hodniki, križišča ali območja z visoko gostoto agentov.
+
+Za lažje razmevanje algoritma je priložen diagram poteka~(\autoref{fig:flowchart}), ki prikazuje, 
+razdelitev agentov v skupine, izbiro lokalnih vodij ter postopek lokalnega reševanja konfliktov in
+medskupinske koordinacije.
+
+Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
+informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
+Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centraliziranimi
+algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
+decentraliziranih pristopih.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{slike/Flowchart.png}
+    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
+    \label{fig:flowchart}
+\end{figure}
+
+
+Predlagamo dva pristopa pri izbiri lokalnih vodij:
+
+\begin{itemize}
+    \item \textbf{Statično}: Lokalni vodji so določeni vnaprej na podlagi kriterijev, kot so centralnost položaja,
+    \item \textbf{Dinamično}: Lokalni vodji se določajo adaptivno med izvajanjem, glede na trenutno gostoto agentov in potrebe po koordinaciji.
+\end{itemize}
+
+
+
+Ko pride do konflikta med agenti različnih skupin, lokalni vodije komunicirajo, med seboj 
+in uskladijo rešitev konflikta, kar omogoča učinkovito koordinacijo brez potrebe po centralnem 
+načrtovalcu. To zmanjša komunikacijsko obremenitev in poveča skalabilnost sistema.
+
+Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
+kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
+pristopi posebej. Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri
+decentraliziranih metodah ter bistveno krajši čas načrtovanja kot pri popolnoma
+centraliziranih algoritmih.
+
+V eksperimentalnem delu bomo preverili vpliv različnih strategij izbire lokalnih vodij,
+velikosti skupin ter gostote agentov na uspešnost reševanja problema MAPF.
+
+
 \section{Eksperiment in analiza rezultatov}
-
-V tem poglavju predstavljamo eksperimentalni protokol, začetno reprodukcijo 
-rezultatov iz izbranih člankov ter zasnovo lastnega eksperimenta za primerjavo 
-centraliziranih, decentraliziranih in lastnega hibridnega pristopa reševanja problema MAPF.
-
-\subsection{Reprodukcija rezultatov iz literature}
-
-Pred izvedbo lastnih eksperimentov smo najprej reproducirali osnovne rezultate iz izbranih 
-člankov, saj je to potrebno za validacijo implementacij in preverjanje pravilnosti 
-eksperimentalnega okolja.
-
-Pri algoritmu LaCAM smo uporabili uradno implementacijo algoritma~\cite{okumura2023lacam} 
-ter testne primere iz zbirke MovingAI. Posebej smo preverjali metriki \textit{sum-of-costs} 
-in \textit{makespan} pri različnih gostotah agentov na standardnih grid zemljevidih. Cilj 
-reprodukcije ni bila popolna identčna rekonstrukcija vseh rezultatov članka, temveč preverjanje, 
-ali se dobljeni rezultati nahajajo v primerljivem območju glede kakovosti rešitev in časa izvajanja.
-
-Pri algoritmu PBS  % Nadaljuj tukaj za pbs
-
-Pri decentraliziranih metodah Follower~\cite{andreychuk2024follower} in MATS-LP~\cite{skrynnik2024mcts}
-% Nadaljuj tukaj na Follower in MATS-LP
-
-
-
-\subsection{Lastni eksperiment}
 
 Po začetni validaciji implementacij smo zasnovali lasten eksperiment, ki bo primerjal centralizirane,
 decentralizirane in hibridni pristop z lokalnimi vodji. Namen experimenta je preveriti ali lahko uvedba
