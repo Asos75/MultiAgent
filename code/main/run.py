@@ -103,6 +103,18 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Maximum agents per group")
     parser.add_argument("--leader-view-radius", type=int, default=3,
                    help="Extra cells the leader can see beyond its agents")
+    parser.add_argument(
+        "--leader-election",
+        choices=["static", "dynamic"],
+        default="static",
+        help="Leader selection mode within each group",
+    )
+    parser.add_argument(
+        "--dynamic-reselect-every",
+        type=int,
+        default=0,
+        help="If >0 and leader-election=dynamic, reselect leader every N local-planning steps (0 disables)",
+    )
     parser.add_argument("--time-limit", type=float, default=60.0,
                    help="Solve time limit in seconds")
 
@@ -178,6 +190,8 @@ def main(argv: list[str] | None = None) -> None:
         group_radius=args.group_radius,
         max_group_size=args.max_group_size,
         leader_view_radius=args.leader_view_radius,
+        leader_election=args.leader_election,
+        dynamic_reselect_every=args.dynamic_reselect_every,
         time_limit_sec=args.time_limit,
         seed=args.seed,
     )
@@ -203,6 +217,8 @@ def main(argv: list[str] | None = None) -> None:
             "group_radius": config.group_radius,
             "max_group_size": config.max_group_size,
             "leader_view_radius": config.leader_view_radius,
+            "leader_election": config.leader_election,
+            "dynamic_reselect_every": config.dynamic_reselect_every,
             "time_limit_sec": config.time_limit_sec,
             "seed": config.seed,
         },

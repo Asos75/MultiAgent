@@ -31,6 +31,8 @@ class LocalLeadersConfig:
     group_radius: int = 5           # Chebyshev radius used to cluster agents
     max_group_size: int = 10        # hard cap on agents per group
     leader_view_radius: int = 3     # cells the leader can see beyond its agents
+    leader_election: str = "static" # 'static' or 'dynamic'
+    dynamic_reselect_every: int = 0 # 0 disables re-selection during solve
     time_limit_sec: float = 60.0
     seed: int = 0
 
