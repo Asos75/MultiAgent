@@ -202,14 +202,7 @@ Cilj problema je načrtovati poti za množico agentov v diskretnem prostoru tako
 medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni čas izvajanja 
 (ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs})~\cite{stern2019multiagent}.
 
-Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju: \footnote{\url{https://github.com/Asos75/MultiAgent}}.
-
-Kot osnovo za formalno definicijo problema in uporabljene metrike uporabljamo delo 
-\textit{Multi-Agent Pathfinding: Definitions, Variants, and Benchmarks}~\cite{stern2019multiagent}. 
-Poudarjamo, da omenjeni članek ne predstavlja konkretnega algoritma, temveč služi kot referenčni okvir 
-za definicije problema MAPF, njegove različice ter standardne metrike, ki jih uporabljajo v 
-nadaljevanju omenjeni članki in katere bomo uporabili tudi mi.
-
+Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
 Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne pristope k 
 reševanju problema MAPF. Izbrane članke so identificirali posamezni člani skupine:
@@ -292,54 +285,51 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 
 \subsection{Centralizirani pristopi}
 
-	extit{EECBS}~\cite{li2021eecbs} je nadgradnja klasičnega CBS, ki ohrani dvonivojsko iskanje, hkrati pa z
+	\textit{EECBS}~\cite{li2021eecbs} je nadgradnja klasičnega CBS, ki ohrani dvonivojsko iskanje, hkrati pa z
     \textit{Explicit Estimation Search} in uteževanjem omogoča nadzorovano suboptimalnost (uporabnik nastavi 
     kompromis med kakovostjo in časom). Avtorji poročajo o bistveno boljši skalabilnosti na večjih instancah 
-    ob majhni, dokazljivo omejeni degradaciji kakovosti rešitve. \textbf{Doprinos k našemu eksperimentu:} 
-    EECBS uporabimo kot referenčno izhodišče za razumevanje kompromisa »hitrost vs. kvaliteta« pri centraliziranih 
-    metodah; njegove ideje utemeljijo, zakaj v evalvaciji poleg kakovosti (SoC/makespan) spremljamo tudi čas 
-    izvajanja in skalabilnost.
+    ob majhni, dokazljivo omejeni degradaciji kakovosti rešitve. EECBS uporabimo kot referenčno izhodišče za 
+    razumevanje kompromisa »hitrost vs. kvaliteta« pri centraliziranih metodah; njegove ideje utemeljijo, zakaj 
+    v evalvaciji poleg kakovosti (SoC/makespan) spremljamo tudi čas izvajanja in skalabilnost.
 
 
-	extit{CBSH2}~\cite{li2019disjoint} izboljša CBS z močnejšimi hevristikami in tehniko \textit{disjoint splitting}, 
+	\textit{CBSH2}~\cite{li2019disjoint} izboljša CBS z močnejšimi hevristikami in tehniko \textit{disjoint splitting}, 
     ki z uvedbo pozitivnih omejitev zmanjša podvajanje iskanja in s tem velikost iskalnega drevesa. Rezultat je 
-    hitrejše reševanje in boljša skalabilnost ob ohranjeni rešitveni kakovosti tipične za CBS-družino. 
-    \textbf{Doprinos k našemu eksperimentu:} CBSH2 obravnavamo kot dodatno referenco znotraj centraliziranih metod, 
-    ki pokaže, da so izboljšave pogosto posledica boljšega upravljanja konfliktov; to nam pomaga pri interpretaciji 
-    rezultatov LaCAM/PBS (kjer tudi ciljamo na učinkovitejšo obravnavo konfliktov), če opazimo razlike predvsem v 
-    času in ne v SoC.
+    hitrejše reševanje in boljša skalabilnost ob ohranjeni rešitveni kakovosti tipične za CBS-družino. CBSH2 obravnavamo 
+    kot dodatno referenco znotraj centraliziranih metod, ki pokaže, da so izboljšave pogosto posledica boljšega 
+    upravljanja konfliktov; to nam pomaga pri interpretaciji rezultatov LaCAM/PBS (kjer tudi ciljamo na učinkovitejšo 
+    obravnavo konfliktov), če opazimo razlike predvsem v času in ne v SoC.
 
 \subsection{Decentralizirani pristopi}
 
-	extit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop za \textit{lifelong} MAPF, ki 
+	\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop za \textit{lifelong} MAPF, ki 
     kombinira (i) hevristični planer (npr. A* nad statičnimi ovirami), ki generira »razpršene« poti z namenom 
     zmanjšanja zasičenosti ozkih grl, in (ii) naučeno politiko sledenja, ki lokalno reagira na druge agente in 
     se izogiba trkom. Izvajanje je povsem lokalno (brez centralnega koordinatorja), zato metoda dobro skalira, 
-    vendar je kakovost poti odvisna od lokalnih informacij in stabilnosti naučene politike. \textbf{Doprinos k 
-    našemu eksperimentu:} Follower je eden naših glavnih decentraliziranih primerjalnih algoritmov; z njim 
-    ovrednotimo, kako se učeni, lokalni pristopi primerjajo s centraliziranima LaCAM/PBS in z našim hibridnim 
-    pristopom z lokalnimi vodji.
+    vendar je kakovost poti odvisna od lokalnih informacij in stabilnosti naučene politike. Follower je eden 
+    naših glavnih decentraliziranih primerjalnih algoritmov; z njim ovrednotimo, kako se učeni, lokalni pristopi 
+    primerjajo s centraliziranima LaCAM/PBS in z našim hibridnim pristopom z lokalnimi vodji.
 
-	extit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
+	\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
     predlaga decentralizirano reševanje \textit{lifelong} MAPF pri delni opazljivosti: vsak agent iz lokalnih opazovanj 
     zgradi intrinzični (lokalni) MDP in na njem izvaja MCTS, ki ga dodatno usmerja nevronska politika. S simulacijami v 
     drevesu agenti ocenjujejo kratkoročne interakcije z bližnjimi agenti, koordinacija pa nastaja implicitno (brez 
-    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. \textbf{Doprinos k 
-    našemu eksperimentu:} delo utemeljuje našo izbiro decentraliziranih primerjalnih metod na POGEMA (delna opazljivost) 
-    in je neposredno relevantno za komponento MATS-LP v naši primerjavi, kjer želimo videti, ali »lookahead« (MCTS) 
-    izboljša pretočnost in robustnost glede na bolj reaktivne politike.
+    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. delo utemeljuje našo 
+    izbiro decentraliziranih primerjalnih metod na POGEMA (delna opazljivost) in je neposredno relevantno za komponento 
+    MATS-LP v naši primerjavi, kjer želimo videti, ali »lookahead« (MCTS) izboljša pretočnost in robustnost glede na 
+    bolj reaktivne politike.
 
-	extit{PRIMAL2}~\cite{damani2021primal2} je zgodnje, vplivno delo, ki pokaže, da je mogoče MAPF reševati z 
+	\textit{PRIMAL2}~\cite{damani2021primal2} je zgodnje, vplivno delo, ki pokaže, da je mogoče MAPF reševati z 
     decentraliziranimi politikami na osnovi lokalnih opazovanj, naučenimi s kombinacijo \textit{imitation learning} 
     (iz centraliziranih planerjev) in \textit{reinforcement learning}. Pristop zelo dobro skali, vendar pogosto žrtvuje 
-    optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. \textbf{Doprinos k našemu eksperimentu:} PRIMAL2 
+    optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. PRIMAL2 
     uporabljamo kot kontekst za interpretacijo rezultatov učenih decentraliziranih metod (Follower/MATS-LP/SCRIMP): če 
     pri njih opazimo slabši SoC, je to pričakovan trade-off, ki ga literatura že izpostavlja.
 
-	extit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo transformer arhitekture in 
+	\textit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo transformer arhitekture in 
     pozornostnega mehanizma, kar omogoča učinkovitejšo koordinacijo tudi pri zelo omejenem vidnem polju. S tem pristop 
     preseže omejitve povsem nekomunikacijskih lokalnih politik, hkrati pa ohrani decentralizirano izvajanje in dobro skalabilnost. 
-    \textbf{Doprinos k našemu eksperimentu:} SCRIMP služi kot motivacija za naš »hibridni« pogled (lokalni vodje): kaže, da lahko 
+    SCRIMP služi kot motivacija za naš »hibridni« pogled (lokalni vodje): kaže, da lahko 
     dodaten koordinacijski signal (komunikacija ali posredno usklajevanje) izboljša pretočnost; naš pristop to doseže z lažjim 
     mehanizmom vodij, ki ga lahko primerjamo z relacijo med čisto lokalnimi in bolj koordiniranimi pristopi.
 
@@ -347,8 +337,8 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 
 	extit{POGEMA}~\cite{skrynnik2025pogema} ponuja standardizirano platformo za evalvacijo MAPF algoritmov v (delno) opazljivih 
     okoljih, z generatorjem instanc in enotnimi metrikami ter protokolom izvajanja. Omogoča pošteno in ponovljivo primerjavo 
-    različnih pristopov. \textbf{Doprinos k našemu eksperimentu:} POGEMA je naše glavno evalvacijsko ogrodje, zato se metodologija, 
-    metrike in primerjava rezultatov neposredno opirajo na to delo.
+    različnih pristopov. POGEMA je naše glavno evalvacijsko ogrodje, zato se metodologija, metrike in primerjava rezultatov 
+    neposredno opirajo na to delo.
 
 \section{Metodologija}
 
@@ -450,14 +440,6 @@ Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centr
 algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
 decentraliziranih pristopih.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{slike/Flowchart.png}
-    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
-    \label{fig:flowchart}
-\end{figure}
-
-
 Predlagamo dva pristopa pri izbiri lokalnih vodij:
 
 \begin{itemize}
@@ -465,11 +447,16 @@ Predlagamo dva pristopa pri izbiri lokalnih vodij:
     \item \textbf{Dinamično}: Lokalni vodji se določajo adaptivno med izvajanjem, glede na trenutno gostoto agentov in potrebe po koordinaciji.
 \end{itemize}
 
-
-
 Ko pride do konflikta med agenti različnih skupin, lokalni vodije komunicirajo, med seboj 
 in uskladijo rešitev konflikta, kar omogoča učinkovito koordinacijo brez potrebe po centralnem 
 načrtovalcu. To zmanjša komunikacijsko obremenitev in poveča skalabilnost sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{slike/Flowchart.png}
+    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
+    \label{fig:flowchart}
+\end{figure}
 
 Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
 kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
