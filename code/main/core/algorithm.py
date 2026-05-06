@@ -2,7 +2,6 @@ from __future__ import annotations
 import time
 from typing import Optional
 from collections import deque
-import random
 
 from .mapf_instance import MAPFInstance
 from .types import (
@@ -61,7 +60,6 @@ class LocalLeadersMAPF:
             solution=solution,
         )
 
-    # TODO: form groups
     def _form_groups(self) -> list[LocalGroup]:
         agents = self.instance.agents
         if not agents:
@@ -251,32 +249,45 @@ class LocalLeadersMAPF:
 
         fixed = 0
         start_t = time.perf_counter()
-        max_rounds = 500
+        # Keep this bounded; wait-insertion can otherwise blow up quickly.
+        # If time_limit_sec <= 0, treat it as "no time limit" and therefore allow
+        max_rounds: int | None = None
+        if float(self.config.time_limit_sec) > 0:
+            max_rounds = max(200, 50 * len(plan))
 
-        rnd = random.Random(self.config.seed)
+        # If we start with a very high conflict count, this naive resolver likely won't converge.
+        # Fail fast so benchmark won't hang until the time limit.
+        initial_conflicts = self._detect_conflicts(plan)
+        if len(initial_conflicts) > 2000:
+            return None, fixed
 
-        for _ in range(max_rounds):
-            if (time.perf_counter() - start_t) > float(self.config.time_limit_sec):
+        rounds = 0
+        while True:
+            if max_rounds is not None and rounds >= max_rounds:
+                break
+            # Allow disabling the solver time limit by setting time_limit_sec <= 0.
+            if float(self.config.time_limit_sec) > 0 and (time.perf_counter() - start_t) > float(self.config.time_limit_sec):
                 return None, fixed
 
             conflicts = self._detect_conflicts(plan)
             if not conflicts:
                 return plan, fixed
 
-            # pick one conflict to fix
-            ai, aj, t, ctype = rnd.choice(conflicts)
+            # Fix the earliest conflict first for stability.
+            ai, aj, t, _ctype = min(conflicts, key=lambda c: (c[2], c[0], c[1], c[3]))
             if ai not in plan or aj not in plan:
+                rounds += 1
                 continue
+
             gi = group_by_agent.get(ai, -1)
             gj = group_by_agent.get(aj, -1)
             if gi == gj and gi != -1:
-                # already handled locally, but still shows up; resolve by waiting non-leader
+                # Still unresolved inside a group; let the same rule apply.
                 pass
 
             ai_is_leader = ai in leaders
             aj_is_leader = aj in leaders
 
-            # Decide who should wait.
             if ai_is_leader and not aj_is_leader:
                 waiter = aj
             elif aj_is_leader and not ai_is_leader:
@@ -286,15 +297,13 @@ class LocalLeadersMAPF:
                 waiter = max(ai, aj)
 
             # Insert a wait at time t for the waiter (stay at previous position).
-            wait_pos = pos_at(waiter, max(0, t))
-            if t > 0:
-                wait_pos = pos_at(waiter, t - 1)
+            wait_pos = pos_at(waiter, t - 1) if t > 0 else pos_at(waiter, 0)
             plan[waiter].insert(t, wait_pos)
             fixed += 1
+            rounds += 1
 
-        # if not resolved within rounds
-        return plan if self._detect_conflicts(plan) == [] else None, fixed
-
+        # If we exit due to round cap, treat as failure if conflicts remain.
+        return (plan, fixed) if not self._detect_conflicts(plan) else (None, fixed)
 
     # Get local view from position
     def _compute_local_view(self, center: Position, radius: int) -> set[Position]:

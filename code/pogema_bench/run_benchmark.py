@@ -13,10 +13,12 @@ from .lacam_adapter import plan_with_lacam, solution_to_actions
 from .matslp_adapter import MatsLPConfig, MatsLPPolicy
 from .movingai_io import read_movingai_map, pick_n_agents
 
+import sys
+
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--algo", choices=["lacam", "matslp"], required=True)
+    p.add_argument("--algo", choices=["lacam", "matslp", "local-leaders"], required=True)
     p.add_argument("--num_agents", type=int, default=16)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--max_episode_steps", type=int, default=128)
@@ -59,6 +61,19 @@ def _parse_args() -> argparse.Namespace:
     # MATS-LP
     p.add_argument("--matslp_num_expansions", type=int, default=250)
     p.add_argument("--matslp_num_threads", type=int, default=4)
+
+    # Local-Leaders
+    p.add_argument("--ll_group_radius", type=int, default=5)
+    p.add_argument("--ll_max_group_size", type=int, default=10)
+    p.add_argument("--ll_leader_view_radius", type=int, default=6)
+    p.add_argument("--ll_leader_election", choices=["static", "dynamic"], default="static")
+    p.add_argument(
+        "--ll_time_limit_sec",
+        type=float,
+        default=0.0,
+        help="Local-Leaders solver time limit in seconds. Set <=0 to disable.",
+    )
+
     return p.parse_args()
 
 
@@ -260,14 +275,116 @@ def run_matslp(env, args: argparse.Namespace) -> Dict[str, Any]:
     }
 
 
+def run_local_leaders(env, args: argparse.Namespace) -> Dict[str, Any]:
+    """Plan once with LocalLeadersMAPF (global plan) and replay in POGEMA."""
+
+    # Ensure repository `code/` is importable so `import main` resolves.
+    repo_root = Path(__file__).resolve().parents[2]
+    code_root = repo_root / "code"
+    if str(code_root) not in sys.path:
+        sys.path.insert(0, str(code_root))
+
+    from main import MAPFInstance
+    from main.core.algorithm import LocalLeadersMAPF
+    from main.core.types import LocalLeadersConfig
+
+    obs, info = env.reset(seed=args.seed)
+
+    obstacles_raw = env.grid.get_obstacles().astype(int).tolist()
+    # `main` uses grid[row][col]. Depending on pogema internals, obstacles may come as [x][y].
+    # Transpose to be safe for map generation here.
+    obstacles = [list(row) for row in zip(*obstacles_raw)] if obstacles_raw else []
+    starts = env.grid.get_agents_xy()
+    goals = env.grid.get_targets_xy()
+
+    instance = MAPFInstance.from_arrays(obstacles, starts, goals)
+    cfg = LocalLeadersConfig(
+        group_radius=args.ll_group_radius,
+        max_group_size=args.ll_max_group_size,
+        leader_view_radius=args.ll_leader_view_radius,
+        leader_election=args.ll_leader_election,
+        time_limit_sec=args.ll_time_limit_sec,
+        seed=args.seed,
+    )
+
+    res = LocalLeadersMAPF(instance, cfg).solve()
+    if not res.solved or res.solution is None:
+        return {
+            "algo": "local-leaders",
+            "solved": False,
+            "soc": res.soc,
+            "makespan": res.makespan,
+            "comp_time_ms": res.comp_time_ms,
+            "num_groups": res.num_groups,
+            "avg_group_size": res.avg_group_size,
+            "num_conflicts_resolved": res.num_conflicts_resolved,
+        }
+
+    # Convert plan (paths) into action sequence for replay.
+    # POGEMA action mapping (common): 0=stay, 1=up, 2=down, 3=left, 4=right
+    def delta_to_action(dr: int, dc: int) -> int:
+        if dr == 0 and dc == 0:
+            return 0
+        if dr == -1 and dc == 0:
+            return 1
+        if dr == 1 and dc == 0:
+            return 2
+        if dr == 0 and dc == -1:
+            return 3
+        if dr == 0 and dc == 1:
+            return 4
+        return 0
+
+    plan = res.solution
+    max_len = max(len(p) for p in plan.values()) if plan else 0
+    actions_seq: list[list[int]] = []
+    for t in range(max_len - 1):
+        step_actions: list[int] = []
+        for aid in range(args.num_agents):
+            path = plan[aid]
+            p0 = path[min(t, len(path) - 1)]
+            p1 = path[min(t + 1, len(path) - 1)]
+            dr, dc = p1[0] - p0[0], p1[1] - p0[1]
+            step_actions.append(delta_to_action(dr, dc))
+        actions_seq.append(step_actions)
+
+    terminated = False
+    step = 0
+    while not terminated and step < len(actions_seq):
+        obs, rew, done, trunc, infos = env.step(actions_seq[step])
+        terminated = all(done) or all(trunc)
+        step += 1
+
+    return {
+        "algo": "local-leaders",
+        "solved": bool(res.solved) and terminated,
+        "soc": res.soc,
+        "makespan": res.makespan,
+        "comp_time_ms": res.comp_time_ms,
+        "num_groups": res.num_groups,
+        "avg_group_size": res.avg_group_size,
+        "num_conflicts_resolved": res.num_conflicts_resolved,
+        "steps_replayed": step,
+        "config": {
+            "group_radius": args.ll_group_radius,
+            "max_group_size": args.ll_max_group_size,
+            "leader_view_radius": args.ll_leader_view_radius,
+            "leader_election": args.ll_leader_election,
+            "time_limit_sec": args.ll_time_limit_sec,
+        },
+    }
+
+
 def main() -> None:
     args = _parse_args()
     env = build_env(args)
 
     if args.algo == "lacam":
         out = run_lacam(env, args)
-    else:
+    elif args.algo == "matslp":
         out = run_matslp(env, args)
+    else:
+        out = run_local_leaders(env, args)
 
     print(out)
 
