@@ -14,6 +14,7 @@ PYBIND11_MODULE(local_leaders_cpp, m) {
       .def_readwrite("max_group_size", &llcpp::Config::max_group_size)
       .def_readwrite("leader_view_radius", &llcpp::Config::leader_view_radius)
       .def_readwrite("leader_election", &llcpp::Config::leader_election)
+      .def_readwrite("dynamic_reselect_every", &llcpp::Config::dynamic_reselect_every)
       .def_readwrite("time_limit_sec", &llcpp::Config::time_limit_sec)
       .def_readwrite("seed", &llcpp::Config::seed)
       .def_readwrite("max_rounds_factor", &llcpp::Config::max_rounds_factor)

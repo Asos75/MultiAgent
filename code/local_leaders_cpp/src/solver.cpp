@@ -143,26 +143,71 @@ static inline Pos pos_at(const std::vector<int>& path_idx, int t, int W) {
 
 struct Conflict { int ai; int aj; int t; int type; }; // type:0 vertex,1 swap
 
-static std::vector<Conflict> detect_conflicts(const std::vector<std::vector<int>>& paths, int W) {
-  std::vector<Conflict> out;
+static bool find_earliest_conflict(const std::vector<std::vector<int>>& paths,
+                                   int W,
+                                   Conflict& out,
+                                   int* total_conflicts,
+                                   int max_conflicts) {
   int A = (int)paths.size();
-  if (A == 0) return out;
+  if (A == 0) {
+    if (total_conflicts) *total_conflicts = 0;
+    return false;
+  }
   int makespan = 0;
   for (auto& p : paths) makespan = std::max(makespan, (int)p.size());
 
+  bool found = false;
+  int total = 0;
+
+  std::unordered_map<int, int> occ;
+  std::unordered_map<std::uint64_t, int> edge;
+  occ.reserve(A * 2);
+  edge.reserve(A * 2);
+
+  auto ekey = [](int u, int v) -> std::uint64_t {
+    return (std::uint64_t(u) << 32) ^ std::uint64_t(std::uint32_t(v));
+  };
+
   for (int t = 0; t < makespan; t++) {
+    occ.clear();
+    edge.clear();
     for (int i = 0; i < A; i++) {
-      for (int j = i + 1; j < A; j++) {
-        auto pi_t = pos_at(paths[i], t, W);
-        auto pj_t = pos_at(paths[j], t, W);
-        auto pi_t1 = pos_at(paths[i], t + 1, W);
-        auto pj_t1 = pos_at(paths[j], t + 1, W);
-        if (pi_t == pj_t) out.push_back({i, j, t, 0});
-        if (pi_t == pj_t1 && pj_t == pi_t1) out.push_back({i, j, t, 1});
+      int u = paths[i][std::min<int>(t, (int)paths[i].size() - 1)];
+      int v = paths[i][std::min<int>(t + 1, (int)paths[i].size() - 1)];
+
+      auto it = occ.find(u);
+      if (it != occ.end()) {
+        total++;
+        if (!found) {
+          out = {i, it->second, t, 0};
+          found = true;
+        }
+        if (max_conflicts > 0 && total >= max_conflicts) {
+          if (total_conflicts) *total_conflicts = total;
+          return found;
+        }
+      } else {
+        occ.emplace(u, i);
       }
+
+      auto rit = edge.find(ekey(v, u));
+      if (rit != edge.end()) {
+        total++;
+        if (!found) {
+          out = {i, rit->second, t, 1};
+          found = true;
+        }
+        if (max_conflicts > 0 && total >= max_conflicts) {
+          if (total_conflicts) *total_conflicts = total;
+          return found;
+        }
+      }
+      edge.emplace(ekey(u, v), i);
     }
   }
-  return out;
+
+  if (total_conflicts) *total_conflicts = total;
+  return found;
 }
 
 // --- reservation-table planning (prioritized planning) ---
@@ -316,6 +361,12 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
 
   std::vector<Pos> starts_by_id = starts;
 
+  auto time_exceeded = [&]() -> bool {
+    if (cfg.time_limit_sec <= 0.0) return false;
+    double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+    return elapsed > cfg.time_limit_sec;
+  };
+
   // --- form groups (same greedy as python) ---
   std::vector<int> remaining(A);
   for (int i = 0; i < A; i++) remaining[i] = i;
@@ -364,7 +415,16 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
 
   // Plan each group with prioritized planning (leader first).
   // Within group: reservation-table planning guarantees no in-group conflicts.
-  for (const auto& g : groups) {
+  std::string election_mode = cfg.leader_election;
+  std::transform(election_mode.begin(), election_mode.end(), election_mode.begin(), ::tolower);
+
+  for (size_t gi = 0; gi < groups.size(); gi++) {
+    auto& g = groups[gi];
+    if (cfg.dynamic_reselect_every > 0 && election_mode == "dynamic") {
+      // One-time reselection before planning (mirrors Python behavior).
+      g.leader_id = elect_leader(starts_by_id, g.members, cfg);
+    }
+
     ReservationTable rt(W);
     std::vector<int> order = g.members;
     // Put leader first.
@@ -375,7 +435,10 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
     });
 
     for (int aid : order) {
-      auto p = plan_with_reservations(grid, g.view_mask, starts[aid], goals[aid], rt, max_time);
+      int manh = manhattan(starts[aid], goals[aid]);
+      int agent_max_time = std::max(16, manh * 4 + 32);
+      agent_max_time = std::min(agent_max_time, max_time);
+      auto p = plan_with_reservations(grid, g.view_mask, starts[aid], goals[aid], rt, agent_max_time);
       if (p.empty()) {
         // fallback: ignore reservations (still better than failing)
         p = bfs_path(grid, g.view_mask, starts[aid], goals[aid]);
@@ -388,36 +451,64 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
     }
   }
 
-  // If groups introduce inter-group conflicts, do a global prioritized replan over all agents.
-  // This sacrifices "distributed" purity, but gives us a plan that actually solves instances.
+  // Resolve inter-group conflicts by inserting waits (fast, bounded).
   int fixed = 0;
-  if (!detect_conflicts(paths, W).empty()) {
-    ReservationTable rt(W);
-    std::vector<int> order(A);
-    for (int i = 0; i < A; i++) order[i] = i;
-    // Keep leaders early (stable) so they act like "local coordinators".
-    std::vector<uint8_t> is_leader(A, 0);
-    for (const auto& g : groups) is_leader[g.leader_id] = 1;
-    std::stable_sort(order.begin(), order.end(), [&](int a, int b) {
-      if (is_leader[a] != is_leader[b]) return is_leader[a] > is_leader[b];
-      return a < b;
-    });
+  Conflict first_conflict{0, 0, 0, 0};
+  int initial_conflicts = 0;
+  bool has_conflict = find_earliest_conflict(
+      paths, W, first_conflict, &initial_conflicts, cfg.max_initial_conflicts + 1);
+  if (initial_conflicts > cfg.max_initial_conflicts) {
+    Result r;
+    r.solved = false;
+    r.num_conflicts_resolved = 0;
+    r.num_groups = (int)groups.size();
+    double avg = 0.0;
+    for (auto& g : groups) avg += (double)g.members.size();
+    if (!groups.empty()) avg /= (double)groups.size();
+    r.avg_group_size = avg;
+    r.comp_time_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+    return r;
+  }
 
-    for (int aid : order) {
-      std::vector<uint8_t> full_view; // empty => no view restriction
-      auto p = plan_with_reservations(grid, full_view, starts[aid], goals[aid], rt, max_time);
-      if (p.empty()) {
-        p = bfs_path(grid, full_view, starts[aid], goals[aid]);
+  if (has_conflict) {
+    std::vector<uint8_t> is_leader(A, 0);
+    std::vector<int> group_by_agent(A, -1);
+    for (int gi = 0; gi < (int)groups.size(); gi++) {
+      const auto& g = groups[gi];
+      is_leader[g.leader_id] = 1;
+      for (int aid : g.members) group_by_agent[aid] = gi;
+    }
+
+    int max_rounds = std::max(200, std::max(1, cfg.max_rounds_factor) * A);
+    for (int rounds = 0; rounds < max_rounds; rounds++) {
+      if (time_exceeded()) break;
+      Conflict c{0, 0, 0, 0};
+      int dummy = 0;
+      if (!find_earliest_conflict(paths, W, c, &dummy, 0)) break;
+
+      int ai = c.ai;
+      int aj = c.aj;
+      int t = c.t;
+
+      int waiter = ai;
+      if (is_leader[ai] && !is_leader[aj]) {
+        waiter = aj;
+      } else if (is_leader[aj] && !is_leader[ai]) {
+        waiter = ai;
+      } else {
+        waiter = std::max(ai, aj);
       }
-      if (p.empty()) p = {idx(starts[aid].first, starts[aid].second, W)};
-      paths[aid] = p;
-      rt.reserve_path(paths[aid], /*hold_goal_for*/ 16);
+
+      int wait_pos = paths[waiter][std::max(0, t - 1)];
+      int insert_at = std::min<int>(t, (int)paths[waiter].size());
+      paths[waiter].insert(paths[waiter].begin() + insert_at, wait_pos);
       fixed++;
     }
   }
 
   // verify
-  bool ok = detect_conflicts(paths, W).empty();
+  Conflict dummy{0, 0, 0, 0};
+  bool ok = !find_earliest_conflict(paths, W, dummy, nullptr, 0);
 
   Result r;
   r.solved = ok;

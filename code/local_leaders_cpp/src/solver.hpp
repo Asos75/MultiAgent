@@ -16,6 +16,7 @@ struct Config {
   int max_group_size = 10;
   int leader_view_radius = 6;
   std::string leader_election = "static";  // static|dynamic
+  int dynamic_reselect_every = 0;
   double time_limit_sec = 0.0;             // <=0 => disabled
   int seed = 0;
   int max_rounds_factor = 500;             // safety cap: max_rounds = max(200, factor*num_agents)

@@ -39,6 +39,7 @@ def solve_local_leaders_cpp(
     c.max_group_size = int(cfg.get("max_group_size", 10))
     c.leader_view_radius = int(cfg.get("leader_view_radius", 6))
     c.leader_election = str(cfg.get("leader_election", "static"))
+    c.dynamic_reselect_every = int(cfg.get("dynamic_reselect_every", 0))
     c.time_limit_sec = float(cfg.get("time_limit_sec", 0.0))
     c.seed = int(cfg.get("seed", 0))
 
