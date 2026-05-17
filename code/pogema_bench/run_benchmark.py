@@ -292,12 +292,27 @@ def run_local_leaders(env, args: argparse.Namespace) -> Dict[str, Any]:
     obs, info = env.reset(seed=args.seed)
 
     obstacles_raw = env.grid.get_obstacles().astype(int).tolist()
-    # `main` uses grid[row][col]. Depending on pogema internals, obstacles may come as [x][y].
-    # Transpose to be safe for map generation here.
-    obstacles = [list(row) for row in zip(*obstacles_raw)] if obstacles_raw else []
     starts = env.grid.get_agents_xy()
     goals = env.grid.get_targets_xy()
 
+    def _all_free(grid, points):
+        if not grid:
+            return False
+        h = len(grid)
+        w = len(grid[0]) if h else 0
+        for r, c in points:
+            if r < 0 or r >= h or c < 0 or c >= w:
+                return False
+            if grid[r][c] != 0:
+                return False
+        return True
+
+    obstacles = obstacles_raw
+    if obstacles_raw:
+        if not _all_free(obstacles_raw, starts + goals):
+            transposed = [list(row) for row in zip(*obstacles_raw)]
+            if _all_free(transposed, starts + goals):
+                obstacles = transposed
     instance = MAPFInstance.from_arrays(obstacles, starts, goals)
     cfg_dict = {
         "group_radius": args.ll_group_radius,

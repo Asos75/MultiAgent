@@ -398,8 +398,12 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
     int leader = elect_leader(starts_by_id, members, cfg);
 
     std::vector<uint8_t> view_mask(H * W, 0);
-    for (int aid : members) add_view(grid, starts_by_id[aid].first, starts_by_id[aid].second, cfg.leader_view_radius, view_mask);
+    for (int aid : members) {
+      add_view(grid, starts_by_id[aid].first, starts_by_id[aid].second, cfg.leader_view_radius, view_mask);
+      add_view(grid, goals[aid].first, goals[aid].second, cfg.leader_view_radius, view_mask);
+    }
     add_view(grid, starts_by_id[leader].first, starts_by_id[leader].second, cfg.leader_view_radius, view_mask);
+    add_view(grid, goals[leader].first, goals[leader].second, cfg.leader_view_radius, view_mask);
 
     groups.push_back(Group{leader, members, std::move(view_mask)});
     for (int aid : members) is_remaining[aid] = 0;
@@ -442,6 +446,10 @@ Result solve(const std::vector<std::vector<uint8_t>>& grid,
       if (p.empty()) {
         // fallback: ignore reservations (still better than failing)
         p = bfs_path(grid, g.view_mask, starts[aid], goals[aid]);
+      }
+      if (p.empty()) {
+        // fallback: full-grid BFS if local view is too restrictive
+        p = bfs_path(grid, std::vector<uint8_t>(), starts[aid], goals[aid]);
       }
       if (p.empty()) {
         p = {idx(starts[aid].first, starts[aid].second, W)};
