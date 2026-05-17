@@ -287,38 +287,96 @@ def run_local_leaders(env, args: argparse.Namespace) -> Dict[str, Any]:
     from main import MAPFInstance
     from main.core.algorithm import LocalLeadersMAPF
     from main.core.types import LocalLeadersConfig
+    from pogema_bench.local_leaders_cpp_adapter import solve_local_leaders_cpp
 
     obs, info = env.reset(seed=args.seed)
 
     obstacles_raw = env.grid.get_obstacles().astype(int).tolist()
-    # `main` uses grid[row][col]. Depending on pogema internals, obstacles may come as [x][y].
-    # Transpose to be safe for map generation here.
-    obstacles = [list(row) for row in zip(*obstacles_raw)] if obstacles_raw else []
     starts = env.grid.get_agents_xy()
     goals = env.grid.get_targets_xy()
 
-    instance = MAPFInstance.from_arrays(obstacles, starts, goals)
-    cfg = LocalLeadersConfig(
-        group_radius=args.ll_group_radius,
-        max_group_size=args.ll_max_group_size,
-        leader_view_radius=args.ll_leader_view_radius,
-        leader_election=args.ll_leader_election,
-        time_limit_sec=args.ll_time_limit_sec,
-        seed=args.seed,
-    )
+    def _all_free(grid, points):
+        if not grid:
+            return False
+        h = len(grid)
+        w = len(grid[0]) if h else 0
+        for r, c in points:
+            if r < 0 or r >= h or c < 0 or c >= w:
+                return False
+            if grid[r][c] != 0:
+                return False
+        return True
 
-    res = LocalLeadersMAPF(instance, cfg).solve()
-    if not res.solved or res.solution is None:
-        return {
-            "algo": "local-leaders",
-            "solved": False,
-            "soc": res.soc,
-            "makespan": res.makespan,
-            "comp_time_ms": res.comp_time_ms,
-            "num_groups": res.num_groups,
-            "avg_group_size": res.avg_group_size,
-            "num_conflicts_resolved": res.num_conflicts_resolved,
-        }
+    obstacles = obstacles_raw
+    if obstacles_raw:
+        if not _all_free(obstacles_raw, starts + goals):
+            transposed = [list(row) for row in zip(*obstacles_raw)]
+            if _all_free(transposed, starts + goals):
+                obstacles = transposed
+    instance = MAPFInstance.from_arrays(obstacles, starts, goals)
+    cfg_dict = {
+        "group_radius": args.ll_group_radius,
+        "max_group_size": args.ll_max_group_size,
+        "leader_view_radius": args.ll_leader_view_radius,
+        "leader_election": args.ll_leader_election,
+        "time_limit_sec": args.ll_time_limit_sec,
+        "seed": args.seed,
+    }
+
+    # Prefer C++ solver (much faster); fall back to Python implementation if build/import fails.
+    try:
+        out_cpp = solve_local_leaders_cpp(instance.grid, starts, goals, cfg_dict)
+        if not out_cpp.get("solved") or not out_cpp.get("solution"):
+            return {
+                "algo": "local-leaders",
+                "solved": False,
+                "soc": out_cpp.get("soc"),
+                "makespan": out_cpp.get("makespan"),
+                "comp_time_ms": out_cpp.get("comp_time_ms"),
+                "num_groups": out_cpp.get("num_groups"),
+                "avg_group_size": out_cpp.get("avg_group_size"),
+                "num_conflicts_resolved": out_cpp.get("num_conflicts_resolved"),
+                "backend": "cpp",
+            }
+        plan = out_cpp["solution"]
+        num_groups = out_cpp.get("num_groups")
+        avg_group_size = out_cpp.get("avg_group_size")
+        num_conflicts_resolved = out_cpp.get("num_conflicts_resolved")
+        comp_time_ms = out_cpp.get("comp_time_ms")
+        soc = out_cpp.get("soc")
+        makespan = out_cpp.get("makespan")
+        backend = "cpp"
+    except Exception:
+        cfg = LocalLeadersConfig(
+            group_radius=args.ll_group_radius,
+            max_group_size=args.ll_max_group_size,
+            leader_view_radius=args.ll_leader_view_radius,
+            leader_election=args.ll_leader_election,
+            time_limit_sec=args.ll_time_limit_sec,
+            seed=args.seed,
+        )
+
+        res = LocalLeadersMAPF(instance, cfg).solve()
+        if not res.solved or res.solution is None:
+            return {
+                "algo": "local-leaders",
+                "solved": False,
+                "soc": res.soc,
+                "makespan": res.makespan,
+                "comp_time_ms": res.comp_time_ms,
+                "num_groups": res.num_groups,
+                "avg_group_size": res.avg_group_size,
+                "num_conflicts_resolved": res.num_conflicts_resolved,
+                "backend": "python",
+            }
+        plan = [res.solution[i] for i in range(args.num_agents)]
+        num_groups = res.num_groups
+        avg_group_size = res.avg_group_size
+        num_conflicts_resolved = res.num_conflicts_resolved
+        comp_time_ms = res.comp_time_ms
+        soc = res.soc
+        makespan = res.makespan
+        backend = "python"
 
     # Convert plan (paths) into action sequence for replay.
     # POGEMA action mapping (common): 0=stay, 1=up, 2=down, 3=left, 4=right
@@ -335,8 +393,8 @@ def run_local_leaders(env, args: argparse.Namespace) -> Dict[str, Any]:
             return 4
         return 0
 
-    plan = res.solution
-    max_len = max(len(p) for p in plan.values()) if plan else 0
+    # plan is: list[agent] -> list[(r,c)]
+    max_len = max(len(p) for p in plan) if plan else 0
     actions_seq: list[list[int]] = []
     for t in range(max_len - 1):
         step_actions: list[int] = []
@@ -357,14 +415,15 @@ def run_local_leaders(env, args: argparse.Namespace) -> Dict[str, Any]:
 
     return {
         "algo": "local-leaders",
-        "solved": bool(res.solved) and terminated,
-        "soc": res.soc,
-        "makespan": res.makespan,
-        "comp_time_ms": res.comp_time_ms,
-        "num_groups": res.num_groups,
-        "avg_group_size": res.avg_group_size,
-        "num_conflicts_resolved": res.num_conflicts_resolved,
+    "solved": bool(terminated),
+    "soc": soc,
+    "makespan": makespan,
+    "comp_time_ms": comp_time_ms,
+    "num_groups": num_groups,
+    "avg_group_size": avg_group_size,
+    "num_conflicts_resolved": num_conflicts_resolved,
         "steps_replayed": step,
+    "backend": backend,
         "config": {
             "group_radius": args.ll_group_radius,
             "max_group_size": args.ll_max_group_size,

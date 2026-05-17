@@ -67,6 +67,7 @@ class LocalLeadersMAPF:
 
         remaining: set[int] = {a.id for a in agents}
         pos_by_id: dict[int, Position] = {a.id: a.start for a in agents}
+        goal_by_id: dict[int, Position] = {a.id: a.goal for a in agents}
 
         groups: list[LocalGroup] = []
         r = int(self.config.group_radius)
@@ -92,11 +93,13 @@ class LocalLeadersMAPF:
             group = LocalGroup(leader_id=leader_id, member_ids=list(members))
             group.leader_id = self._elect_leader(group)
 
-            # Local view is around leader and all members.
+            # Local view is around each member's start/goal and the leader.
             view: set[Position] = set()
             for aid in group.member_ids:
                 view |= self._compute_local_view(pos_by_id[aid], self.config.leader_view_radius)
+                view |= self._compute_local_view(goal_by_id[aid], self.config.leader_view_radius)
             view |= self._compute_local_view(pos_by_id[group.leader_id], self.config.leader_view_radius)
+            view |= self._compute_local_view(goal_by_id[group.leader_id], self.config.leader_view_radius)
             group.local_view = view
 
             groups.append(group)
@@ -152,7 +155,7 @@ class LocalLeadersMAPF:
 
         view = group.local_view or self._compute_local_view(pos_by_id[group.leader_id], self.config.leader_view_radius)
 
-        def bfs(start: Position, goal: Position) -> Optional[Path]:
+        def bfs(start: Position, goal: Position, allowed: Optional[set[Position]]) -> Optional[Path]:
             if start == goal:
                 return [start]
             q = deque([start])
@@ -161,7 +164,7 @@ class LocalLeadersMAPF:
             while q:
                 cur = q.popleft()
                 for nb in self.instance.get_neighbours(cur):
-                    if nb not in view:
+                    if allowed is not None and nb not in allowed:
                         continue
                     if nb in seen:
                         continue
@@ -179,7 +182,10 @@ class LocalLeadersMAPF:
 
         plans: dict[int, Path] = {}
         for aid in group.member_ids:
-            p = bfs(pos_by_id[aid], goal_by_id[aid])
+            p = bfs(pos_by_id[aid], goal_by_id[aid], view)
+            if p is None:
+                # Fallback to global grid if local view blocks the path.
+                p = bfs(pos_by_id[aid], goal_by_id[aid], None)
             if p is None:
                 # fallback: stay in place
                 plans[aid] = [pos_by_id[aid]]
