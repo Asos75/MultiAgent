@@ -1,0 +1,13 @@
+label,map_name,num_agents,seed,avg_throughput,elapsed_s,solved
+random_d0_a8,pico_s.*_od0_na32,8,0,0.768966962,10.4,True
+random_d0_a8,pico_s.*_od0_na32,8,1,1248.731171685,0.01,True
+random_d0_a8,pico_s.*_od0_na32,8,2,1233.974336335,0.01,True
+random_d0_a16,pico_s.*_od0_na32,16,0,1673.054947574,0.01,True
+random_d0_a16,pico_s.*_od0_na32,16,1,1825.217617083,0.01,True
+random_d0_a16,pico_s.*_od0_na32,16,2,1187.918541856,0.01,True
+maze_20x20_a4,mazes-s.*_20x20,4,0,640.854746116,0.01,True
+maze_20x20_a4,mazes-s.*_20x20,4,1,598.370994929,0.01,True
+maze_20x20_a4,mazes-s.*_20x20,4,2,649.41812133,0.01,True
+maze_20x20_a8,mazes-s.*_20x20,8,0,1059.629595812,0.01,True
+maze_20x20_a8,mazes-s.*_20x20,8,1,893.456436738,0.01,True
+maze_20x20_a8,mazes-s.*_20x20,8,2,919.706094113,0.01,True
