@@ -1,4 +1,0 @@
-*.so
-*.pyd
-*.dll
-__pycache__/
