@@ -1,7 +1,8 @@
 from __future__ import annotations
+import heapq
 import time
-from typing import Optional
 from collections import deque
+from typing import Optional
 
 from .mapf_instance import MAPFInstance
 from .types import (
@@ -25,10 +26,7 @@ class LocalLeadersMAPF:
         self.config = config or LocalLeadersConfig()
         self._groups: list[LocalGroup] = []
 
-
-    # Run the algorithm and return a SolveResult.
     def solve(self) -> SolveResult:
-
         t0 = time.perf_counter()
 
         groups = self._form_groups()
@@ -77,14 +75,12 @@ class LocalLeadersMAPF:
             seed_id = next(iter(remaining))
             seed_pos = pos_by_id[seed_id]
 
-            # Collect candidates in radius and clamp by max_group_size.
             members = [
                 aid
                 for aid in remaining
                 if self._chebyshev(pos_by_id[aid], seed_pos) <= r
             ]
 
-            # Prefer closer agents if we need to trim.
             if len(members) > max_size:
                 members.sort(key=lambda aid: self._chebyshev(pos_by_id[aid], seed_pos))
                 members = members[:max_size]
@@ -93,7 +89,6 @@ class LocalLeadersMAPF:
             group = LocalGroup(leader_id=leader_id, member_ids=list(members))
             group.leader_id = self._elect_leader(group)
 
-            # Local view is around each member's start/goal and the leader.
             view: set[Position] = set()
             for aid in group.member_ids:
                 view |= self._compute_local_view(pos_by_id[aid], self.config.leader_view_radius)
@@ -107,10 +102,7 @@ class LocalLeadersMAPF:
 
         return groups
 
-    # TODO: elect a leader in the group
     def _elect_leader(self, group: LocalGroup) -> int:
-        # Static: pick the member with minimum avg Manhattan distance to others.
-        # Dynamic: add a simple local-density term (how many group members are within radius 2).
         member_ids = group.member_ids
         if not member_ids:
             raise ValueError("LocalGroup has no members")
@@ -132,186 +124,244 @@ class LocalLeadersMAPF:
         mode = (self.config.leader_election or "static").lower()
 
         if mode == "dynamic":
-            # Prefer high density (more coordination needed) and then centrality.
-            # We maximize density, minimize avg_dist.
             best = max(member_ids, key=lambda aid: (density(aid), -avg_dist(aid), -aid))
             return best
 
         best = min(member_ids, key=lambda aid: (avg_dist(aid), aid))
         return best
 
-    # TODO: leader needs to update plans of agents
     def _compute_local_plan(self, group: LocalGroup) -> dict[int, Path]:
-        # Simple local planner:
-        # - plan each agent independently with BFS (ignoring other agents)
-        # - then do an in-group deconfliction by inserting waits when vertex conflicts appear
+        """Plan agents within a group using prioritised space-time A*."""
         pos_by_id: dict[int, Position] = {a.id: a.start for a in self.instance.agents}
         goal_by_id: dict[int, Position] = {a.id: a.goal for a in self.instance.agents}
 
-        # Optional dynamic leader re-selection (within group only). Here we do a single reselection
-        # based on current starts; doing it each timestep would require simulation.
         if (self.config.leader_election or "static").lower() == "dynamic" and self.config.dynamic_reselect_every:
             group.leader_id = self._elect_leader(group)
 
-        view = group.local_view or self._compute_local_view(pos_by_id[group.leader_id], self.config.leader_view_radius)
+        view = group.local_view or self._compute_local_view(
+            pos_by_id[group.leader_id], self.config.leader_view_radius
+        )
 
-        def bfs(start: Position, goal: Position, allowed: Optional[set[Position]]) -> Optional[Path]:
-            if start == goal:
-                return [start]
-            q = deque([start])
-            prev: dict[Position, Position] = {}
-            seen = {start}
-            while q:
-                cur = q.popleft()
-                for nb in self.instance.get_neighbours(cur):
-                    if allowed is not None and nb not in allowed:
-                        continue
-                    if nb in seen:
-                        continue
-                    seen.add(nb)
-                    prev[nb] = cur
-                    if nb == goal:
-                        # reconstruct
-                        path = [goal]
-                        while path[-1] != start:
-                            path.append(prev[path[-1]])
-                        path.reverse()
-                        return path
-                    q.append(nb)
-            return None
-
-        plans: dict[int, Path] = {}
-        for aid in group.member_ids:
-            p = bfs(pos_by_id[aid], goal_by_id[aid], view)
-            if p is None:
-                # Fallback to global grid if local view blocks the path.
-                p = bfs(pos_by_id[aid], goal_by_id[aid], None)
-            if p is None:
-                # fallback: stay in place
-                plans[aid] = [pos_by_id[aid]]
-            else:
-                plans[aid] = p
-
-        # In-group conflict smoothing: iteratively resolve vertex conflicts by adding waits
-        # to the non-leader agent involved.
-        def pos_at(path: Path, t: int) -> Position:
-            return path[min(t, len(path) - 1)]
-
+        # Leader first, then others sorted by distance to goal (shortest first)
         leader = group.leader_id
-        max_iters = 200
-        for _ in range(max_iters):
-            agent_ids = list(plans.keys())
-            makespan = max(len(p) for p in plans.values())
-            conflict_found = False
-            for t in range(makespan):
-                occ: dict[Position, int] = {}
-                for aid in agent_ids:
-                    p = pos_at(plans[aid], t)
-                    if p in occ:
-                        other = occ[p]
-                        # decide who waits
-                        waiter = aid
-                        if aid == leader and other != leader:
-                            waiter = other
-                        elif other == leader and aid != leader:
-                            waiter = aid
-                        else:
-                            waiter = max(aid, other)
+        others = sorted(
+            [aid for aid in group.member_ids if aid != leader],
+            key=lambda aid: self._manhattan(pos_by_id[aid], goal_by_id[aid]),
+        )
+        priority_order = [leader] + others
 
-                        wpos = pos_at(plans[waiter], max(0, t - 1))
-                        plans[waiter].insert(t, wpos)
-                        conflict_found = True
-                        break
-                    occ[p] = aid
-                if conflict_found:
-                    break
-            if not conflict_found:
-                break
+        max_dist = max(
+            (self._manhattan(pos_by_id[aid], goal_by_id[aid]) for aid in group.member_ids),
+            default=1,
+        )
+        t_max = max(max_dist * 4, 200)
+
+        reserved_vertex: dict = {}
+        reserved_edge: dict = {}
+        plans: dict[int, Path] = {}
+
+        for aid in priority_order:
+            start = pos_by_id[aid]
+            goal = goal_by_id[aid]
+
+            # Precompute heuristic from goal (reverse BFS within view, then global fallback)
+            h_local = self._reverse_bfs(goal, allowed=view)
+            h_global = self._reverse_bfs(goal)
+
+            # Try within local view first, fall back to full grid
+            path = self._spacetime_astar(start, goal, reserved_vertex, reserved_edge, t_max, h_local, allowed=view)
+            if path is None:
+                path = self._spacetime_astar(start, goal, reserved_vertex, reserved_edge, t_max, h_global)
+            if path is None:
+                path = [start]
+
+            plans[aid] = path
+            self._reserve_path(path, aid, reserved_vertex, reserved_edge, t_max)
 
         return plans
 
-    # TODO: Globally resolve agents conflicts after updating plans
     def _resolve_inter_group_conflicts(
         self,
         groups: list[LocalGroup],
         partial_plans: dict[int, Path],
     ) -> tuple[Optional[Plan], int]:
-        # Leader-mediated resolution: when conflicts appear between different groups,
-        # make the non-leader side wait, or if both are leaders, pick one deterministically.
+        """Resolve inter-group conflicts via global prioritised space-time A*.
+
+        Agents with shorter optimal paths are planned first so they can claim
+        their goal positions before longer-path agents transit through them.
+        Uses A* with a precomputed heuristic for each agent — dramatically
+        faster than BFS on large maps (warehouse-20-40 etc.).
+        """
         if not groups:
             return dict(partial_plans), 0
 
-        plan: Plan = dict(partial_plans)
-        group_by_agent: dict[int, int] = {}
-        leaders: set[int] = set()
-        for gi, g in enumerate(groups):
-            leaders.add(g.leader_id)
-            for aid in g.member_ids:
-                group_by_agent[aid] = gi
+        goal_by_id = {a.id: a.goal for a in self.instance.agents}
+        start_by_id = {a.id: a.start for a in self.instance.agents}
 
-        def pos_at(aid: int, t: int) -> Position:
-            path = plan[aid]
-            return path[min(t, len(path) - 1)]
+        all_agent_ids = [a.id for a in self.instance.agents]
 
+        # Precompute reverse-BFS heuristic maps and clean-map distances per unique goal.
+        # Multiple agents may share a goal only in degenerate inputs; cache by goal cell.
+        h_map_cache: dict[Position, dict[Position, int]] = {}
+        dist_cache: dict[Position, int] = {}
+
+        def get_h_map(goal: Position) -> dict[Position, int]:
+            if goal not in h_map_cache:
+                h_map_cache[goal] = self._reverse_bfs(goal)
+            return h_map_cache[goal]
+
+        def get_dist(start: Position, goal: Position) -> int:
+            key = (start, goal)
+            if key not in dist_cache:
+                h = get_h_map(goal)
+                dist_cache[key] = h.get(start, 10**9)
+            return dist_cache[key]
+
+        # Sort by clean-map distance: shorter-path agents plan first so they
+        # claim their goals before longer-path agents transit through them.
+        priority_order = sorted(
+            all_agent_ids,
+            key=lambda aid: (get_dist(start_by_id[aid], goal_by_id[aid]), aid),
+        )
+
+        max_partial = max((len(p) for p in partial_plans.values()), default=1)
+        t_max = max(max_partial * 3, 300)
+
+        reserved_vertex: dict = {}
+        reserved_edge: dict = {}
+        plan: Plan = {}
         fixed = 0
-        start_t = time.perf_counter()
-        # Keep this bounded; wait-insertion can otherwise blow up quickly.
-        # If time_limit_sec <= 0, treat it as "no time limit" and therefore allow
-        max_rounds: int | None = None
-        if float(self.config.time_limit_sec) > 0:
-            max_rounds = max(200, 50 * len(plan))
 
-        # If we start with a very high conflict count, this naive resolver likely won't converge.
-        # Fail fast so benchmark won't hang until the time limit.
-        initial_conflicts = self._detect_conflicts(plan)
-        if len(initial_conflicts) > 2000:
-            return None, fixed
+        for aid in priority_order:
+            start = start_by_id[aid]
+            goal = goal_by_id[aid]
+            h_map = get_h_map(goal)
 
-        rounds = 0
-        while True:
-            if max_rounds is not None and rounds >= max_rounds:
-                break
-            # Allow disabling the solver time limit by setting time_limit_sec <= 0.
-            if float(self.config.time_limit_sec) > 0 and (time.perf_counter() - start_t) > float(self.config.time_limit_sec):
-                return None, fixed
+            new_path = self._spacetime_astar(start, goal, reserved_vertex, reserved_edge, t_max, h_map)
 
-            conflicts = self._detect_conflicts(plan)
-            if not conflicts:
-                return plan, fixed
+            old_path = partial_plans.get(aid, [start])
+            if new_path is None:
+                new_path = old_path
+            elif new_path != old_path:
+                fixed += 1
 
-            # Fix the earliest conflict first for stability.
-            ai, aj, t, _ctype = min(conflicts, key=lambda c: (c[2], c[0], c[1], c[3]))
-            if ai not in plan or aj not in plan:
-                rounds += 1
+            plan[aid] = new_path
+            self._reserve_path(new_path, aid, reserved_vertex, reserved_edge, t_max)
+
+        conflicts = self._detect_conflicts(plan)
+        return (plan, fixed) if not conflicts else (None, fixed)
+
+    def _reverse_bfs(
+        self,
+        goal: Position,
+        allowed: Optional[set[Position]] = None,
+    ) -> dict[Position, int]:
+        """BFS from goal backwards to compute h(pos) = distance to goal.
+
+        Returns a dict mapping reachable positions to their distance.
+        Positions not in the dict are unreachable (treat as infinity).
+        """
+        h: dict[Position, int] = {goal: 0}
+        q: deque[Position] = deque([goal])
+        while q:
+            pos = q.popleft()
+            for nb in self.instance.get_neighbours(pos):
+                if nb in h:
+                    continue
+                if allowed is not None and nb not in allowed:
+                    continue
+                h[nb] = h[pos] + 1
+                q.append(nb)
+        return h
+
+    def _spacetime_astar(
+        self,
+        start: Position,
+        goal: Position,
+        reserved_vertex: dict,
+        reserved_edge: dict,
+        t_max: int,
+        h_map: dict[Position, int],
+        allowed: Optional[set[Position]] = None,
+    ) -> Optional[Path]:
+        """Space-time A* avoiding reserved vertices and swap conflicts.
+
+        h_map: precomputed reverse-BFS heuristic (distance from each cell to goal).
+        allowed: optional local-view cell filter.
+        Returns the shortest conflict-free path, or None if not found within t_max.
+        """
+        if allowed is not None and start not in allowed:
+            return None
+        if (start, 0) in reserved_vertex:
+            return None
+        if start == goal:
+            return [start]
+        if start not in h_map:
+            return None  # goal unreachable from start (disconnected)
+
+        # Priority queue entries: (f, g, pos, t)
+        h0 = h_map.get(start, 10**9)
+        pq: list[tuple] = [(h0, 0, start, 0)]
+        g_best: dict[tuple[Position, int], int] = {(start, 0): 0}
+        prev: dict[tuple, Optional[tuple]] = {(start, 0): None}
+
+        while pq:
+            f, g, cur_pos, t = heapq.heappop(pq)
+
+            # Stale entry check
+            if g_best.get((cur_pos, t), 10**9) < g:
                 continue
 
-            gi = group_by_agent.get(ai, -1)
-            gj = group_by_agent.get(aj, -1)
-            if gi == gj and gi != -1:
-                # Still unresolved inside a group; let the same rule apply.
-                pass
+            if cur_pos == goal:
+                path: list[Position] = []
+                state: Optional[tuple] = (cur_pos, t)
+                while state is not None:
+                    path.append(state[0])
+                    state = prev[state]
+                path.reverse()
+                return path
 
-            ai_is_leader = ai in leaders
-            aj_is_leader = aj in leaders
+            if t >= t_max:
+                continue
 
-            if ai_is_leader and not aj_is_leader:
-                waiter = aj
-            elif aj_is_leader and not ai_is_leader:
-                waiter = ai
-            else:
-                # both leaders or both non-leaders: deterministic tie-break
-                waiter = max(ai, aj)
+            nt = t + 1
+            for next_pos in self.instance.get_neighbours(cur_pos) + [cur_pos]:
+                if allowed is not None and next_pos not in allowed:
+                    continue
+                if (next_pos, nt) in reserved_vertex:
+                    continue
+                if next_pos != cur_pos and (next_pos, cur_pos, t) in reserved_edge:
+                    continue
 
-            # Insert a wait at time t for the waiter (stay at previous position).
-            wait_pos = pos_at(waiter, t - 1) if t > 0 else pos_at(waiter, 0)
-            plan[waiter].insert(t, wait_pos)
-            fixed += 1
-            rounds += 1
+                new_g = g + 1
+                state_key = (next_pos, nt)
+                if g_best.get(state_key, 10**9) <= new_g:
+                    continue
 
-        # If we exit due to round cap, treat as failure if conflicts remain.
-        return (plan, fixed) if not self._detect_conflicts(plan) else (None, fixed)
+                g_best[state_key] = new_g
+                prev[state_key] = (cur_pos, t)
+                h = h_map.get(next_pos, 10**9)
+                heapq.heappush(pq, (new_g + h, new_g, next_pos, nt))
 
-    # Get local view from position
+        return None
+
+    def _reserve_path(
+        self,
+        path: Path,
+        aid: int,
+        reserved_vertex: dict,
+        reserved_edge: dict,
+        t_max: int,
+    ) -> None:
+        """Mark all space-time cells of path as reserved by aid."""
+        for t, pos in enumerate(path):
+            reserved_vertex[(pos, t)] = aid
+            if t > 0:
+                reserved_edge[(path[t - 1], pos, t - 1)] = aid
+        # Agent stays at its goal after the path ends
+        for t in range(len(path) - 1, t_max + 1):
+            reserved_vertex[(path[-1], t)] = aid
+
     def _compute_local_view(self, center: Position, radius: int) -> set[Position]:
         x0, y0 = center
         return {
@@ -321,10 +371,7 @@ class LocalLeadersMAPF:
             if self.instance.is_free((x, y))
         }
 
-    # Find conflicts in agent's plans
-    # 2 possible issues: agents want to occupy same vertex at same time or they want to pass through each other
     def _detect_conflicts(self, solution: Plan) -> list[tuple]:
-
         conflicts: list[tuple] = []
         agent_ids = list(solution.keys())
         if not agent_ids:
@@ -334,39 +381,58 @@ class LocalLeadersMAPF:
 
         def pos_at(aid: int, t: int) -> Position:
             path = solution[aid]
-            # Agent stays at goal after its path ends
             return path[min(t, len(path) - 1)]
 
         for t in range(makespan):
-            for i, ai in enumerate(agent_ids):
-                for aj in agent_ids[i + 1:]:
-                    pi_t = pos_at(ai, t)
-                    pj_t = pos_at(aj, t)
-                    pi_t1 = pos_at(ai, t + 1)
-                    pj_t1 = pos_at(aj, t + 1)
+            # Vertex conflicts: O(n) with hash map
+            occ: dict[Position, int] = {}
+            for ai in agent_ids:
+                p = pos_at(ai, t)
+                if p in occ:
+                    conflicts.append((occ[p], ai, t, "vertex"))
+                else:
+                    occ[p] = ai
 
-                    if pi_t == pj_t:
-                        conflicts.append((ai, aj, t, "vertex"))
-
-                    if pi_t == pj_t1 and pj_t == pi_t1:
+            # Swap conflicts: O(n) with edge hash map
+            edges: dict[tuple[Position, Position], int] = {}
+            for ai in agent_ids:
+                edge = (pos_at(ai, t), pos_at(ai, t + 1))
+                edges[edge] = ai
+            for ai in agent_ids:
+                reverse = (pos_at(ai, t + 1), pos_at(ai, t))
+                if reverse in edges and edges[reverse] != ai:
+                    aj = edges[reverse]
+                    if ai < aj:
                         conflicts.append((ai, aj, t, "swap"))
 
         return conflicts
 
-    # SOC
     def _compute_soc(self, solution: Plan) -> int:
         return sum(len(path) - 1 for path in solution.values())
 
-    # Makespan
     def _compute_makespan(self, solution: Plan) -> int:
         return max(len(path) - 1 for path in solution.values())
 
-    # Get manhattan distance between 2 points
+    def _bfs_dist(self, start: Position, goal: Position) -> int:
+        """Shortest path distance on the clean grid (no other agents)."""
+        if start == goal:
+            return 0
+        q: deque[tuple[Position, int]] = deque([(start, 0)])
+        seen: set[Position] = {start}
+        while q:
+            pos, d = q.popleft()
+            for nb in self.instance.get_neighbours(pos):
+                if nb == goal:
+                    return d + 1
+                if nb not in seen:
+                    seen.add(nb)
+                    q.append((nb, d + 1))
+        return 10**9  # unreachable
+
     @staticmethod
     def _manhattan(a: Position, b: Position) -> int:
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    # Get Chebyshev distance between 2 points
     @staticmethod
     def _chebyshev(a: Position, b: Position) -> int:
         return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
