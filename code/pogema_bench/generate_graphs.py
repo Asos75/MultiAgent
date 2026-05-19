@@ -63,19 +63,17 @@ except ImportError:
 # ── Colour & label palette ────────────────────────────────────────────────────
 
 COLORS = {
-    "lacam":              "#2196F3",   # blue
-    "local-leaders":      "#4CAF50",   # green
-    "local-leaders-cpp":  "#1B5E20",   # dark green
-    "matslp":             "#FF9800",   # orange
-    "follower":           "#9C27B0",   # purple
+    "lacam":         "#2196F3",   # blue
+    "local-leaders": "#4CAF50",   # green
+    "matslp":        "#FF9800",   # orange
+    "follower":      "#9C27B0",   # purple
 }
 
 LABELS = {
-    "lacam":             "LaCAM",
-    "local-leaders":     "Local Leaders (Python)",
-    "local-leaders-cpp": "Local Leaders (C++)",
-    "matslp":            "MATS-LP",
-    "follower":          "Follower",
+    "lacam":         "LaCAM",
+    "local-leaders": "Local Leaders",
+    "matslp":        "MATS-LP",
+    "follower":      "Follower",
 }
 
 MAP_TYPE_ORDER = ["random", "maze", "warehouse"]
@@ -574,7 +572,6 @@ def fig_success_rate(
 def fig_throughput(
     matslp_rows: List[dict],
     ll_rows: List[dict],
-    ll_cpp_rows: List[dict],
     follower_rows: List[dict],
     out: Path,
 ) -> None:
@@ -587,12 +584,11 @@ def fig_throughput(
     Two panels: 0% and 30% obstacle density (random maps only).
     """
     densities = [0, 30]
-    algos = ["matslp", "local-leaders", "local-leaders-cpp", "follower"]
+    algos = ["matslp", "local-leaders", "follower"]
     all_rows = {
-        "matslp":            matslp_rows,
-        "follower":          follower_rows,
-        "local-leaders":     ll_rows,
-        "local-leaders-cpp": ll_cpp_rows,
+        "matslp":        matslp_rows,
+        "follower":      follower_rows,
+        "local-leaders": ll_rows,
     }
 
     fig, axes = plt.subplots(1, len(densities), figsize=(5.5 * len(densities), 4.2), sharey=True)
@@ -678,21 +674,19 @@ def fig_soc_overhead(rows: List[dict], out: Path) -> None:
 def fig_throughput_by_maptype(
     matslp_rows: List[dict],
     ll_rows: List[dict],
-    ll_cpp_rows: List[dict],
     out: Path,
 ) -> None:
-    """Lifelong throughput across all map types: MATS-LP vs Local Leaders (Python & C++).
+    """Lifelong throughput across all map types: MATS-LP vs Local Leaders.
 
     Each panel shows a map type; bars are grouped by agent count.
     """
-    algos = ["matslp", "local-leaders", "local-leaders-cpp"]
-    all_rows = {"matslp": matslp_rows, "local-leaders": ll_rows, "local-leaders-cpp": ll_cpp_rows}
+    algos = ["matslp", "local-leaders"]
+    all_rows = {"matslp": matslp_rows, "local-leaders": ll_rows}
 
     map_types = [
         mt for mt in MAP_TYPE_ORDER
         if any(r["map_type"] == mt for r in matslp_rows)
         or any(r["map_type"] == mt for r in ll_rows)
-        or any(r["map_type"] == mt for r in ll_cpp_rows)
     ]
     if not map_types:
         return
@@ -725,7 +719,7 @@ def fig_throughput_by_maptype(
                   MAP_TYPE_TITLES[mt])
 
     fig.suptitle(
-        "Throughput by Map Type: MATS-LP vs Local Leaders Python vs Local Leaders C++  (lifelong POGEMA benchmark)",
+        "Throughput by Map Type: MATS-LP vs Local Leaders  (lifelong POGEMA benchmark)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig7_throughput_by_maptype", out)
@@ -770,8 +764,7 @@ def main() -> None:
 
     movingai_rows    = load_movingai(RESULTS_DIR / "movingai_benchmark.csv")
     matslp_rows      = load_throughput(MATS_LP_RESULTS / "benchmark_results.csv", "matslp")
-    ll_lifelong_rows = load_throughput(LL_LIFELONG_RESULTS, "local-leaders")
-    ll_cpp_rows      = load_throughput(LL_CPP_RESULTS, "local-leaders-cpp")
+    ll_lifelong_rows = load_throughput(LL_CPP_RESULTS, "local-leaders")
     follower_rows    = load_follower_summary(RESULTS_DIR / "follower_results_follower_summary.csv")
     follower_raw     = load_follower_raw(RESULTS_DIR / "follower_results_follower.csv")
 
@@ -782,9 +775,9 @@ def main() -> None:
     fig_makespan(movingai_rows, GRAPHS_DIR)
     fig_planning_time(movingai_rows, matslp_rows, ll_lifelong_rows, follower_raw, GRAPHS_DIR)
     fig_success_rate(movingai_rows, matslp_rows, ll_lifelong_rows, follower_rows, GRAPHS_DIR)
-    fig_throughput(matslp_rows, ll_lifelong_rows, ll_cpp_rows, follower_rows, GRAPHS_DIR)
+    fig_throughput(matslp_rows, ll_lifelong_rows, follower_rows, GRAPHS_DIR)
     fig_soc_overhead(movingai_rows, GRAPHS_DIR)
-    fig_throughput_by_maptype(matslp_rows, ll_lifelong_rows, ll_cpp_rows, GRAPHS_DIR)
+    fig_throughput_by_maptype(matslp_rows, ll_lifelong_rows, GRAPHS_DIR)
 
     print("Done.")
 
