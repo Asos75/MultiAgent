@@ -64,14 +64,18 @@ except ImportError:
 
 COLORS = {
     "lacam":         "#2196F3",   # blue
-    "local-leaders": "#4CAF50",   # green
+    "pbs":           "#F44336",   # red
+    "local-leaders": "#4CAF50",   # green  (MovingAI one-shot data)
+    "ll-cpp":        "#4CAF50",   # green  (POGEMA lifelong data — same algorithm)
     "matslp":        "#FF9800",   # orange
     "follower":      "#9C27B0",   # purple
 }
 
 LABELS = {
     "lacam":         "LaCAM",
+    "pbs":           "PBS",
     "local-leaders": "Local Leaders",
+    "ll-cpp":        "Local Leaders",
     "matslp":        "MATS-LP",
     "follower":      "Follower",
 }
@@ -352,10 +356,11 @@ def _save(fig: "plt.Figure", stem: str, out: Path) -> None:
 # ── Figure 1: SoC comparison ──────────────────────────────────────────────────
 
 def fig_soc(rows: List[dict], out: Path) -> None:
-    """SoC — LaCAM vs Local Leaders, one panel per map type."""
+    """SoC — LaCAM / PBS / Local Leaders, one panel per map type."""
     if not rows:
         return
-    algos = ["lacam", "local-leaders"]
+    algos = [a for a in ["lacam", "pbs", "local-leaders"]
+             if any(r["algo"] == a for r in rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in rows)]
 
     fig, axes = plt.subplots(1, len(map_types), figsize=(4.5 * len(map_types), 4.2))
@@ -373,17 +378,18 @@ def fig_soc(rows: List[dict], out: Path) -> None:
         _grouped_bars(ax, agents, algo_vals, algo_errs)
         _setup_ax(ax, "Number of agents", "Sum of Costs", MAP_TYPE_TITLES[mt])
 
-    fig.suptitle("Sum of Costs: LaCAM vs Local Leaders", fontweight="bold", y=1.01)
+    fig.suptitle("Sum of Costs: LaCAM vs PBS vs Local Leaders", fontweight="bold", y=1.01)
     _save(fig, "fig1_soc_comparison", out)
 
 
 # ── Figure 2: Makespan ────────────────────────────────────────────────────────
 
 def fig_makespan(rows: List[dict], out: Path) -> None:
-    """Makespan — LaCAM vs Local Leaders, one panel per map type."""
+    """Makespan — LaCAM / PBS / Local Leaders, one panel per map type."""
     if not rows:
         return
-    algos = ["lacam", "local-leaders"]
+    algos = [a for a in ["lacam", "pbs", "local-leaders"]
+             if any(r["algo"] == a for r in rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in rows)]
 
     fig, axes = plt.subplots(1, len(map_types), figsize=(4.5 * len(map_types), 4.2))
@@ -401,7 +407,7 @@ def fig_makespan(rows: List[dict], out: Path) -> None:
         _grouped_bars(ax, agents, algo_vals, algo_errs)
         _setup_ax(ax, "Number of agents", "Makespan (steps)", MAP_TYPE_TITLES[mt])
 
-    fig.suptitle("Makespan: LaCAM vs Local Leaders", fontweight="bold", y=1.01)
+    fig.suptitle("Makespan: LaCAM vs PBS vs Local Leaders", fontweight="bold", y=1.01)
     _save(fig, "fig2_makespan_comparison", out)
 
 
@@ -413,6 +419,7 @@ def fig_planning_time(
     ll_lifelong_rows: List[dict],
     follower_raw_rows: List[dict],
     out: Path,
+    ll_cpp_rows: Optional[List[dict]] = None,
 ) -> None:
     """Planning time / episode wall-time comparison.
 
@@ -420,7 +427,8 @@ def fig_planning_time(
     Rightmost panel: POGEMA episode elapsed_s for MATS-LP vs Local Leaders vs Follower
     on random maps with 0% obstacles.  Shows ~400× speedup of LL over MATS-LP.
     """
-    algos_mv = ["lacam", "local-leaders"]
+    algos_mv = [a for a in ["lacam", "pbs", "local-leaders"]
+                if any(r["algo"] == a for r in movingai_rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in movingai_rows)]
 
     n_panels = len(map_types) + 1
@@ -447,10 +455,15 @@ def fig_planning_time(
                   MAP_TYPE_TITLES[mt], log_y=True)
 
     # POGEMA episode time panel (random maps, 0% obstacles)
-    pogema_algos = ["matslp", "local-leaders", "follower"]
+    _ll_cpp = ll_cpp_rows or []
+    pogema_algos = [a for a in ["matslp", "ll-cpp", "follower"]
+                    if any(r.get("elapsed_s") is not None
+                           for r in (matslp_rows if a == "matslp"
+                                     else _ll_cpp if a == "ll-cpp"
+                                     else follower_raw_rows))]
     pogema_src = {
         "matslp":        matslp_rows,
-        "local-leaders": ll_lifelong_rows,
+        "ll-cpp":        _ll_cpp,
         "follower":      follower_raw_rows,
     }
     agent_sets: set = set()
@@ -484,7 +497,7 @@ def fig_planning_time(
         ax_pogema.set_title("POGEMA episode time")
 
     fig.suptitle(
-        "Runtime: LaCAM vs LL (MovingAI planning time)  |  MATS-LP vs LL vs Follower (POGEMA episode time)",
+        "Runtime: LaCAM/PBS/LL (MovingAI)  |  MATS-LP/LL-CPP/LL/Follower (POGEMA episode time)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig3_planning_time", out)
@@ -498,6 +511,7 @@ def fig_success_rate(
     ll_lifelong_rows: List[dict],
     follower_rows: List[dict],
     out: Path,
+    ll_cpp_rows: Optional[List[dict]] = None,
 ) -> None:
     """
     Left panels (one per map type): MovingAI one-shot success rate — LaCAM vs Local Leaders.
@@ -507,7 +521,8 @@ def fig_success_rate(
       (random maps, 0% obstacles).  LaCAM is a one-shot planner and is not benchmarked
       in lifelong mode.
     """
-    algos_mv = ["lacam", "local-leaders"]
+    algos_mv = [a for a in ["lacam", "pbs", "local-leaders"]
+                if any(r["algo"] == a for r in movingai_rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in movingai_rows)]
     n_panels = len(map_types) + 1
 
@@ -526,12 +541,17 @@ def fig_success_rate(
         ax.axhline(1.0, color="#ccc", linewidth=0.8, zorder=1)
         _setup_ax(ax, "Number of agents", "Success rate", MAP_TYPE_TITLES[mt])
 
-    # POGEMA panel: lifelong throughput for all 3 POGEMA algorithms
+    # POGEMA panel: lifelong throughput — MATS-LP, LL-CPP, LL-Python, Follower
     ax_pogema = axes[-1]
-    pogema_algos = ["matslp", "local-leaders", "follower"]
+    _ll_cpp = ll_cpp_rows or []
+    pogema_algos = [a for a in ["matslp", "ll-cpp", "follower"]
+                    if any(r.get("throughput") is not None
+                           for r in (matslp_rows if a == "matslp"
+                                     else _ll_cpp if a == "ll-cpp"
+                                     else follower_rows))]
     pogema_src = {
         "matslp":        matslp_rows,
-        "local-leaders": ll_lifelong_rows,
+        "ll-cpp":        _ll_cpp,
         "follower":      follower_rows,
     }
 
@@ -561,7 +581,7 @@ def fig_success_rate(
         ax_pogema.set_title("POGEMA throughput")
 
     fig.suptitle(
-        "Success Rate (MovingAI one-shot: LaCAM vs LL)  |  Throughput (POGEMA lifelong: all 3 decentralised)",
+        "Success Rate (MovingAI: LaCAM/PBS/LL)  |  Throughput (POGEMA lifelong: MATS-LP/LL-CPP/LL/Follower)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig4_success_rate", out)
@@ -572,6 +592,7 @@ def fig_success_rate(
 def fig_throughput(
     matslp_rows: List[dict],
     ll_rows: List[dict],
+    ll_cpp_rows: List[dict],
     follower_rows: List[dict],
     out: Path,
 ) -> None:
@@ -584,11 +605,15 @@ def fig_throughput(
     Two panels: 0% and 30% obstacle density (random maps only).
     """
     densities = [0, 30]
-    algos = ["matslp", "local-leaders", "follower"]
+    algos = [a for a in ["matslp", "ll-cpp", "follower"]
+             if any(r.get("throughput") is not None
+                    for r in (matslp_rows if a == "matslp"
+                              else ll_cpp_rows if a == "ll-cpp"
+                              else follower_rows))]
     all_rows = {
         "matslp":        matslp_rows,
+        "ll-cpp":        ll_cpp_rows,
         "follower":      follower_rows,
-        "local-leaders": ll_rows,
     }
 
     fig, axes = plt.subplots(1, len(densities), figsize=(5.5 * len(densities), 4.2), sharey=True)
@@ -622,7 +647,7 @@ def fig_throughput(
         )
 
     fig.suptitle(
-        "Throughput: MATS-LP vs Local Leaders vs Follower  (POGEMA, random maps)",
+        "Throughput: MATS-LP vs LL-CPP vs Local Leaders vs Follower  (POGEMA, random maps)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig5_throughput_comparison", out)
@@ -631,7 +656,7 @@ def fig_throughput(
 # ── Figure 6: SoC overhead ratio ─────────────────────────────────────────────
 
 def fig_soc_overhead(rows: List[dict], out: Path) -> None:
-    """SoC ratio (Local Leaders / LaCAM) per map type — shows cost overhead."""
+    """SoC ratio vs LaCAM per map type — LL and PBS lines."""
     if not rows:
         return
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in rows)]
@@ -640,31 +665,37 @@ def fig_soc_overhead(rows: List[dict], out: Path) -> None:
     if len(map_types) == 1:
         axes = [axes]
 
+    comparison_algos = [a for a in ["pbs", "local-leaders"]
+                        if any(r["algo"] == a for r in rows)]
+
     for ax, mt in zip(axes, map_types):
         mt_rows = [r for r in rows if r["map_type"] == mt]
         agents = sorted({r["num_agents"] for r in mt_rows})
         lc_agg = agg(mt_rows, "lacam", "soc").get(mt, {})
-        ll_agg = agg(mt_rows, "local-leaders", "soc").get(mt, {})
 
-        xs, ratios = [], []
-        for na in agents:
-            lc_m = lc_agg.get(na, {}).get("mean")
-            ll_m = ll_agg.get(na, {}).get("mean")
-            if lc_m and ll_m and lc_m > 0:
-                xs.append(na)
-                ratios.append(ll_m / lc_m)
+        for algo in comparison_algos:
+            algo_agg = agg(mt_rows, algo, "soc").get(mt, {})
+            xs, ratios = [], []
+            for na in agents:
+                lc_m = lc_agg.get(na, {}).get("mean")
+                al_m = algo_agg.get(na, {}).get("mean")
+                if lc_m and al_m and lc_m > 0:
+                    xs.append(na)
+                    ratios.append(al_m / lc_m)
+            if xs:
+                ax.plot(xs, ratios, marker="o", color=COLORS[algo],
+                        linewidth=2, markersize=6,
+                        label=f"{LABELS[algo]} / LaCAM", zorder=3)
 
-        if xs:
-            ax.plot(xs, ratios, marker="o", color=COLORS["local-leaders"],
-                    linewidth=2, markersize=6, label="Local Leaders / LaCAM", zorder=3)
         ax.axhline(1.0, color=COLORS["lacam"], linestyle="--", linewidth=1.2,
                    label="LaCAM (ratio = 1)", zorder=2)
-        _setup_ax(ax, "Number of agents", "SoC ratio (LL / LaCAM)" if mt == map_types[0] else "",
+        _setup_ax(ax, "Number of agents",
+                  "SoC ratio vs LaCAM" if mt == map_types[0] else "",
                   MAP_TYPE_TITLES[mt])
         ax.set_ylim(bottom=0)
         ax.legend()
 
-    fig.suptitle("SoC Overhead: Local Leaders vs LaCAM  (ratio > 1 = worse than LaCAM)",
+    fig.suptitle("SoC Ratio vs LaCAM  (< 1 = better than LaCAM)",
                  fontweight="bold", y=1.01)
     _save(fig, "fig6_soc_overhead", out)
 
@@ -674,20 +705,26 @@ def fig_soc_overhead(rows: List[dict], out: Path) -> None:
 def fig_throughput_by_maptype(
     matslp_rows: List[dict],
     ll_rows: List[dict],
+    ll_cpp_rows: List[dict],
+    follower_rows: List[dict],
     out: Path,
 ) -> None:
-    """Lifelong throughput across all map types: MATS-LP vs Local Leaders.
+    """Lifelong throughput across all map types: MATS-LP / LL-CPP / LL / Follower.
 
     Each panel shows a map type; bars are grouped by agent count.
     """
-    algos = ["matslp", "local-leaders"]
-    all_rows = {"matslp": matslp_rows, "local-leaders": ll_rows}
+    src = {
+        "matslp":        matslp_rows,
+        "ll-cpp":        ll_cpp_rows,
+        "follower":      follower_rows,
+    }
+    algos = [a for a in ["matslp", "ll-cpp", "follower"]
+             if any(r.get("throughput") is not None for r in src[a])]
 
-    map_types = [
-        mt for mt in MAP_TYPE_ORDER
-        if any(r["map_type"] == mt for r in matslp_rows)
-        or any(r["map_type"] == mt for r in ll_rows)
-    ]
+    all_map_types = set()
+    for a in algos:
+        all_map_types |= {r["map_type"] for r in src[a] if r.get("throughput") is not None}
+    map_types = [mt for mt in MAP_TYPE_ORDER if mt in all_map_types]
     if not map_types:
         return
 
@@ -698,7 +735,7 @@ def fig_throughput_by_maptype(
     for ax, mt in zip(axes, map_types):
         agent_sets: set = set()
         for algo in algos:
-            mt_rows = [r for r in all_rows[algo] if r.get("map_type") == mt]
+            mt_rows = [r for r in src[algo] if r.get("map_type") == mt]
             d = agg_throughput_by_maptype(mt_rows, algo).get(mt, {})
             agent_sets |= set(d.keys())
         agents = sorted(agent_sets)
@@ -708,7 +745,7 @@ def fig_throughput_by_maptype(
 
         algo_vals, algo_errs = {}, {}
         for algo in algos:
-            mt_rows = [r for r in all_rows[algo] if r.get("map_type") == mt]
+            mt_rows = [r for r in src[algo] if r.get("map_type") == mt]
             d = agg_throughput_by_maptype(mt_rows, algo).get(mt, {})
             algo_vals[algo] = [d.get(n, {}).get("mean") for n in agents]
             algo_errs[algo] = [d.get(n, {}).get("std", 0.0) for n in agents]
@@ -719,7 +756,7 @@ def fig_throughput_by_maptype(
                   MAP_TYPE_TITLES[mt])
 
     fig.suptitle(
-        "Throughput by Map Type: MATS-LP vs Local Leaders  (lifelong POGEMA benchmark)",
+        "Throughput by Map Type: MATS-LP / LL-CPP / Local Leaders / Follower  (POGEMA lifelong)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig7_throughput_by_maptype", out)
@@ -764,7 +801,9 @@ def main() -> None:
 
     movingai_rows    = load_movingai(RESULTS_DIR / "movingai_benchmark.csv")
     matslp_rows      = load_throughput(MATS_LP_RESULTS / "benchmark_results.csv", "matslp")
-    ll_lifelong_rows = load_throughput(LL_CPP_RESULTS, "local-leaders")
+    ll_lifelong_rows = load_throughput(
+        CODE_ROOT / "local_leaders" / "results" / "benchmark_results.csv", "local-leaders")
+    ll_cpp_rows      = load_throughput(LL_CPP_RESULTS, "ll-cpp")
     follower_rows    = load_follower_summary(RESULTS_DIR / "follower_results_follower_summary.csv")
     follower_raw     = load_follower_raw(RESULTS_DIR / "follower_results_follower.csv")
 
@@ -773,11 +812,13 @@ def main() -> None:
 
     fig_soc(movingai_rows, GRAPHS_DIR)
     fig_makespan(movingai_rows, GRAPHS_DIR)
-    fig_planning_time(movingai_rows, matslp_rows, ll_lifelong_rows, follower_raw, GRAPHS_DIR)
-    fig_success_rate(movingai_rows, matslp_rows, ll_lifelong_rows, follower_rows, GRAPHS_DIR)
-    fig_throughput(matslp_rows, ll_lifelong_rows, follower_rows, GRAPHS_DIR)
+    fig_planning_time(movingai_rows, matslp_rows, ll_lifelong_rows, follower_raw, GRAPHS_DIR,
+                      ll_cpp_rows=ll_cpp_rows)
+    fig_success_rate(movingai_rows, matslp_rows, ll_lifelong_rows, follower_rows, GRAPHS_DIR,
+                     ll_cpp_rows=ll_cpp_rows)
+    fig_throughput(matslp_rows, ll_lifelong_rows, ll_cpp_rows, follower_rows, GRAPHS_DIR)
     fig_soc_overhead(movingai_rows, GRAPHS_DIR)
-    fig_throughput_by_maptype(matslp_rows, ll_lifelong_rows, GRAPHS_DIR)
+    fig_throughput_by_maptype(matslp_rows, ll_lifelong_rows, ll_cpp_rows, follower_rows, GRAPHS_DIR)
 
     print("Done.")
 
