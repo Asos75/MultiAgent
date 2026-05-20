@@ -204,15 +204,6 @@ medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni 
 
 Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
-Za analizo bomo uporabili več sodobnih znanstvenih člankov, ki obravnavajo različne pristope k 
-reševanju problema MAPF. Izbrane članke so identificirali posamezni člani skupine:
-\begin{itemize}
-    \item \textit{LaCAM: Search-Based Algorithm for Quick Multi-Agent Pathfinding}~\cite{okumura2023lacam},
-    \item \textit{Priority-Based Search for Multi-Agent Path Finding}~\cite{li2019pbs},
-    \item \textit{Follower: Learning to Solve Decentralized Lifelong Multi-Agent Pathfinding}~\cite{andreychuk2024follower},
-    \item \textit{MATS-LP: Learning Decentralized Multi-Agent Pathfinding with Transformer-Based Policies}~\cite{skrynnik2024mcts}.
-\end{itemize}
-
 V nadaljevanju bomo primerjali centralizirane metode, katerih predstavnika sta LaCAM in PBS, 
 ki načrtujejo poti za vse agente z uporabo globalnega pogleda na problem, ter decentralizirane 
 pristope, kot sta Follower in MATS-LP, kjer posamezni agenti sprejemajo odločitve lokalno brez 
@@ -424,17 +415,55 @@ Primerjavo bomo izvedli na dveh ravneh:
 \subsection{Uvedba lokalnih vodij}
 
 Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
-\textit{lokalnih vodij}. Gre za hibridni pristop med centraliziranim in decentraliziranim 
-načrtovanjem, kjer je množica agentov razdeljena na lokalne skupine.
+\textit{lokalnih vodij}. Gre za hibridni algoritem \textit{Local Leaders}, ki združuje prednosti
+centraliziranega in decentraliziranega pristopa. Algoritem je povsem
+\textit{online} -- brez vnaprejšnjega načrtovanja -- in deluje v petih korakih
+pri vsakem časovnem koraku~(sl.~\ref{fig:flowchart}).
 
-Namesto popolnoma globalnega načrtovanja za vse agente ali popolnoma neodvisnega lokalnega odločanja
-predlagamo hierarhično razporeditev agentov v več lokalnih skupin. Vsaka od teh skupin ima lokalnega vodjo,
-to je agent, ki koordinira agente znotraj skupine, reševanje lokalnih konfliktov ter usklajevanje prehodov
-skozi kritične točke, kot so ozki hodniki, križišča ali območja z visoko gostoto agentov.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{../latex/slike/flowchart_local_leaders.png}
+    \caption{Diagram poteka algoritma Local Leaders: dinamično oblikovanje skupin,
+    določitev vodje, A* načrtovanje in prioritetna razrešitev konfliktov.}
+    \label{fig:flowchart}
+\end{figure}
 
-Za lažje razmevanje algoritma je priložen diagram poteka~(\autoref{fig:flowchart}), ki prikazuje, 
-razdelitev agentov v skupine, izbiro lokalnih vodij ter postopek lokalnega reševanja konfliktov in
-medskupinske koordinacije.
+\paragraph{1. Oblikovanje skupin.}
+Na začetku vsakega koraka, se agenti razdelijo v skupine. Pravilo za deljenje je preprosto in
+deterministično: Agent $i$ postane \textit{vodja}, če nobeden od agentov z nižjim ID-jem ne 
+leži znotraj razdalje $r_{\text{comm}}$ (Manhattan). Procesiranje agentov, od najnižjega do
+najvišjega ID-ja zagotovi konsistentno particijo brez dvoumnosti.
+
+\textbf{Ključna lastnost}: particija se spremeni vsak korak, tako da je članstvo v skupini
+dinamično glede na trenutno postaavitev.
+
+\paragraph{2. Željena celica (A*).}
+Vsak agent zase neodvisno izvede algoritem A* od svojega položaja, do cilja pri čimer gleda le
+na statične ovire. Agent na tej točki ignorira ostale agente. Rezultat tega koraka, je prva celica
+najkrajše poti, to je celica kamor se agent \textit{želi} premakniti. Agenti, ki so obstali 
+$\geq t_{\text{esc}}$ korakov (\textit{escape mode}), namesto A* izberejo naključno prosto 
+sosednje celico, s čimer prekinejo tesnobne zastoje v hodnikih.
+
+\paragraph{3. Prioritetna razrešitev konfliktov.}
+Agenti se obdelajo v vrstnem redu prioritet:
+\begin{enumerate}
+    \item agenti v escape modu (najvišja prioriteta),
+    \item vodje skupin,
+    \item sledilci.
+\end{enumerate}
+Znotraj vsake ravni je prednost pri agentih z nižjim ID-jem. Za vsakega agenta
+se preverita \textit{vozliščni} in \textit{zamenjalni} konflikt. V primeru
+konflikta se agent pomakne v najbližjo prosto, še nezaseženo celico. Ker se
+agenti z višjo prioriteto potrdijo prej, nižjeprioritentni agenti vedno vidijo
+zasedene celice in se jim izognejo, tako se izognemo konfliktom v fizikalnem koraku.
+
+\paragraph{4. Posodobitev števca zastoja.}
+Agent, ki se ni premaknil, poveča števec zastoja; agent, ki se je premaknil,
+ga ponastavi na nič.
+
+\paragraph{5. Implementacija.}
+Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++ 
+(prek pybind11) za hitrejše izvajanje. Parametri uporabljeni za testiranje so $r_{\text{comm}} = 7$, $t_{\text{esc}} = 8$.
 
 Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
 informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
@@ -442,33 +471,11 @@ Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centr
 algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
 decentraliziranih pristopih.
 
-Predlagamo dva pristopa pri izbiri lokalnih vodij:
-
-\begin{itemize}
-    \item \textbf{Statično}: Lokalni vodji so določeni vnaprej na podlagi kriterijev, kot so centralnost položaja,
-    \item \textbf{Dinamično}: Lokalni vodji se določajo adaptivno med izvajanjem, glede na trenutno gostoto agentov in potrebe po koordinaciji.
-\end{itemize}
-
-Ko pride do konflikta med agenti različnih skupin, lokalni vodije komunicirajo, med seboj 
-in uskladijo rešitev konflikta, kar omogoča učinkovito koordinacijo brez potrebe po centralnem 
-načrtovalcu. To zmanjša komunikacijsko obremenitev in poveča skalabilnost sistema.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{slike/Flowchart.png}
-    \caption{Diagram poteka algoritma, ki uporablja lokalne vodije}
-    \label{fig:flowchart}
-\end{figure}
-
 Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
 kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
 pristopi posebej. Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri
 decentraliziranih metodah ter bistveno krajši čas načrtovanja kot pri popolnoma
 centraliziranih algoritmih.
-
-V eksperimentalnem delu bomo preverili vpliv različnih strategij izbire lokalnih vodij,
-velikosti skupin ter gostote agentov na uspešnost reševanja problema MAPF.
-
 
 \section{Eksperiment in analiza rezultatov}
 
@@ -495,46 +502,10 @@ Uporabljamo tri glavne tipe okolij:
     robotiziranim skladiščem, kjer se agenti pogosto srečujejo na križiščih in v ozkih hodnikih.
 \end{itemize}
 
-Kot zanimiv prikaz dejanske uporabe pa uporabljamo tudi:
-
-\begin{itemize}
-    \item \textbf{Zemljevide mesta} (\textit{city maps}) – Resnični zemljevide mest, ki vključujejo ulice, 
-    zgradbe in druge ovire.
-
-    \item \textbf{Zemlevid videoiger} (\textit{game maps}) – Zemljevidi iz videoiger, ki pogosto vključujejo 
-    kompleksne strukture, hodnike in ovire.
-\end{itemize}
-
 Za vsako vrsto okolja izvajamo eksperimente pri različnih številih agentov (od 20 do 1000 agentov, odvisno od 
 velikosti zemljevida), z različnimi konfiguracijami. Vsaka konfiguracija se izvede večkrat z različnimi scenariji, 
 ki vključujejo začetne in ciljne pozicije agentov, rezultati pa se povprečijo, da zmanjšamo vpliv posameznih 
 naključnih primerov.
-
-\subsubsection{Predlagani hibridni pristop}
-
-Pri lastni izboljšavi uvedemo hierarhično razdelitev agentov v lokalne skupine. Skupine oblikujemo na podlagi
-prostorske bližine agentov ter njihove trenutne gostote v okolju.
-
-Vsaki skupini dodelimo lokalnega vodjo, ki prevzame odgovornost za:
-
-\begin{itemize}
-    \item koordinacijo gibanja znotraj skupine,
-    \item lokalno reševanje konfliktov,
-    \item usklajevanje prehodov skozi ozke prehode,
-    \item komunikacijo z drugimi lokalnimi vodji ob medskupinskih konfliktih.
-\end{itemize}
-
-Eksperimentalno preverjamo dve strategiji izbire lokalnih vodij:
-
-\begin{itemize}
-    \item \textbf{Statična izbira}, kjer vodje določimo pred začetkom izvajanja na podlagi centralnosti položaja;
-    
-    \item \textbf{Dinamična izbira}, kjer se vodje prilagajajo med izvajanjem glede na trenutno gostoto agentov in 
-    konfliktne situacije.
-\end{itemize}
-
-Dodatno analiziramo vpliv velikosti skupin na uspešnost algoritma, saj premajhne skupine zmanjšajo prednosti 
-koordinacije, prevelike pa povečajo lokalno kompleksnost načrtovanja.
 
 \subsubsection{Primerjalni kriteriji}
 

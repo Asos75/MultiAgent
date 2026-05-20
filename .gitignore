@@ -30,4 +30,5 @@ ALGORITHM.md
 # Auto-generated results and draft text (not committed)
 sample.md
 code/pogema_bench/results/movingai_benchmark.csv
-code/pogema_bench/results/graphs/
+code/pogema_bench/results/graphs/latex-draft/
+latex-draft/
