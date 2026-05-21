@@ -29,7 +29,7 @@ RESULTS_DIR = Path(__file__).parent / "results"
 GRAPHS_DIR = RESULTS_DIR / "graphs"
 MATS_LP_RESULTS = CODE_ROOT / "mats-lp" / "results"
 LL_LIFELONG_RESULTS = CODE_ROOT / "local_leaders" / "results" / "benchmark_results.csv"
-LL_CPP_RESULTS = CODE_ROOT / "local_leaders_cpp" / "results" / "benchmark_results.csv"
+LL_CPP_RESULTS = CODE_ROOT / "local_leaders_v2" / "results" / "benchmark_results.csv"
 
 try:
     import matplotlib

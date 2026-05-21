@@ -414,18 +414,11 @@ Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uv
 centraliziranega in decentraliziranega pristopa. Algoritem deluje lokalno, na ravni agenta, 
 brez vnaprejšnjega načrtovanja in deluje v petih korakih~(sl.~\ref{fig:flowchart}).
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{../latex/slike/flowchart_local_leaders.png}
-    \caption{Diagram poteka algoritma Local Leaders: dinamično oblikovanje skupin,
-    določitev vodje, A* načrtovanje in prioritetna razrešitev konfliktov.}
-    \label{fig:flowchart}
-\end{figure}
 
 \paragraph{1. Oblikovanje skupin.}
 Na začetku vsakega koraka, se agenti razdelijo v skupine. Pravilo za deljenje je preprosto in
-deterministično: Agent $i$ postane \textit{vodja}, če nobeden od agentov z nižjim ID-jem ne 
-leži znotraj razdalje $r_{\text{comm}}$ (Razdalja se izračuna po metodi Manhattan). Procesiranje 
+deterministično: Agent $i$ postane \textit{vodja}, če nobeden od agentov z nižjim ID-jem ne
+leži znotraj razdalje $r_{\text{leader}}$ (razdalja se izračuna po Manhattanski metriki). Procesiranje 
 agentov, od najnižjega do najvišjega ID-ja zagotovi konsistentno particijo brez dvoumnosti.
 Pri tem se pa particija se spremeni vsak korak, tako da je članstvo v skupini dinamično glede 
 na trenutno postavitev.
@@ -437,19 +430,27 @@ najkrajše poti, to je celica kamor se agent \textit{želi} premakniti. Agenti, 
 $\geq t_{\text{esc}}$ korakov preidejo v \textit{način pobega}, kjer namesto A* izberejo naključno 
 prosto sosednjo celico, s čimer prekinejo tesnobne zastoje v hodnikih.
 
-\paragraph{3. Prioritetna razrešitev konfliktov.}
-Agenti se obdelajo v vrstnem redu prioritet:
-\begin{enumerate}
-    \item agenti v načinu pobega (najvišja prioriteta),
-    \item vodje skupin,
-    \item sledilci.
-\end{enumerate}
+\paragraph{3. Razrešitev konfliktov v dveh fazah.}
+Razrešitev poteka v dveh eksplicitnih fazah, ki ločita konflikte \emph{znotraj} skupin od konfliktov \emph{med} skupinami.
 
-Znotraj vsake ravni je prednost pri agentih z nižjim ID-jem. Za vsakega agenta
-se preverita \textit{vozliščni} in \textit{zamenjalni} konflikt. V primeru
-konflikta se agent pomakne v najbližjo prosto, še nezaseženo celico. Ker se
-agenti z višjo prioriteto potrdijo prej, nižjeprioritentni agenti vedno vidijo
-zasedene celice in se jim izognejo, tako se izognemo konfliktom v fizikalnem koraku.
+\textbf{Faza A — znotrajskupinska razrešitev (vodja posreduje).}
+Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine z lokalno karto zavez.
+Obdelava članov znotraj skupine poteka v naslednjem vrstnem redu:
+\begin{enumerate}
+    \item agenti v načinu pobega (potrebujejo prednost, da se sprostijo iz zastoja),
+    \item preostali člani, urejeni po bližini do cilja (bolj nujni agenti prej), pri enakosti po ID-ju.
+\end{enumerate}
+Za vsakega člana vodja preveri \textit{vozliščni} (oba agenta v isto celico) in \textit{zamenjalni} konflikt (agenta zamenjata poziciji). Agent, ki pride na vrsto pozneje, se preusmeri v najboljšo prosto alternativo. Rezultat tega koraka so začasni položaji $\mathit{provisional}[i]$ vsakega agenta.
+
+\textbf{Faza B — medskupinska razrešitev (pogajanje vodij).}
+Agenti v načinu pobega najprej dobijo globalni predprehod, ne glede na prioriteto svoje skupine.
+Nato se skupine zavežejo v skupno globalno karto v naslednjem vrstnem redu:
+\begin{enumerate}
+    \item skupine z največjim številom obtičanih agentov,
+    \item pri enakosti: skupina, katere vodja je bliže svojemu cilju,
+    \item pri enakosti: skupina z nižjim ID-jem vodje.
+\end{enumerate}
+Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri — to je implicitno pogajanje med dvema vodjema.
 
 \paragraph{4. Posodobitev števca zastoja.}
 Agent, ki se ni premaknil, poveča števec zastoja; agent, ki se je premaknil,
@@ -460,6 +461,16 @@ Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI
 (prek pybind11) za hitrejše izvajanje. Parametri uporabljeni za testiranje so
 $r_{\text{agent}} = 11$ (vidno polje agenta), $r_{\text{leader}} = 17$ (vidno polje vodje),
 $t_{\text{esc}} = 1$ (prag pobega) in $t_{\text{regroup}} = 5$ (interval ponovnega združevanja skupin).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{../latex/slike/FlowchartV2.png}
+    \caption{Diagram poteka algoritma Local Leaders: dinamično oblikovanje skupin,
+    določitev vodje, A* načrtovanje in dvofazna razrešitev konfliktov (znotrajskupinska
+    posredovanost vodje, nato medskupinsko pogajanje vodij).}
+    \label{fig:flowchart}
+\end{figure}
+
 
 Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
 informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
@@ -600,8 +611,8 @@ Desni panel prikazuje lifelong pretočnost (cilji/korak) na POGEMA.
 Rezultati prikazujejo C++ implementacijo Local Leaders, ki je po pretočnosti
 primerljiva s Python različico, a bistveno hitrejša pri izvedbi.
 MATS-LP doseže 0{,}61 (8 agentov), 1{,}18 (16) in 2{,}26 (32 agentov).
-Local Leaders je tik zadaj: 0{,}59, 1{,}17 in 2{,}25,
-kar je 97--100\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
+Local Leaders je tik zadaj: 0{,}59, 1{,}18 in 2{,}28,
+kar je 97--101\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
 (0{,}36, 0{,}76, 1{,}41).
 
 \subsection{Primerjava pretočnosti pri 30\,\% ovirah}
@@ -621,11 +632,11 @@ Pri 0\,\% ovirah so vse tri krivulje blizu skupaj in dobro skalirajo z
 naraščajočim številom agentov. Pri 30\,\% ovirah se slika nekoliko spremeni:
 MATS-LP ohranja razumno pretočnost (0{,}36--0{,}90), Follower je pri 32
 agentih primerljiv z MATS-LP (0{,}94). Local Leaders s posodobitvijo parametrov
-($t_{\text{esc}} = 1$) bistveno izboljša pretočnost pri gostih ovirah: pri 8 agentih
-doseže 0{,}47 (vs.\ MATS-LP 0{,}36), pri 16 agentih 0{,}65, pri 32 agentih pa
-0{,}46 (vs.\ MATS-LP 0{,}90). Agresivnejši mehanizem pobega učinkoviteje
-razrešuje ciklične zastoje v ozkih hodnikih, čeprav je pri visokem številu agentov
-MATS-LP še vedno boljši.
+($t_{\text{esc}} = 1$) in dvofazno razrešitvijo konfliktov bistveno izboljša pretočnost
+pri gostih ovirah: pri 8 agentih doseže 0{,}49 (vs.\ MATS-LP 0{,}36), pri 16 agentih
+0{,}60, pri 32 agentih pa 0{,}51 (vs.\ MATS-LP 0{,}90). Agresivnejši mehanizem pobega
+in posredovanje vodje znotraj skupin učinkoviteje razrešujeta ciklične zastoje v ozkih
+hodnikih, čeprav je pri visokem številu agentov MATS-LP še vedno boljši.
 
 \subsection{SoC overhead razmerje}
 
@@ -662,10 +673,10 @@ PBS doseže razmerje $0{,}888$ pri 16 agentih, Local Leaders pa $0{,}960$
 Slika~\ref{fig:maptype} primerja lifelong pretočnost MATS-LP, Local Leaders in
 Follower na vseh treh tipih zemljevidov. Na naključnih zemljevidih so si
 algoritmi po pretočnosti blizu. Na labirintih pa vodi MATS-LP (0{,}906 pri 32 agentih), Local
-Leaders pa doseže 0{,}548 (pri 32 agentih), kar je boljše od Followerja. Na
-\emph{skladiščnih} zemljevidih se pa vlogi zamenjata: Local Leaders doseže 1{,}14
-(32 agentov) oziroma 2{,}12 (96 agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28,
-to je $\approx 7$--$10$-kratna prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
+Leaders pa doseže 0{,}672 (pri 32 agentih), kar je boljše od Followerja. Na
+\emph{skladiščnih} zemljevidih se pa vlogi zamenjata: Local Leaders doseže 1{,}16
+(32 agentov) oziroma 2{,}14 (96 agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28,
+to je $\approx 8$--$10$-kratna prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
 Vzrok je v tem, da MCTS v širokih koridorjih postane računsko izjemno zahteven
 (do 1240\,s na epizodo), medtem ko Local Leaders s C++ implementacijo isto
 epizodo opravi v pod 2\,s.
@@ -704,12 +715,12 @@ LaCAM, in časom načrtovanja 0{,}3--20\,ms. S tem zapolni vrzel, ki jo pušča
 Local Leaders v gostih labirintnih scenarijih, brez žrtve pri hitrosti.
 
 Local Leaders se izkaže kot učinkovit pristop: na lifelong
-scenarijih dosega 97--100\,\% pretočnosti MATS-LP na odprtih naključnih
-okoljih, na skladiščnih okoljih pa ga $\approx 7$--$10\times$ prekaša, pri čemer je
-100--400$\times$ hitrejši od MATS-LP po času epizode. Z dobro optimiziranimi parametri
-lahko doseže tudi konkurenčno pretočnost pri 30\,\% ovirah, čeprav pri 32 agentih še 
-vedno zaostaja za MATS-LP. Follower, kot naučena politika, leži med njima, 
-a ne uspe zaključiti epizod na skladiščnih zemljevidih.
+scenarijih dosega 97--101\,\% pretočnosti MATS-LP na odprtih naključnih
+okoljih, na skladiščnih okoljih pa ga $\approx 8$--$10\times$ prekaša, pri čemer je
+100--400$\times$ hitrejši od MATS-LP po času epizode. Dvofazna razrešitev konfliktov
+z vodji bistveno izboljša pretočnost v labirintih (+23\,\% pri 32 agentih) in pri
+30\,\% ovirah (0{,}51 vs.\ 0{,}90 MATS-LP pri 32 agentih). Follower, kot naučena
+politika, leži med njima, a ne uspe zaključiti epizod na skladiščnih zemljevidih.
 
 
 \section{Zaključek}
@@ -727,26 +738,28 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
     kar je za lokalni algoritem presenetljivo.
     
     \item \textbf{Pretočnost}: Na odprtih (0\,\% ovir) naključnih okoljih dosega
-    Local Leaders 97--100\,\% pretočnosti MATS-LP. Na skladiščnih okoljih
-    prekaša MATS-LP za 7--10-kratnik (2{,}12 vs.\ 0{,}28 ciljev/korak pri 96
-    agentih). Pri 30\,\% ovirah dosega 0{,}47--0{,}65 ciljev/korak, kar je
-    bistveno boljše od prejšnje različice (bila 0{,}14--0{,}28).
+    Local Leaders 97--101\,\% pretočnosti MATS-LP. Na labirintih doseže 0{,}672
+    pri 32 agentih (+23\,\% v primerjavi z osnovno različico). Na skladiščnih okoljih
+    prekaša MATS-LP za 8--10-kratnik (2{,}14 vs.\ 0{,}28 ciljev/korak pri 96
+    agentih). Pri 30\,\% ovirah dosega 0{,}49--0{,}60 ciljev/korak, kar je
+    bistveno boljše od osnove (bila 0{,}14--0{,}28).
 
-    \item \textbf{Hitrost}: Local leaders je hitrejši od MATS-LP za faktor 100--400,
+    \item \textbf{Hitrost}: Local Leaders je hitrejši od MATS-LP za faktor 100--400,
     pri čemer opravi epizodo v 0{,}26--0{,}97\,s, medtem ko MATS-LP potrebuje 48--416\,s za
     isto epizodo, kar potrjuje skalabilnost pristopa.
 
     \item \textbf{Slabosti}: Algoritem pri 32 agentih in 30\,\% ovirah zaostaja za
-    MATS-LP (0{,}46 vs.\ 0{,}90), v labirintnih okoljih pa PBS ponuja zanesljivejšo
-    alternativo. Nadaljnje izboljšave bi lahko vključevale kooperativno načrtovanje
-    med sosednjimi vodji pri gostih ovirah.
+    MATS-LP (0{,}51 vs.\ 0{,}90), v labirintnih okoljih pa PBS ponuja zanesljivejšo
+    alternativo z zagotovljeno 100\,\% uspešnostjo.
 \end{itemize}
 
 Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
 kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
-potrjujemo za odprta, gosta in skladiščna okolja. Posodobitev parametrov ($t_{\text{esc}} = 1$)
-je bistveno izboljšala vedenje pri visoki gostoti ovir. Za labirintna okolja bo potrebno
-razviti zanesljivejši mehanizem razrešitve zastojev, npr. pametnejšo izbiro smeri pobega.
+potrjujemo za odprta, gosta in skladiščna okolja. Dvofazna razrešitev konfliktov z
+vodji in posodobitev parametrov ($t_{\text{esc}} = 1$) sta bistveno izboljšali vedenje
+pri visoki gostoti ovir in v labirintih. Za scenarije z ozkimi hodniki bo potrebno
+razviti zanesljivejši mehanizem razrešitve zastojev, npr.\ kratkovidno kooperativno
+načrtovanje med sosednjimi vodji.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
