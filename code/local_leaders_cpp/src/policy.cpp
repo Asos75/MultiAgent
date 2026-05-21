@@ -5,10 +5,8 @@
 #include <numeric>
 #include <queue>
 
-// ── Constructor ───────────────────────────────────────────────────────────────
 
-LocalLeadersPolicy::LocalLeadersPolicy(int num_agents, unsigned seed,
-                                       PolicyConfig config)
+LocalLeadersPolicy::LocalLeadersPolicy(int num_agents, unsigned seed, PolicyConfig config)
     : N_(num_agents), H_(0), W_(0),
       config_(std::move(config)),
       stuck_(num_agents, 0), rng_(seed) {}
@@ -29,13 +27,14 @@ void LocalLeadersPolicy::reset(const Grid& grid) {
     astar_dirty_.reserve(H_ * W_ / 4);
 
     stuck_.assign(N_, 0);
+    step_count_ = 0;
     leader_of_.resize(N_);
     is_leader_.resize(N_);
     desired_.resize(N_);
     ordered_agents_.resize(N_);
     final_pos_.resize(N_);
     committed_.reserve(N_ * 2);
-    leaders_scratch_.reserve(N_);
+    leaders_.reserve(N_);
 }
 
 // A* algorithm
@@ -87,36 +86,37 @@ Pos LocalLeadersPolicy::astar_next(Pos start, Pos goal) const {
             }
         }
     }
-    return start; // unreachable → stay
+    return start; // unreachable -> stay
 }
 
-// ── Group formation ───────────────────────────────────────────────────────────
-// Processing agents in ascending ID order gives a deterministic partition.
-// Agent i becomes a leader if no already-formed leader lies within
-// leader_view_radius_; otherwise it joins the nearest one.
 
+// Group formation
 void LocalLeadersPolicy::form_groups(const PosVec& positions) {
-    leaders_scratch_.clear();
+    leaders_.clear();
 
+    // For every agent we look for the closest leader and assign him there
+    // If no such leader is found, he becomes one
     for (int i = 0; i < N_; ++i) {
-        Pos pi     = positions[i];
-        int best   = -1;
-        int best_d = config_.leader_view + 1;
+        Pos pi = positions[i];
+        int closestLeader = -1;
+        int minDistance = config_.leader_view + 1;
 
-        for (int lid : leaders_scratch_) {
-            int d = manh(pi, positions[lid]);
-            if (d <= config_.leader_view && d < best_d) {
-                best_d = d;
-                best   = lid;
+        for (int leader : leaders_) {
+            int d = manh(pi, positions[leader]);
+            if (d <= config_.leader_view && d < minDistance) {
+                minDistance = d;
+                closestLeader = leader;
             }
         }
 
-        leader_of_[i] = (best == -1) ? i : best;
-        if (leader_of_[i] == i) leaders_scratch_.push_back(i);
+        leader_of_[i] = (closestLeader == -1) ? i : closestLeader;
+        if (leader_of_[i] == i) {
+            leaders_.push_back(i);
+        }
     }
 }
 
-// ── Grid helpers ──────────────────────────────────────────────────────────────
+// Grid helpers 
 
 inline bool LocalLeadersPolicy::is_passable(int r, int c) const noexcept {
     return r >= 0 && r < H_ && c >= 0 && c < W_ && grid_flat_[r * W_ + c] == 0;
@@ -126,13 +126,10 @@ inline bool LocalLeadersPolicy::in_view(bool i_is_leader, Pos pi, Pos pj) const 
     return manh(pi, pj) <= (i_is_leader ? config_.leader_view : config_.agent_view);
 }
 
-// ── Best alternative cell ─────────────────────────────────────────────────────
-// Candidates: 4 neighbours (k=0..3 via DR/DC) + stay (k=4).
-// Returns the free, un-committed candidate closest (Manhattan) to tgt.
 
+// When the desired cell is taken we look for the best alternative move
 Pos LocalLeadersPolicy::best_alternative(
-    Pos pos, Pos tgt, const Committed& committed, int exclude_enc) const
-{
+    Pos pos, Pos desire, const Committed& committed, int exclude_enc) const {
     Pos best_cell = pos;
     int best_dist = INT_MAX;
 
@@ -143,7 +140,7 @@ Pos LocalLeadersPolicy::best_alternative(
         int enc = cell_encode(r, c, W_);
         if (committed.count(enc)) continue;
         if (enc == exclude_enc) continue;
-        int dist = std::abs(r - tgt.first) + std::abs(c - tgt.second);
+        int dist = std::abs(r - desire.first) + std::abs(c - desire.second);
         if (dist < best_dist) {
             best_dist = dist;
             best_cell = {r, c};
@@ -154,14 +151,14 @@ Pos LocalLeadersPolicy::best_alternative(
 
 // Function for resolving vertex conflicts
 Pos LocalLeadersPolicy::resolve_vertex(
-    int i, Pos pos, Pos want, int& want_enc, Pos tgt, int pos_enc,
+    int i, Pos pos, Pos want, int& want_enc, Pos desire, int pos_enc,
     const PosVec& positions) const {
     auto it = committed_.find(want_enc);
     if (it == committed_.end()) return want;
 
     int owner = it->second;
     if (in_view(is_leader_[i], pos, positions[owner])) {
-        want = best_alternative(pos, tgt, committed_);
+        want = best_alternative(pos, desire, committed_);
         want_enc = cell_encode(want.first, want.second, W_);
     } else {
         want = pos;
@@ -172,7 +169,7 @@ Pos LocalLeadersPolicy::resolve_vertex(
 
 // Function for resolving swap conflicts
 Pos LocalLeadersPolicy::resolve_swap(
-    int i, Pos pos, Pos want, int& want_enc, Pos tgt, int pos_enc,
+    int i, Pos pos, Pos want, int& want_enc, Pos desire, int pos_enc,
     const PosVec& positions) const {
     if (want == pos) return want;
 
@@ -181,7 +178,7 @@ Pos LocalLeadersPolicy::resolve_swap(
 
     int j = jt->second;
     if (positions[j] == want && in_view(is_leader_[i], pos, positions[j])) {
-        want = best_alternative(pos, tgt, committed_, want_enc);
+        want = best_alternative(pos, desire, committed_, want_enc);
         want_enc = cell_encode(want.first, want.second, W_);
     }
     return want;
@@ -190,13 +187,13 @@ Pos LocalLeadersPolicy::resolve_swap(
 // Main action function
 IntVec LocalLeadersPolicy::act(const PosVec& positions, const PosVec& targets) {
     
-    // 1. Group formation
-    // We init a lookup table for the leader of every agent
-    form_groups(positions);
-    // Fast lookup for whether agent is a leader
-    for (int i = 0; i < N_; ++i) {
-        is_leader_[i] = (leader_of_[i] == i);
+    // 1. Group formation - recomputed every regroup_interval steps.
+    if (step_count_ % config_.regroup_interval == 0) {
+        form_groups(positions);
+        for (int i = 0; i < N_; ++i)
+            is_leader_[i] = (leader_of_[i] == i);
     }
+    ++step_count_;
 
     // 2. For each agent we compute the next move with A*
     // Alternatively, if the agent is stuck we move randomly
@@ -271,14 +268,14 @@ IntVec LocalLeadersPolicy::act(const PosVec& positions, const PosVec& targets) {
         return false;
     });
 
-    // 4. Conflict resolution — committed maps encoded cell → owning agent index.
+    // 4. Conflict resolution - committed maps encoded cell -> owning agent index.
     committed_.clear();
     final_pos_ = positions;
 
     for (int i : ordered_agents_) {
-        Pos pos  = positions[i];
-        Pos want = desired_[i];
-        Pos target  = targets[i];
+        Pos pos    = positions[i];
+        Pos want   = desired_[i];
+        Pos desire = config_.hint_use_desired ? desired_[i] : targets[i];
 
         // Flat encodings of current and desired cells for hashmap
         int want_enc = cell_encode(want.first, want.second, W_);
@@ -286,8 +283,8 @@ IntVec LocalLeadersPolicy::act(const PosVec& positions, const PosVec& targets) {
 
         // Resolve conflicts with previously committed agents, in priority order.
         // Want can change here
-        want = resolve_vertex(i, pos, want, want_enc, target, pos_enc, positions);
-        want = resolve_swap(i, pos, want, want_enc, target, pos_enc, positions);
+        want = resolve_vertex(i, pos, want, want_enc, desire, pos_enc, positions);
+        want = resolve_swap(i, pos, want, want_enc, desire, pos_enc, positions);
 
         // Register where the agent will actually go
         final_pos_[i] = want;

@@ -9,6 +9,7 @@ import csv
 import sys
 import time
 import argparse
+from datetime import datetime
 from itertools import product
 from pathlib import Path
 
@@ -55,7 +56,20 @@ def run_episode(mod, map_name: str, num_agents: int, seed: int) -> tuple[float, 
     if map_name != "wfi_warehouse":
         base_env = LifeLongAverageThroughputMetric(base_env)
 
-    policy = mod.LocalLeadersPolicy(num_agents, seed)
+    cfg = mod.PolicyConfig()
+    cfg.agent_view       = 11
+    cfg.leader_view      = 17
+    cfg.escape_thresh    = 1
+    cfg.regroup_interval = 5
+    cfg.hint_use_desired = False
+    cfg.criteria = [
+        mod.Criterion.ESCAPE,
+        mod.Criterion.LEADER,
+        mod.Criterion.AGENT_ID,
+        mod.Criterion.LEAST_STUCK,
+        mod.Criterion.FOLLOWER,
+    ]
+    policy = mod.LocalLeadersPolicy(num_agents, seed, cfg)
 
     t_start = time.perf_counter()
     obs, _ = base_env.reset(seed=seed)
@@ -79,8 +93,10 @@ def run_episode(mod, map_name: str, num_agents: int, seed: int) -> tuple[float, 
 
 
 def main() -> None:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default="results/benchmark_results.csv")
+    parser.add_argument("--output", default=f"results/benchmark_{ts}.csv")
     parser.add_argument("--seeds", type=int, default=len(SEEDS))
     args = parser.parse_args()
 

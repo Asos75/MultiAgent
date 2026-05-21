@@ -1,8 +1,12 @@
 /*
 <%
+import sys
 import pybind11
 setup_pybind11(cfg)
-cfg['compiler_args'] = ['-std=c++17', '-O3', '-march=native']
+if sys.platform == 'win32':
+    cfg['compiler_args'] = ['/std:c++17', '/O2']
+else:
+    cfg['compiler_args'] = ['-std=c++17', '-O3', '-march=native']
 cfg['sources'] = ['policy.cpp']
 cfg['include_dirs'] = ['.', pybind11.get_include()]
 %>
@@ -16,7 +20,7 @@ cfg['include_dirs'] = ['.', pybind11.get_include()]
 namespace py = pybind11;
 
 PYBIND11_MODULE(local_leaders_online, m) {
-    m.doc() = "Online Local Leaders MAPF policy — C++ backend";
+    m.doc() = "Online Local Leaders MAPF policy - C++ backend";
 
     m.attr("AGENT_VIEW_RADIUS")  = AGENT_VIEW_RADIUS;
     m.attr("LEADER_VIEW_RADIUS") = LEADER_VIEW_RADIUS;
@@ -40,10 +44,12 @@ PYBIND11_MODULE(local_leaders_online, m) {
         "    cfg.criteria = [Criterion.LEADER, Criterion.PROXIMITY_CLOSEST]\n"
         "    policy = LocalLeadersPolicy(32, config=cfg)\n")
         .def(py::init<>())
-        .def_readwrite("agent_view",    &PolicyConfig::agent_view)
-        .def_readwrite("leader_view",   &PolicyConfig::leader_view)
-        .def_readwrite("escape_thresh", &PolicyConfig::escape_thresh)
-        .def_readwrite("criteria",      &PolicyConfig::criteria);
+        .def_readwrite("agent_view",       &PolicyConfig::agent_view)
+        .def_readwrite("leader_view",      &PolicyConfig::leader_view)
+        .def_readwrite("escape_thresh",    &PolicyConfig::escape_thresh)
+        .def_readwrite("regroup_interval",  &PolicyConfig::regroup_interval)
+        .def_readwrite("hint_use_desired",  &PolicyConfig::hint_use_desired)
+        .def_readwrite("criteria",          &PolicyConfig::criteria);
 
     py::class_<LocalLeadersPolicy>(m, "LocalLeadersPolicy",
         "Online, fully decentralised Local Leaders MAPF policy.\n\n"
