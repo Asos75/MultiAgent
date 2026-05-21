@@ -644,77 +644,119 @@ zanesljivo.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig6_soc_overhead.pdf}
-    \caption{Razmerje SoC (Local Leaders / LaCAM) po tipu zemljevida. Vrednost
-    pod 1 pomeni, da Local Leaders doseže nižji SoC kot LaCAM.}
+    \caption{Razmerje SoC (PBS / LaCAM in Local Leaders / LaCAM) po tipu
+    zemljevida. Vrednost pod 1 pomeni nižji SoC kot LaCAM.}
     \label{fig:overhead}
 \end{figure}
 
-Slika~\ref{fig:overhead} nazorno prikaže, da Local Leaders pri vseh tipih
-zemljevidov in pri vseh preizkušenih gostotah agentov doseže nižji SoC kot
-LaCAM (razmerje $< 1{,}0$). Na naključnih zemljevidih razmerje pada z
-naraščajočim številom agentov: od 0{,}994 (8 agentov) do 0{,}913 (64 agentov).
-Na skladiščnih zemljevidih je razmerje med 0{,}888 (8 agentov) in 0{,}913 (32
-agentov), kar nakazuje, da lokalna koordinacija v regularnih skladiščnih
-vzorcih učinkoviteje izkorišča strukturo prostora. Na labirintnih zemljevidih
-razmerje niha (0{,}994 pri 4, $\approx 0{,}924$ pri 8, $\approx 0{,}960$ pri
-16 agentih), a ostaja pod $1{,}0$.
+Slika~\ref{fig:overhead} prikazuje razmerje SoC za oba algoritma glede na
+LaCAM. Oba, PBS in Local Leaders, pri vseh tipih zemljevidov in gostotah
+agentov dosežeta nižji SoC kot LaCAM (razmerje $< 1{,}0$). Na naključnih
+zemljevidih razmerji PBS in Local Leaders sledita podobni krivulji, ki pada z
+naraščajočim številom agentov: od $\approx 0{,}994$ (8 agentov) do
+$\approx 0{,}913$ (64 agentov), vrednosti so tako podobne, da se črti
+praktično prekrivata. Na skladiščnih zemljevidih je razmerje za oba med
+$0{,}888$ (8 agentov) in $0{,}913$ (32 agentov). Na labirintnih zemljevidih
+PBS doseže razmerje $0{,}888$ pri 16 agentih, Local Leaders pa $0{,}960$
+(le pri uspešnih instancah), PBS je tu boljši, ker rešuje vse instance.
 
 \subsection{Pretočnost po tipu zemljevida}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig7_throughput_by_maptype.pdf}
-    \caption{Lifelong pretočnost MATS-LP in Local Leaders po tipu zemljevida
-    (naključni, labirint, skladišče). Na skladiščnih zemljevidih Local Leaders
-    dosega do 7-kratno višjo pretočnost kot MATS-LP.}
+    \caption{Lifelong pretočnost MATS-LP, Local Leaders in Follower po tipu
+    zemljevida (naključni, labirint, skladišče). Na skladiščnih zemljevidih
+    Local Leaders dosega do $10\times$ višjo pretočnost kot MATS-LP.}
     \label{fig:maptype}
 \end{figure}
 
-Slika~\ref{fig:maptype} primerja pretočnost na vseh treh tipih zemljevidov.
-Na naključnih in labirintnih je MATS-LP pred Local Leaders, pri čemer razlika
-narašča z gostoto agentov (MATS-LP: 0{,}906, LL: 0{,}237 pri 32 agentih v
-labirintu). Toda na \emph{skladiščnih} zemljevidih se vlogi zamenjata:
-Local Leaders doseže pretočnost 1{,}14 (32 agentov) oziroma 1{,}96 (96
-agentov), medtem ko MATS-LP doseže le 0{,}11 oziroma 0{,}28. To je
-$\approx 10$-kratna prednost Local Leaders. Vzrok je v tem, da MATS-LP v
-širokih koridorjih skladišča MCTS iskanje postane izjemno računsko zahtevno
-(do 1240\,s na epizodo), medtem ko greedy A* v takih prostorih deluje brez
-zastojev in je 400-krat hitrejši.
+Slika~\ref{fig:maptype} primerja lifelong pretočnost MATS-LP, Local Leaders in
+Follower na vseh treh tipih zemljevidov. Na naključnih zemljevidih so si
+algoritmi blizu; na labirintih MATS-LP vodi (0{,}906 pri 32 agentih), Local
+Leaders pa zaostaja (0{,}237). Toda na \emph{skladiščnih} zemljevidih se vlogi
+zamenjata: Local Leaders doseže 1{,}14 (32 agentov) oziroma 1{,}96 (96
+agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28, to je $\approx 10$-kratna
+prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
+Vzrok je v tem, da MCTS v širokih koridorjih postane računsko izjemno zahteven
+(do 1240\,s na epizodo), medtem ko Local Leaders s C++ implementacijo isto
+epizodo opravi v pod 2\,s.
 
 \subsection{Povzetek rezultatov}
 
 \begin{table}[H]
 \centering
-\caption{Povzetek primerjave po metrikah in tipih evaluacije. ++ zelo dobro,
-+ dobro, $\sim$ primerljivo, - slabo, -- zelo slabo.}
+\caption{Povzetek primerjave po metrikah. \textbf{++} zelo dobro, \textbf{+} dobro,
+$\sim$ primerljivo, \textbf{-} slabo, \textbf{-{}-} zelo slabo / N/A.}
 \label{tab:summary}
 \small
-\begin{tabular}{lcccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Metrika} & \textbf{LaCAM} & \textbf{LL} & \textbf{MATS-LP} & \textbf{Follower} \\
+\textbf{Metrika} & \textbf{LaCAM} & \textbf{PBS} & \textbf{LL} & \textbf{MATS-LP} & \textbf{Follower} \\
 \midrule
-SoC (one-shot)            & $\sim$  & $+$  & --   & -- \\
-Makespan (one-shot)       & $+$     & $+$  & --   & -- \\
-Čas načrtov. (MovingAI)   & $++$    & $-$  & --   & -- \\
-Stopnja uspeha (random)   & $++$    & $++$ & --   & -- \\
-Stopnja uspeha (maze)     & $++$    & $-$  & --   & -- \\
-Pretočnost (0\,\% ovire)  & --      & $\sim$ & $+$ & $\sim$ \\
-Pretočnost (30\,\% ovire) & --      & $--$   & $+$ & $\sim$ \\
-Pretočnost (warehouse)    & --      & $++$   & $-$ & -- \\
-Čas epizode (POGEMA)      & --      & $++$   & $-$ & $+$ \\
+SoC (one-shot)            & $\sim$ & $+$    & $+$    & --   & -- \\
+Makespan (one-shot)       & $+$    & $+$    & $+$    & --   & -- \\
+Čas načrtov. (MovingAI)   & $++$   & $+$    & $-$    & --   & -- \\
+Uspešnost (random)        & $++$   & $++$   & $++$   & --   & -- \\
+Uspešnost (maze)          & $++$   & $++$   & $-$    & --   & -- \\
+Pretočnost (0\,\% ovire)  & --     & --     & $\sim$ & $+$  & $\sim$ \\
+Pretočnost (30\,\% ovire) & --     & --     & $--$   & $+$  & $\sim$ \\
+Pretočnost (warehouse)    & --     & --     & $++$   & $-$  & -- \\
+Čas epizode (POGEMA)      & --     & --     & $++$   & $-$  & $+$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Preglednica~\ref{tab:summary} povzema primerjavo. Local Leaders se izkaže
-kot učinkovit hibridni pristop: na one-shot scenarijih dosega primerljivo ali
-boljšo kakovost rešitev kot LaCAM, na lifelong scenarijih se enakovredno
-kosa z MATS-LP na odprtih okoljih, na skladiščnih okoljih pa ga bistveno
-prekaša. Primarne slabosti so visoka gostota ovir (30\,\% ovir) ter ozki
-hodniki labirintov, kjer mehanizem naključnega pobega ne zadostuje.
+Preglednica~\ref{tab:summary} povzema primerjavo vseh petih algoritmov.
+PBS se izkaže kot izredno kompetenten centraliziran algoritem: na vseh tipih
+zemljevidov doseže 100\,\% uspešnost (vključno z labirinti, kjer Local Leaders
+zataji pri 33--50\,\%), z SoC, ki je $\approx 9$--$11\,\%$ nižji kot pri
+LaCAM, in časom načrtovanja 0{,}3--20\,ms. S tem zapolni vrzel, ki jo pušča
+Local Leaders v gostih labirintnih scenarijih, brez žrtve pri hitrosti.
+
+Local Leaders se kljub temu izkaže kot učinkovit hibridni pristop: na lifelong
+scenarijih dosega 94--96\,\% pretočnosti MATS-LP na odprtih in naključnih
+okoljih, na skladiščnih okoljih pa ga $\approx 10\times$ prekaša, pri čemer je
+100--400$\times$ hitrejši od MATS-LP po času epizode. Primarne slabosti
+ostajata visoka gostota ovir (30\,\% ovir) in ozki hodniki labirintov, kjer
+mehanizem naključnega pobega ne zadostuje in PBS ponuja zanesljivejšo
+alternativo.
 
 
+\section{Zaključek}
 
+V tem delu smo predstavili algoritem \textit{Local Leaders}, ki je naš pristop za 
+reševanje problema večagentnega iskanja poti. Ta temelju na dinamičnem oblikovanju 
+hierarhije lokalnih skupin z vodji, neodvisnem načrtovanju z algoritmom A* in reševanju 
+konfliktov z uporabo prioritet, vso načrtovanje pa se izvaja sproti.
+
+Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
+
+\begin{itemize}
+    \item \textbf{Kakovost rešitev}: Local Leaders premaga LaCAM v metriki Soc,
+    (do $9\,\%$ manj) in dosega primerljiv makespan na naključnih in skladiščnih,
+    kar je za lokalni algoritem presenetljivo.
+    
+    \item \textbf{Pretočnost}: Na odprtih (0\,\% ovir) naključnih okoljih dosega
+    Local Leaders 94--96\,\% pretočnosti MATS-LP. Na skladiščnih okoljih
+    prekaša MATS-LP za do 10-kratnik (1{,}96 vs.\ 0{,}28 ciljev/korak pri 96
+    agentih).
+    
+    \item \textbf{Hitrost}: Local leaders je hitrejši od MATS-LP za faktor 100--400,
+    pri čemer opravi epizodo v 0{,}26--0{,}97\,s, medtem ko MATS-LP potrebuje 48--416\,s za
+    isto epizodo, kar potrjuje skalabilnost pristopa.
+
+    \item \textbf{Slabosti}: Vseeno pa algoritem degradira pri visoki gostoti ovir 
+    (30\,\% na naključnih zemljevidih) in v labirintnih okoljih, kjer mehanizem naključnega pobega
+    ne zadostuje več za zanesljivo razrešitev zastojev, kar je področje za nadaljnje izboljšave.
+\end{itemize}
+
+Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
+kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
+potrjujemo za odprta in skladiščna okolja. Za gosta in labirintna okolja bo potrebno razviti 
+zanesljivejši mehanizem razrešitve zastojev, npr.\ kratkovidno kooperativno načrtovanje med 
+sosednjimi vodji ali pa pametnejšo izbiro smeri pobega.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
