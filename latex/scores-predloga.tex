@@ -214,8 +214,6 @@ Cilj problema je načrtovati poti za množico agentov v diskretnem prostoru tako
 medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni čas izvajanja 
 (ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs})~\cite{stern2019multiagent}.
 
-Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
-
 V nadaljevanju bomo primerjali centralizirane metode, katerih predstavnika sta LaCAM\cite{okumura2023lacam} in PBS\cite{li2019pbs}, 
 ki načrtujejo poti za vse agente z uporabo globalnega pogleda na problem, ter decentralizirane 
 pristope, kot sta Follower\cite{andreychuk2024follower} in MATS-LP\cite{skrynnik2023decentralized}, kjer posamezni agenti sprejemajo odločitve lokalno brez 
@@ -236,6 +234,8 @@ učinkovitostjo in skalabilnostjo ter omogoča relativno enostavno reprodukcijo 
 LaCAM bomo uporabili kot predstavnika centraliziranih metod, s katerim bomo primerjali 
 decentralizirane pristope, kot sta Follower in MATS-LP, ter tako sistematično analizirali 
 razlike med globalnim in lokalnim načrtovanjem poti.
+
+Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
 \subsection{Definicija problema}
 
@@ -392,6 +392,19 @@ robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši klju
 
 \vspace{0.5em}
 \noindent
+\textbf{Pretok (Throughput)} meri povprečno število agentov, ki na 
+časovni korak dosežejo svoja ciljna vozlišča~\cite{skrynnik2025pogema}. 
+Skupaj s stopnjo uspeha tvori osnovo za vrednotenje na platformi 
+POGEMA~\cite{skrynnik2025pogema}. 
+Metrika je še posebej primerna za lifelong oziroma zvezne scenarije, 
+kjer agenti po dosegu cilja prejmejo novo nalogo, saj odraža 
+dolgotrajno zmogljivost sistema pri visokih obremenitvah. 
+Za razliko od makespana, ki meri trajanje posamezne instance, pretok 
+zajame sposobnost sistema za vzdrževanje učinkovitega delovanja skozi 
+daljše časovno obdobje.
+
+\vspace{0.5em}
+\noindent
 \textbf{Čas načrtovanja} merimo kot skupni čas izvajanja algoritma na
 posamezni instanci. Ta metrika je še posebej pomembna pri primerjavi med kategorijama, saj centralizirani načrtovalec tipično porabi več časa za globalno načrtovanje, 
 kot decentralizirani agenti. 
@@ -425,41 +438,38 @@ Na začetku vsakega koraka, se agenti razdelijo v skupine. Pravilo za deljenje j
 deterministično: Agent $i$ postane \textit{vodja}, če nobeden od agentov z nižjim ID-jem ne
 leži znotraj razdalje $r_{\text{leader}}$ (razdalja se izračuna po Manhattanski metriki). Procesiranje 
 agentov, od najnižjega do najvišjega ID-ja zagotovi konsistentno particijo brez dvoumnosti.
-Pri tem se pa particija se spremeni vsak korak, tako da je članstvo v skupini dinamično glede 
-na trenutno postavitev.
 
 \paragraph{2. Željena celica (A*).}
 Vsak agent zase neodvisno izvede algoritem A* od svojega položaja, do cilja, pri čimer gleda le
-na statične ovire. Agent na tej točki ignorira ostale agente. Rezultat tega koraka, je prva celica
-najkrajše poti, to je celica kamor se agent \textit{želi} premakniti. Agenti, ki so obstali 
+na statične ovire. Agent na tej točki ignorira ostale agente. Rezultat tega koraka, je celica kamor se agent \textit{želi} premakniti. Agenti, ki so obstali 
 $\geq t_{\text{esc}}$ korakov preidejo v \textit{način pobega}, kjer namesto A* izberejo naključno 
-prosto sosednjo celico, s čimer prekinejo tesnobne zastoje v hodnikih.
+prosto sosednjo celico.
 
 \paragraph{3. Razrešitev konfliktov v dveh fazah.}
 Razrešitev poteka v dveh eksplicitnih fazah, ki ločita konflikte \emph{znotraj} skupin od konfliktov \emph{med} skupinami.
 
-\textbf{Faza A — znotrajskupinska razrešitev (vodja posreduje).}
-Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine z lokalno karto zavez.
+\textbf{Faza A — znotrajskupinska razrešitev }
+Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine.
 Obdelava članov znotraj skupine poteka v naslednjem vrstnem redu:
 \begin{enumerate}
-    \item agenti v načinu pobega (potrebujejo prednost, da se sprostijo iz zastoja),
-    \item preostali člani, urejeni po bližini do cilja (bolj nujni agenti prej), pri enakosti po ID-ju.
+    \item agenti v načinu pobega,
+    \item preostali člani, urejeni po bližini do cilja, pri enakosti pa po ID-ju.
 \end{enumerate}
-Za vsakega člana vodja preveri \textit{vozliščni} (oba agenta v isto celico) in \textit{zamenjalni} konflikt (agenta zamenjata poziciji). Agent, ki pride na vrsto pozneje, se preusmeri v najboljšo prosto alternativo. Rezultat tega koraka so začasni položaji $\mathit{provisional}[i]$ vsakega agenta.
+Za vsakega člana vodja preveri \textit{vozliščni} (oba agenta želita v isto celico) in \textit{zamenjalni} konflikt (agenta menjujeta poziciji). Agent, ki pride na vrsto pozneje, se preusmeri v najboljšo prosto alternativo. Rezultat tega koraka so začasni položaji $\mathit{provisional}[i]$ vsakega agenta.
 
-\textbf{Faza B — medskupinska razrešitev (pogajanje vodij).}
+\textbf{Faza B — medskupinska razrešitev}
 Agenti v načinu pobega najprej dobijo globalni predprehod, ne glede na prioriteto svoje skupine.
-Nato se skupine zavežejo v skupno globalno karto v naslednjem vrstnem redu:
+Nato se skupine zavežejo v skupno globalno karto premikov po sledeči prioriteti skupin:
 \begin{enumerate}
     \item skupine z največjim številom obtičanih agentov,
     \item pri enakosti: skupina, katere vodja je bliže svojemu cilju,
     \item pri enakosti: skupina z nižjim ID-jem vodje.
 \end{enumerate}
-Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri — to je implicitno pogajanje med dvema vodjema.
+Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri, kar predstavlja implicitno pogajanje med dvema vodjema.
 
 \paragraph{4. Posodobitev števca zastoja.}
 Agent, ki se ni premaknil, poveča števec zastoja; agent, ki se je premaknil,
-ga ponastavi na nič.
+pa ga ponastavi na nič.
 
 \paragraph{5. Implementacija.}
 Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++
@@ -492,10 +502,10 @@ centraliziranih algoritmih.
 \section{Eksperiment in analiza rezultatov}
 
 Po začetni validaciji implementacij smo zasnovali lasten eksperiment, ki primerja centralizirane,
-decentralizirane in hibridni pristop z lokalnimi vodji. Namen experimenta je preveriti ali lahko uvedba
+decentralizirane in hibridni pristop z lokalnimi vodji. Namen eksperimenta je preveriti ali lahko uvedba
 lokalnih vodij izboljša razmerje med kakovostjo rešitev in časom načrtovanja.
 
-Experimente izvajamo na standardiziranih zemlevidih iz zbirk MovingAI in POGEMA, na različnih velikostih 
+Experimente izvajamo na standardiziranih zemljevidih iz zbirk MovingAI in POGEMA, na različnih velikostih 
 zemljevidov, gostotah agentov in scenarijih. Tu so najbolj zanimivi scenariji z visoko gostoto agentov, 
 kjer se razlike med rešitvami najbolj pokažejo.
 
@@ -682,7 +692,7 @@ Leaders pa doseže 0{,}672 (pri 32 agentih), kar je boljše od Followerja. Na
 \emph{skladiščnih} zemljevidih se pa vlogi zamenjata: Local Leaders doseže 1{,}16
 (32 agentov) oziroma 2{,}14 (96 agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28,
 to je $\approx 8$--$10$-kratna prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
-Vzrok je v tem, da MCTS v širokih koridorjih postane računsko izjemno zahteven
+Vzrok je v tem, da MCTS v širokih hodnikih postane računsko izjemno zahteven
 (do 1240\,s na epizodo), medtem ko Local Leaders s C++ implementacijo isto
 epizodo opravi v pod 2\,s.
 
@@ -717,7 +727,7 @@ PBS se izkaže kot izredno kompetenten centraliziran algoritem: na vseh tipih
 zemljevidov doseže 100\,\% uspešnost (vključno z labirinti, kjer Local Leaders
 zataji pri 33--50\,\%), z SoC, ki je $\approx 9$--$11\,\%$ nižji kot pri
 LaCAM, in časom načrtovanja 0{,}3--20\,ms. S tem zapolni vrzel, ki jo pušča
-Local Leaders v gostih labirintnih scenarijih, brez žrtve pri hitrosti.
+Local Leaders v gostih labirintnih scenarijih, brez kompromisa pri hitrosti.
 
 Local Leaders se izkaže kot učinkovit pristop: na lifelong
 scenarijih dosega 97--101\,\% pretočnosti MATS-LP na odprtih naključnih
@@ -733,7 +743,7 @@ politika, leži med njima, a ne uspe zaključiti epizod na skladiščnih zemljev
 V tem delu smo predstavili algoritem \textit{Local Leaders}, ki je naš pristop za 
 reševanje problema večagentnega iskanja poti. Ta temelju na dinamičnem oblikovanju 
 hierarhije lokalnih skupin z vodji, neodvisnem načrtovanju z algoritmom A* in reševanju 
-konfliktov z uporabo prioritet, vso načrtovanje pa se izvaja sproti.
+konfliktov z uporabo prioritet, s tem da se načrtovanje izvaja sproti.
 
 Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
 
@@ -761,8 +771,7 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
 Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
 kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
 potrjujemo za odprta, gosta in skladiščna okolja. Dvofazna razrešitev konfliktov z
-vodji in posodobitev parametrov ($t_{\text{esc}} = 1$) sta bistveno izboljšali vedenje
-pri visoki gostoti ovir in v labirintih. Za scenarije z ozkimi hodniki bo potrebno
+vodji se je izkazala kot soliden pristop. Za scenarije z ozkimi hodniki bo potrebno
 razviti zanesljivejši mehanizem razrešitve zastojev, npr.\ kratkovidno kooperativno
 načrtovanje med sosednjimi vodji.
 
