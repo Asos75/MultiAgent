@@ -186,11 +186,8 @@
 \keywords{centralizirano načrtovanje poti, distribuirano načrtovanje poti, usklajevanje agentov, izogibanje trkom, optimizacija poti}
 
 \begin{abstract}
-V tem delu obravnavamo problem večagentnega iskanja poti MAPF, kjer primerjamo centralizirane in
-decentralizirane algoritme, ter predlagamo svoj hibridni pristop z lokalnimi vodijami (\textit{local leaders}).
-Algoritem agente dinamično razporeja v lokalne skupine, znotraj katerih vodja koordinira gibanje s
-prioritetno razrešitvijo konfliktov in algoritmom A*. Predlagani pristop primerjamo s centraliziranimi
-algoritmi LaCAM in PBS ter decentraliziranima algoritmoma Follower in MATS-LP na standardiziranih zbirkah
+V tem delu obravnavamo problem večagentnega iskanja poti MAPF, kjer primerjamo centralizirane in decentralizirane algoritme, ter predlagamo svoj pristop z lokalnimi vodijami (\textit{local leaders}). Algoritem agente dinamično razporeja v lokalne skupine z vodji, ki določajo prioriteto pri razreševanju konfliktov. Vsak agent pa neodvisno načrtuje pot z algoritmom A*.
+
 MovingAI in POGEMA. Local Leaders dosledno dosega nižji SoC kot LaCAM in PBS ($\approx9\,\%$ pri 64
 agentih), hkrati pa je 100--400$\times$ hitrejši od MATS-LP pri lifelong scenarijih.
 \end{abstract}
@@ -336,27 +333,15 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
     dodaten koordinacijski signal (komunikacija ali posredno usklajevanje) izboljša pretočnost; naš pristop to doseže z lažjim 
     mehanizmom vodij, ki ga lahko primerjamo z relacijo med čisto lokalnimi in bolj koordiniranimi pristopi.
 
-\subsection{Primerjalne platforme}
-
-	\textit{POGEMA}~\cite{skrynnik2025pogema} ponuja standardizirano platformo za evalvacijo MAPF algoritmov v (delno) opazljivih 
-    okoljih, z generatorjem instanc in enotnimi metrikami ter protokolom izvajanja. Omogoča pošteno in ponovljivo primerjavo 
-    različnih pristopov. POGEMA je naše glavno evalvacijsko ogrodje, zato se metodologija, metrike in primerjava rezultatov 
-    neposredno opirajo na to delo.
-
 \section{Metodologija}
 
 V tem poglavju bomo predstavili metodologijo vrednotenja in primerjanja izbranih algoritmov za problem večagentnega iskanja poti.
 Cilj eksperimentalnega dela je primerjati centralizirane pristope, kot sta LaCAM in PBS, z decentraliziranimi pristopi Follower 
-in MATS-LP ter ovrednotiti predlagani hibridni pristop z lokalnimi vodji.
+in MATS-LP ter ovrednotiti predlagani pristop z lokalnimi vodji.
 
-\subsection{Experimentalno okolje}
+\subsection{Eksperimentalno okolje}
 
-Za primerjalno okolje bomo uporabili knjižnico POGEMA~\cite{skrynnik2025pogema}, ki omogoča standardizirano evalvacijo MAPF
-algoritmov v delno opazljivih okoljih, ter to kombinirali z MovingAI~\cite{stern2019multiagent} knjižnico zemljevidov za testiranje agentov.
-
-POGEMA je dostopna kot standardna Python knjižnica, medtem ko so implementacije posameznih algoritmov pridobljene iz uradnih repozitorijev 
-avtorjev izbranih člankov. Ker različni algoritmi uporabljajo različne vhodne formate in interne predstavitve okolja, je bilo potrebno za 
-vsako implementacijo razviti poseben prilagoditveni sloj (\textit{adapter}), ki omogoča vključitev algoritma v skupno evalvacijsko ogrodje.
+Za evalvacijo uporabljamo knjižnico POGEMA~\cite{skrynnik2025pogema}, ki ponuja standardizirano platformo za primerjavo MAPF algoritmov v delno opazljivih okoljih — z generatorjem instanc, enotnimi metrikami in protokolom izvajanja. To kombiniramo z MovingAI~\cite{stern2019multiagent} zbirko zemljevidov, ki zagotavlja reprezentativne testne scenarije. POGEMA je dostopna kot standardna Python knjižnica, implementacije posameznih algoritmov pa so pridobljene iz uradnih repozitorijev avtorjev. Ker različni algoritmi uporabljajo različne vhodne formate in interne predstavitve okolja, smo za vsako implementacijo razvili poseben prilagoditveni sloj (\textit{adapter}), ki omogoča njeno vključitev v skupno ogrodje.
 
 \subsection{Metrike}
 
@@ -425,7 +410,7 @@ Primerjavo bomo izvedli na dveh ravneh:
 \subsection{Uvedba lokalnih vodij}
 
 Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
-\textit{lokalnih vodij}. Gre za hibridni algoritem \textit{Local Leaders}, ki združuje prednosti
+\textit{lokalnih vodij}. Gre za algoritem \textit{Local Leaders}, ki združuje prednosti
 centraliziranega in decentraliziranega pristopa. Algoritem deluje lokalno, na ravni agenta, 
 brez vnaprejšnjega načrtovanja in deluje v petih korakih~(sl.~\ref{fig:flowchart}).
 
