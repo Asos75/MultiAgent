@@ -186,12 +186,17 @@
 \keywords{centralizirano načrtovanje poti, distribuirano načrtovanje poti, usklajevanje agentov, izogibanje trkom, optimizacija poti}
 
 \begin{abstract}
-V tem delu obravnavamo problem večagentnega iskanja poti MAPF, kjer primerjamo centralizirane in decentralizirane algoritme, ter predlagamo svoj pristop z lokalnimi vodijami (\textit{local leaders}). Algoritem agente dinamično razporeja v lokalne skupine z vodji, ki določajo prioriteto pri razreševanju konfliktov. Vsak agent pa neodvisno načrtuje pot z algoritmom A*.
-
-MovingAI in POGEMA. Local Leaders dosledno dosega nižji SoC kot LaCAM in PBS ($\approx9\,\%$ pri 64
-agentih), hkrati pa je 100--400$\times$ hitrejši od MATS-LP pri lifelong scenarijih.
+V tem delu obravnavamo problem več-agentnega iskanja poti (MAPF) in predlagamo
+nov hibridni algoritem \textit{Local Leaders}, ki združuje prednosti centraliziranega
+in decentraliziranega pristopa. Algoritem agente dinamično razporeja v lokalne
+skupine, znotraj katerih vodja koordinira gibanje s prioritetno razrešitvijo
+konfliktov in algoritmom A*. Predlagani pristop primerjamo s centraliziranim
+algoritmom LaCAM ter decentraliziranima algoritmoma Follower in MATS-LP na
+standardiziranih zbirkah MovingAI in POGEMA\@. Rezultati pokažejo, da Local
+Leaders dosega primerljiv ali celo nekoliko nižji SoC kot LaCAM (do $9\,\%$
+manj pri 64 agentih), ob tem pa ohranja skoraj enako pretočnost kot MATS-LP na
+odprtih okoljih (94--96\,\%) pri do 400-kratno krajšem času izvajanja epizode.
 \end{abstract}
-
 %%
 %% This command processes the author and affiliation and title
 %% information and builds the first part of the formatted document.
