@@ -33,3 +33,10 @@ sample.md
 code/pogema_bench/results/movingai_benchmark.csv
 code/pogema_bench/results/graphs/latex-draft/
 latex-draft/
+
+venv/
+*.pyd
+*.so
+src/.rendered.*
+src/__pycache__/
+__pycache__/

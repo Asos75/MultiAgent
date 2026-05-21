@@ -1,86 +1,124 @@
 #pragma once
+#include <climits>
+#include <cstdlib>
 #include <random>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-// ── Visibility constants — change here to tune the algorithm ──────────────────
-//
-//  AGENT_VIEW_RADIUS : observation radius for regular (follower) agents.
-//                      Followers resolve conflicts only with agents within
-//                      this Manhattan distance; others are treated as static.
-//  LEADER_VIEW_RADIUS: observation / communication radius for leaders.
-//                      Used for group-formation: agent i joins the nearest
-//                      already-formed leader within this distance.
-//  ESCAPE_THRESHOLD  : consecutive stuck steps before an agent switches to
-//                      random-neighbour escape mode.
-//
+// Default tuning constants
 static constexpr int AGENT_VIEW_RADIUS  = 5;
 static constexpr int LEADER_VIEW_RADIUS = 7;
 static constexpr int ESCAPE_THRESHOLD   = 4;
 
-// ── POGEMA action encoding ────────────────────────────────────────────────────
+// POGEMA action encoding
 static constexpr int ACTION_STAY  = 0;
 static constexpr int ACTION_UP    = 1;
 static constexpr int ACTION_DOWN  = 2;
 static constexpr int ACTION_LEFT  = 3;
 static constexpr int ACTION_RIGHT = 4;
 
-// ── Convenience aliases ───────────────────────────────────────────────────────
-using Grid   = std::vector<std::vector<int>>;
-using Pos    = std::pair<int, int>;
-using PosVec = std::vector<Pos>;
-using IntVec = std::vector<int>;
-// committed map: encoded cell → agent index that owns it
+// Convenience aliases
+using Grid      = std::vector<std::vector<int>>;
+using Pos       = std::pair<int, int>;
+using PosVec    = std::vector<Pos>;
+using IntVec    = std::vector<int>;
 using Committed = std::unordered_map<int, int>;
 
-// Flat encoding for fast hashing
-inline int  cell_encode(int r, int c, int W) noexcept { return r * W + c; }
-inline Pos  cell_decode(int code, int W)    noexcept { return {code / W, code % W}; }
+inline int cell_encode(int r, int c, int W) noexcept { return r * W + c; }
+inline Pos cell_decode(int code, int W)     noexcept { return {code / W, code % W}; }
 
-// Manhattan distance
 inline int manh(Pos a, Pos b) noexcept {
     return std::abs(a.first - b.first) + std::abs(a.second - b.second);
 }
 
-// ── Neighbour deltas (up, down, left, right) ──────────────────────────────────
+// Neighbour deltas (up, down, left, right)
 static constexpr int DR[4] = {-1,  1,  0,  0};
 static constexpr int DC[4] = { 0,  0, -1,  1};
 
-// ── A* helper ─────────────────────────────────────────────────────────────────
-// Returns the first cell on the shortest static-obstacle-only path from
-// `start` to `goal`. Returns `start` if goal is already reached or unreachable.
-Pos astar_next(const Grid& grid, int H, int W, Pos start, Pos goal);
+// A* heap node
+struct AStarNode {
+    int f, g, r, c, fr, fc;
+    bool operator>(const AStarNode& o) const noexcept { return f > o.f; }
+};
 
-// ── Main policy class ─────────────────────────────────────────────────────────
+// Priority criteria
+enum class Criterion {
+    ESCAPE,             // stuck (>= escape_thresh) agents go first
+    LEADER,             // leaders go first
+    FOLLOWER,           // followers go first (inverse of LEADER)
+    PROXIMITY_CLOSEST,  // agent closest to its target goes first
+    PROXIMITY_FURTHEST, // agent furthest from its target goes first
+    AGENT_ID,           // lower agent index goes first
+    MOST_STUCK,         // agent with more stuck steps goes first
+    LEAST_STUCK,        // agent with fewer stuck steps goes first
+};
+
+// Policy configuration
+struct PolicyConfig {
+    int agent_view       = AGENT_VIEW_RADIUS;
+    int leader_view      = LEADER_VIEW_RADIUS;
+    int escape_thresh    = ESCAPE_THRESHOLD;
+    int  regroup_interval    = 1;    // recompute groups every N steps; 1 = every step
+    bool hint_use_desired    = true; // fallback hint: true = A* next step, false = final target
+
+    // Priority ordering: evaluated left-to-right, first difference wins.
+    std::vector<Criterion> criteria = {
+        Criterion::ESCAPE,
+        Criterion::LEADER,
+        Criterion::AGENT_ID,
+    };
+};
+
+// Main policy class
 class LocalLeadersPolicy {
 public:
-    explicit LocalLeadersPolicy(int num_agents, unsigned seed = 0);
+    explicit LocalLeadersPolicy(int num_agents, unsigned seed = 0,
+                                PolicyConfig config = {});
 
-    // Call once per episode with the static obstacle grid (0 = free, 1 = wall).
-    void reset(const Grid& grid);
-
-    // Compute one-step POGEMA actions for all agents.
-    // positions, targets: (row, col) in the padded grid coordinate system.
+    void   reset(const Grid& grid);
     IntVec act(const PosVec& positions, const PosVec& targets);
 
 private:
-    int          N_;
-    Grid         grid_;
-    int          H_, W_;
-    IntVec       stuck_;       // consecutive stuck steps per agent
-    std::mt19937 rng_;
+    int          N_, H_, W_;
+    PolicyConfig config_;
 
-    // Assign each agent to a leader (returns leader index per agent).
-    // Uses LEADER_VIEW_RADIUS for group formation.
-    IntVec form_groups(const PosVec& positions) const;
+    std::vector<int> grid_flat_;
+    IntVec           stuck_;
+    std::mt19937     rng_;
+    int              step_count_ = 0;
 
-    // Best un-committed cell reachable in one step that is closest to tgt.
-    // exclude_enc: additional encoded cell to skip (-1 = none).
-    Pos best_alternative(Pos pos, Pos tgt, const Committed& committed,
+    mutable std::vector<int> astar_dist_;
+    mutable std::vector<int> astar_dirty_;
+
+    // Per-step scratch buffers - allocated once in reset(), reused every act() call.
+    IntVec             leader_of_;
+    std::vector<bool>  is_leader_;
+    PosVec             desired_;
+    IntVec             ordered_agents_;
+    PosVec             final_pos_;
+    Committed          committed_;
+    std::vector<int>   leaders_;
+
+    // A* algorithm
+    Pos  astar_next(Pos start, Pos goal) const;
+
+    // Group formation
+    void form_groups(const PosVec& positions);
+
+    // Grid helpers
+    inline bool is_passable(int r, int c) const noexcept;
+    inline bool in_view(bool i_is_leader, Pos pi, Pos pj) const noexcept;
+
+    // When the desired cell is taken we look for the best alternative move
+    Pos best_alternative(Pos pos, Pos desire, const Committed& committed,
                          int exclude_enc = -1) const;
 
-    // Whether agent i can "see" agent j given their roles.
-    // Followers use AGENT_VIEW_RADIUS; leaders use LEADER_VIEW_RADIUS.
-    bool in_view(bool i_is_leader, Pos pi, Pos pj) const noexcept;
+    // Function for resolving vertex conflicts
+    Pos resolve_vertex(int i, Pos pos, Pos want, int& want_enc, Pos desire,
+                       int pos_enc, const PosVec& positions) const;
+
+    // Function for resolving swap conflicts
+    Pos resolve_swap(int i, Pos pos, Pos want, int& want_enc, Pos desire,
+                     int pos_enc, const PosVec& positions) const;
 };
