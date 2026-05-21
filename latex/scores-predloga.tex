@@ -456,8 +456,10 @@ Agent, ki se ni premaknil, poveča števec zastoja; agent, ki se je premaknil,
 ga ponastavi na nič.
 
 \paragraph{5. Implementacija.}
-Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++ 
-(prek pybind11) za hitrejše izvajanje. Parametri uporabljeni za testiranje so $r_{\text{comm}} = 7$, $t_{\text{esc}} = 8$.
+Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++
+(prek pybind11) za hitrejše izvajanje. Parametri uporabljeni za testiranje so
+$r_{\text{agent}} = 11$ (vidno polje agenta), $r_{\text{leader}} = 17$ (vidno polje vodje),
+$t_{\text{esc}} = 1$ (prag pobega) in $t_{\text{regroup}} = 5$ (interval ponovnega združevanja skupin).
 
 Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
 informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
@@ -598,8 +600,8 @@ Desni panel prikazuje lifelong pretočnost (cilji/korak) na POGEMA.
 Rezultati prikazujejo C++ implementacijo Local Leaders, ki je po pretočnosti
 primerljiva s Python različico, a bistveno hitrejša pri izvedbi.
 MATS-LP doseže 0{,}61 (8 agentov), 1{,}18 (16) in 2{,}26 (32 agentov).
-Local Leaders je tik zadaj: 0{,}57, 1{,}13 in 2{,}15,
-kar je 94--96\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
+Local Leaders je tik zadaj: 0{,}59, 1{,}17 in 2{,}25,
+kar je 97--100\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
 (0{,}36, 0{,}76, 1{,}41).
 
 \subsection{Primerjava pretočnosti pri 30\,\% ovirah}
@@ -610,19 +612,20 @@ kar je 94--96\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
     \caption{Lifelong pretočnost MATS-LP, Local Leaders in Follower na naključnih
     zemljevidih pri 0\,\% (levo) in 30\,\% (desno) gostoti ovir. Rezultati
     Local Leaders so iz C++ implementacije. Pri 30\,\% ovirah Local Leaders
-    občutno degradira pri 16 in 32 agentih.}
+    ostaja konkurenčen pri manjšem številu agentov, a zaostaja pri 32 agentih.}
     \label{fig:throughput}
 \end{figure}
 
 Slika~\ref{fig:throughput} kaže, kako gostota ovir vpliva na vsak algoritem.
 Pri 0\,\% ovirah so vse tri krivulje blizu skupaj in dobro skalirajo z
-naraščajočim številom agentov. Pri 30\,\% ovirah se slika bistveno spremeni:
+naraščajočim številom agentov. Pri 30\,\% ovirah se slika nekoliko spremeni:
 MATS-LP ohranja razumno pretočnost (0{,}36--0{,}90), Follower je pri 32
-agentih primerljiv z MATS-LP (0{,}94), Local Leaders pa bistveno pade: pri 16
-agentih doseže zgolj 0{,}28, pri 32 agentih pa 0{,}14. Gosto posejane ovire
-ustvarjajo ozke hodnike, v katerih se dva agenta vzajemno blokirata. Mehanizem
-naključnega pobega (\textit{escape mode}) takšnih cikličnih zastojev ne rešuje
-zanesljivo.
+agentih primerljiv z MATS-LP (0{,}94). Local Leaders s posodobitvijo parametrov
+($t_{\text{esc}} = 1$) bistveno izboljša pretočnost pri gostih ovirah: pri 8 agentih
+doseže 0{,}47 (vs.\ MATS-LP 0{,}36), pri 16 agentih 0{,}65, pri 32 agentih pa
+0{,}46 (vs.\ MATS-LP 0{,}90). Agresivnejši mehanizem pobega učinkoviteje
+razrešuje ciklične zastoje v ozkih hodnikih, čeprav je pri visokem številu agentov
+MATS-LP še vedno boljši.
 
 \subsection{SoC overhead razmerje}
 
@@ -658,11 +661,11 @@ PBS doseže razmerje $0{,}888$ pri 16 agentih, Local Leaders pa $0{,}960$
 
 Slika~\ref{fig:maptype} primerja lifelong pretočnost MATS-LP, Local Leaders in
 Follower na vseh treh tipih zemljevidov. Na naključnih zemljevidih so si
-algoritmi blizu; na labirintih MATS-LP vodi (0{,}906 pri 32 agentih), Local
-Leaders pa zaostaja (0{,}237). Toda na \emph{skladiščnih} zemljevidih se vlogi
-zamenjata: Local Leaders doseže 1{,}14 (32 agentov) oziroma 1{,}96 (96
-agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28, to je $\approx 10$-kratna
-prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
+algoritmi po pretočnosti blizu. Na labirintih pa vodi MATS-LP (0{,}906 pri 32 agentih), Local
+Leaders pa doseže 0{,}548 (pri 32 agentih), kar je boljše od Followerja. Na
+\emph{skladiščnih} zemljevidih se pa vlogi zamenjata: Local Leaders doseže 1{,}14
+(32 agentov) oziroma 2{,}12 (96 agentov), MATS-LP pa le 0{,}11 oziroma 0{,}28,
+to je $\approx 7$--$10$-kratna prednost. Follower na skladiščnih zemljevidih ne uspe zaključiti epizod.
 Vzrok je v tem, da MCTS v širokih koridorjih postane računsko izjemno zahteven
 (do 1240\,s na epizodo), medtem ko Local Leaders s C++ implementacijo isto
 epizodo opravi v pod 2\,s.
@@ -686,7 +689,7 @@ Makespan (one-shot)       & $+$    & $+$    & $+$    & --   & -- \\
 Uspešnost (random)        & $++$   & $++$   & $++$   & --   & -- \\
 Uspešnost (maze)          & $++$   & $++$   & $-$    & --   & -- \\
 Pretočnost (0\,\% ovire)  & --     & --     & $\sim$ & $+$  & $\sim$ \\
-Pretočnost (30\,\% ovire) & --     & --     & $--$   & $+$  & $\sim$ \\
+Pretočnost (30\,\% ovire) & --     & --     & $\sim$ & $+$  & $\sim$ \\
 Pretočnost (warehouse)    & --     & --     & $++$   & $-$  & -- \\
 Čas epizode (POGEMA)      & --     & --     & $++$   & $-$  & $+$ \\
 \bottomrule
@@ -700,13 +703,13 @@ zataji pri 33--50\,\%), z SoC, ki je $\approx 9$--$11\,\%$ nižji kot pri
 LaCAM, in časom načrtovanja 0{,}3--20\,ms. S tem zapolni vrzel, ki jo pušča
 Local Leaders v gostih labirintnih scenarijih, brez žrtve pri hitrosti.
 
-Local Leaders se kljub temu izkaže kot učinkovit hibridni pristop: na lifelong
-scenarijih dosega 94--96\,\% pretočnosti MATS-LP na odprtih in naključnih
-okoljih, na skladiščnih okoljih pa ga $\approx 10\times$ prekaša, pri čemer je
-100--400$\times$ hitrejši od MATS-LP po času epizode. Primarne slabosti
-ostajata visoka gostota ovir (30\,\% ovir) in ozki hodniki labirintov, kjer
-mehanizem naključnega pobega ne zadostuje in PBS ponuja zanesljivejšo
-alternativo.
+Local Leaders se izkaže kot učinkovit pristop: na lifelong
+scenarijih dosega 97--100\,\% pretočnosti MATS-LP na odprtih naključnih
+okoljih, na skladiščnih okoljih pa ga $\approx 7$--$10\times$ prekaša, pri čemer je
+100--400$\times$ hitrejši od MATS-LP po času epizode. Z dobro optimiziranimi parametri
+lahko doseže tudi konkurenčno pretočnost pri 30\,\% ovirah, čeprav pri 32 agentih še 
+vedno zaostaja za MATS-LP. Follower, kot naučena politika, leži med njima, 
+a ne uspe zaključiti epizod na skladiščnih zemljevidih.
 
 
 \section{Zaključek}
@@ -724,24 +727,26 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
     kar je za lokalni algoritem presenetljivo.
     
     \item \textbf{Pretočnost}: Na odprtih (0\,\% ovir) naključnih okoljih dosega
-    Local Leaders 94--96\,\% pretočnosti MATS-LP. Na skladiščnih okoljih
-    prekaša MATS-LP za do 10-kratnik (1{,}96 vs.\ 0{,}28 ciljev/korak pri 96
-    agentih).
-    
+    Local Leaders 97--100\,\% pretočnosti MATS-LP. Na skladiščnih okoljih
+    prekaša MATS-LP za 7--10-kratnik (2{,}12 vs.\ 0{,}28 ciljev/korak pri 96
+    agentih). Pri 30\,\% ovirah dosega 0{,}47--0{,}65 ciljev/korak, kar je
+    bistveno boljše od prejšnje različice (bila 0{,}14--0{,}28).
+
     \item \textbf{Hitrost}: Local leaders je hitrejši od MATS-LP za faktor 100--400,
     pri čemer opravi epizodo v 0{,}26--0{,}97\,s, medtem ko MATS-LP potrebuje 48--416\,s za
     isto epizodo, kar potrjuje skalabilnost pristopa.
 
-    \item \textbf{Slabosti}: Vseeno pa algoritem degradira pri visoki gostoti ovir 
-    (30\,\% na naključnih zemljevidih) in v labirintnih okoljih, kjer mehanizem naključnega pobega
-    ne zadostuje več za zanesljivo razrešitev zastojev, kar je področje za nadaljnje izboljšave.
+    \item \textbf{Slabosti}: Algoritem pri 32 agentih in 30\,\% ovirah zaostaja za
+    MATS-LP (0{,}46 vs.\ 0{,}90), v labirintnih okoljih pa PBS ponuja zanesljivejšo
+    alternativo. Nadaljnje izboljšave bi lahko vključevale kooperativno načrtovanje
+    med sosednjimi vodji pri gostih ovirah.
 \end{itemize}
 
 Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
 kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
-potrjujemo za odprta in skladiščna okolja. Za gosta in labirintna okolja bo potrebno razviti 
-zanesljivejši mehanizem razrešitve zastojev, npr.\ kratkovidno kooperativno načrtovanje med 
-sosednjimi vodji ali pa pametnejšo izbiro smeri pobega.
+potrjujemo za odprta, gosta in skladiščna okolja. Posodobitev parametrov ($t_{\text{esc}} = 1$)
+je bistveno izboljšala vedenje pri visoki gostoti ovir. Za labirintna okolja bo potrebno
+razviti zanesljivejši mehanizem razrešitve zastojev, npr. pametnejšo izbiro smeri pobega.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
