@@ -34,18 +34,9 @@ def load_module():
 # We define the parameters for our algorithm
 def make_config(module):
     cfg = module.PolicyConfig()
-    cfg.agent_view       = 11
     cfg.leader_view      = 17
     cfg.escape_thresh    = 1
     cfg.regroup_interval = 5
-    cfg.hint_use_desired = False
-    cfg.criteria = [
-        module.Criterion.ESCAPE,
-        module.Criterion.LEADER,
-        module.Criterion.AGENT_ID,
-        module.Criterion.LEAST_STUCK,
-        module.Criterion.FOLLOWER,
-    ]
     return cfg
 
 

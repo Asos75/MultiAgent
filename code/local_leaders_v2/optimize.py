@@ -28,32 +28,11 @@ FAST_SEEDS = [0]
 FULL_SEEDS = [0, 1, 2]
 MAX_EPISODE_STEPS = 512
 
-CRITERION_NAMES = [
-    "ESCAPE", "LEADER", "FOLLOWER",
-    "PROXIMITY_CLOSEST", "PROXIMITY_FURTHEST",
-    "AGENT_ID", "MOST_STUCK", "LEAST_STUCK",
-]
-
-
 # We load the cpp module at runtime
 def load_module():
     import cppimport
     src = Path(__file__).parent / "src" / "local_leaders_v2.cpp"
     return cppimport.imp_from_filepath(str(src))
-
-# We build the criteria list from Optuna weights
-def build_criteria(module, trial):
-    weights = {
-        name: trial.suggest_float(f"crit_{name}", 0.0, 1.0)
-        for name in CRITERION_NAMES
-    }
-    selected = sorted(
-        [(w, name) for name, w in weights.items() if w > 0.5],
-        reverse=True,
-    )
-    if not selected:
-        return [module.Criterion.AGENT_ID]
-    return [getattr(module.Criterion, name) for _, name in selected]
 
 
 # We run one episode and return its throughput
@@ -94,12 +73,9 @@ def run_episode(module, cfg, map_name, num_agents, seed):
 def make_objective(module, configs, seeds):
     def objective(trial):
         cfg = module.PolicyConfig()
-        cfg.agent_view       = trial.suggest_int("agent_view", 2, 12)
-        cfg.leader_view      = cfg.agent_view + trial.suggest_int("leader_view_offset", 0, 8)
-        cfg.escape_thresh    = trial.suggest_int("escape_thresh", 1, 12)
+        cfg.leader_view = trial.suggest_int("leader_view", 2, 20)
+        cfg.escape_thresh = trial.suggest_int("escape_thresh", 1, 12)
         cfg.regroup_interval = trial.suggest_int("regroup_interval", 1, 20)
-        cfg.hint_use_desired = trial.suggest_categorical("hint_use_desired", [True, False])
-        cfg.criteria         = build_criteria(module, trial)
 
         scores = []
         # We run one episode for each config and seed, and average the results
@@ -118,25 +94,11 @@ def make_objective(module, configs, seeds):
 # We print the best found parameters
 def print_best(study):
     p = study.best_params
-    leader_view = p["agent_view"] + p["leader_view_offset"]
 
     print(f"\nBest average throughput: {study.best_value:.4f}")
-    print(f"  agent_view       = {p['agent_view']}")
-    print(f"  leader_view      = {leader_view}  (agent_view + {p['leader_view_offset']})")
+    print(f"  leader_view      = {p['leader_view']}")
     print(f"  escape_thresh    = {p['escape_thresh']}")
     print(f"  regroup_interval = {p['regroup_interval']}")
-    print(f"  hint_use_desired = {p['hint_use_desired']}")
-
-    weights  = {name: p[f"crit_{name}"] for name in CRITERION_NAMES}
-    selected = sorted(
-        [(w, name) for name, w in weights.items() if w > 0.5],
-        reverse=True,
-    )
-    criteria_str = (
-        ", ".join(f"Criterion.{name}" for _, name in selected)
-        or "Criterion.AGENT_ID"
-    )
-    print(f"  criteria         = [{criteria_str}]")
 
 
 def main():
