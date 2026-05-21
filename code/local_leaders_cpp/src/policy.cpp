@@ -1,5 +1,4 @@
 #include "policy.hpp"
-
 #include <algorithm>
 #include <climits>
 #include <numeric>

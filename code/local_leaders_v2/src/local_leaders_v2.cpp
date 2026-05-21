@@ -20,7 +20,7 @@ cfg['include_dirs'] = ['.', pybind11.get_include()]
 namespace py = pybind11;
 
 PYBIND11_MODULE(local_leaders_v2, m) {
-    m.doc() = "Local Leaders V2 — leader-mediated conflict resolution";
+    m.doc() = "Local Leaders V2 - leader-mediated conflict resolution";
 
     m.attr("LEADER_VIEW_RADIUS") = LEADER_VIEW_RADIUS;
     m.attr("ESCAPE_THRESHOLD")   = ESCAPE_THRESHOLD;
