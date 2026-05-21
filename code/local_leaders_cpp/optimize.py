@@ -1,19 +1,3 @@
-"""
-Parameter optimizer for LocalLeadersPolicy using Optuna (TPE Bayesian optimization).
-
-Searches over:
-  - agent_view, leader_view, escape_thresh, regroup_interval  (integers)
-  - criteria ordering  (each criterion gets a weight; include if > 0.5, sort descending)
-
-Usage:
-    python optimize.py                        # 50 trials, fast eval subset
-    python optimize.py --trials 200 --full    # 200 trials, full benchmark suite
-    python optimize.py --study my_run         # resume / extend a named study
-
-Results are saved to <study>.db (SQLite) so runs can be interrupted and resumed.
-Install dependency once:  pip install optuna
-"""
-
 import sys
 import argparse
 from pathlib import Path
@@ -27,7 +11,6 @@ from env.create_env import create_env_base, DecMAPFConfig
 from pogema.wrappers.metrics import LifeLongAverageThroughputMetric
 
 
-# Fast subset used by default — quick enough for many trials.
 FAST_CONFIGS = [
     ("pico_s.*_od0_na32",  16, "random_d0_a16"),
     ("pico_s.*_od30_na32", 16, "random_d30_a16"),
@@ -41,8 +24,8 @@ FULL_CONFIGS = [
     *[("wfi_warehouse",      n, f"warehouse_a{n}")  for n in [32, 96]],
 ]
 
-FAST_SEEDS        = [0]
-FULL_SEEDS        = [0, 1, 2]
+FAST_SEEDS = [0]
+FULL_SEEDS = [0, 1, 2]
 MAX_EPISODE_STEPS = 512
 
 CRITERION_NAMES = [
@@ -52,19 +35,14 @@ CRITERION_NAMES = [
 ]
 
 
+# We load the cpp module at runtime
 def load_module():
     import cppimport
     src = Path(__file__).parent / "src" / "local_leaders_online.cpp"
     return cppimport.imp_from_filepath(str(src))
 
-
-def build_criteria(mod, trial):
-    """
-    Each criterion gets a float weight suggested in [0, 1].
-    Those with weight > 0.5 are included; the list is sorted by weight descending
-    so the optimizer controls both membership and relative priority in one go.
-    Falls back to [AGENT_ID] if nothing clears the threshold.
-    """
+# We build the criteria list from Optuna weights
+def build_criteria(module, trial):
     weights = {
         name: trial.suggest_float(f"crit_{name}", 0.0, 1.0)
         for name in CRITERION_NAMES
@@ -74,11 +52,12 @@ def build_criteria(mod, trial):
         reverse=True,
     )
     if not selected:
-        return [mod.Criterion.AGENT_ID]
-    return [getattr(mod.Criterion, name) for _, name in selected]
+        return [module.Criterion.AGENT_ID]
+    return [getattr(module.Criterion, name) for _, name in selected]
 
 
-def run_episode(mod, cfg, map_name, num_agents, seed) -> float:
+# We run one episode and return its throughput
+def run_episode(module, cfg, map_name, num_agents, seed):
     env_cfg = DecMAPFConfig(
         with_animation=False,
         num_agents=num_agents,
@@ -86,45 +65,48 @@ def run_episode(mod, cfg, map_name, num_agents, seed) -> float:
         map_name=map_name,
         max_episode_steps=MAX_EPISODE_STEPS,
     )
-    base_env = create_env_base(env_cfg)
+
+    # We create the test environment in POGEMA
+    env = create_env_base(env_cfg)
     if map_name != "wfi_warehouse":
-        base_env = LifeLongAverageThroughputMetric(base_env)
+        env = LifeLongAverageThroughputMetric(env)
 
-    policy = mod.LocalLeadersPolicy(num_agents, seed, cfg)
-    obs, _ = base_env.reset(seed=seed)
-    grid_list = [list(map(int, row)) for row in base_env.get_global_obstacles()]
-    policy.reset(grid_list)
+    # We set the policy based on our config
+    policy = module.LocalLeadersPolicy(num_agents, seed, cfg)
 
+    # We reset the environment and pass in the obstacles
+    env.reset(seed=seed)
+    policy.reset([list(map(int, row)) for row in env.get_global_obstacles()])
+
+    # One iteration = 1 alg. timestep
     while True:
-        positions = [tuple(p) for p in base_env.get_global_agents_xy()]
-        targets   = [tuple(t) for t in base_env.get_global_targets_xy()]
-        actions   = policy.act(positions, targets)
-        obs, rew, dones, trunc, infos = base_env.step(actions)
+        positions = [tuple(p) for p in env.get_global_agents_xy()]
+        targets   = [tuple(t) for t in env.get_global_targets_xy()]
+        _, _, dones, trunc, infos = env.step(policy.act(positions, targets))
         if all(dones) or all(trunc):
             break
 
-    metrics = infos[0].get("metrics", {})
-    return float(metrics.get("avg_throughput") or 0.0)
+    # Return avg throughput
+    return float(infos[0].get("metrics", {}).get("avg_throughput") or 0.0)
 
 
-def make_objective(mod, configs, seeds):
+# We define the Optuna objective function
+def make_objective(module, configs, seeds):
     def objective(trial):
-        cfg = mod.PolicyConfig()
-
-        cfg.agent_view       = trial.suggest_int("agent_view",    2, 12)
-        # leader_view is sampled as an offset so it is always >= agent_view
+        cfg = module.PolicyConfig()
+        cfg.agent_view       = trial.suggest_int("agent_view", 2, 12)
         cfg.leader_view      = cfg.agent_view + trial.suggest_int("leader_view_offset", 0, 8)
         cfg.escape_thresh    = trial.suggest_int("escape_thresh", 1, 12)
         cfg.regroup_interval = trial.suggest_int("regroup_interval", 1, 20)
         cfg.hint_use_desired = trial.suggest_categorical("hint_use_desired", [True, False])
-        cfg.criteria         = build_criteria(mod, trial)
+        cfg.criteria         = build_criteria(module, trial)
 
         scores = []
-        for (map_name, num_agents, _), seed in [
-            (conf, s) for conf in configs for s in seeds
-        ]:
+        # We run one episode for each config and seed, and average the results
+        for (map_name, num_agents, _), seed in [(c, s) for c in configs for s in seeds]:
             try:
-                scores.append(run_episode(mod, cfg, map_name, num_agents, seed))
+                score = run_episode(module, cfg, map_name, num_agents, seed)
+                scores.append(score)
             except Exception:
                 scores.append(0.0)
 
@@ -133,6 +115,7 @@ def make_objective(mod, configs, seeds):
     return objective
 
 
+# We print the best found parameters
 def print_best(study):
     p = study.best_params
     leader_view = p["agent_view"] + p["leader_view_offset"]
@@ -157,42 +140,42 @@ def print_best(study):
 
 
 def main():
+
+    # Parse command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trials", type=int, default=50,
-                        help="Number of new trials to run (default: 50)")
-    parser.add_argument("--full",   action="store_true",
-                        help="Use full benchmark suite instead of fast subset")
-    parser.add_argument("--study",  default="local_leaders_opt",
-                        help="Study name — also used as the SQLite DB filename")
+    parser.add_argument("--trials", type=int, default=50)
+    parser.add_argument("--full",   action="store_true")
+    parser.add_argument("--study",  default="local_leaders_opt")
     args = parser.parse_args()
 
     configs = FULL_CONFIGS if args.full else FAST_CONFIGS
     seeds   = FULL_SEEDS   if args.full else FAST_SEEDS
 
     print("Compiling C++ module ...", flush=True)
-    mod = load_module()
+    module = load_module()
 
+    # Create Optuna instance
     import optuna
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-
-    storage = f"sqlite:///{args.study}.db"
     study = optuna.create_study(
         study_name=args.study,
-        storage=storage,
+        storage=f"sqlite:///{args.study}.db",
         direction="maximize",
         load_if_exists=True,
     )
 
     n_existing = len(study.trials)
     print(f"Study '{args.study}' — {n_existing} existing trials, running {args.trials} more.")
-    print(f"Eval: {len(configs)} map configs × {len(seeds)} seed(s) per trial\n")
+    print(f"Eval: {len(configs)} configs x {len(seeds)} seed(s) per trial\n")
 
+    # Run the optuna optimization
     study.optimize(
-        make_objective(mod, configs, seeds),
+        make_objective(module, configs, seeds),
         n_trials=args.trials,
         show_progress_bar=True,
     )
 
+    # Print best results
     print_best(study)
 
 
