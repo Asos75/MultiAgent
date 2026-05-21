@@ -35,10 +35,8 @@ code/pogema_bench/results/graphs/latex-draft/
 latex-draft/
 
 venv/
-*.db
 *.pyd
 *.so
 src/.rendered.*
 src/__pycache__/
 __pycache__/
-results/
