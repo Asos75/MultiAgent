@@ -204,7 +204,7 @@ odprtih okoljih (94--96\,\%) pri do 400-kratno krajšem času izvajanja epizode.
 
 \section{Uvod}
 
-V tem članku obravnavamo problem več-agentnega iskanja poti (Multi-Agent Path Finding / MAPF), 
+V tem članku obravnavamo problem večagentnega iskanja poti (ang. \textit{Multi-Agent Path Finding}, MAPF), 
 ki se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
 inteligentni transportni sistemi in drugi logistični sistemi. Gre za temeljni problem koordinacije 
 več avtonomnih enot v skupnem prostoru, kjer mora vsak agent doseči svoj cilj brez trkov z 
@@ -219,13 +219,21 @@ ki načrtujejo poti za vse agente z uporabo globalnega pogleda na problem, ter d
 pristope, kot sta Follower\cite{andreychuk2024follower} in MATS-LP\cite{skrynnik2023decentralized}, kjer posamezni agenti sprejemajo odločitve lokalno brez 
 centralnega nadzora in imajo pregled le nad svojo okolico.
 
+Poleg primerjave obstoječih pristopov v tem delu predstavimo tudi hibridni algoritem
+\textit{Local Leaders} (lokalni vodje), pri katerem se agenti dinamično razporejajo v lokalne
+skupine, znotraj katerih izbrani vodja usklajuje premike in razrešuje konflikte po prioritetah.
+Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med kakovostjo
+rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani pristopi posebej.
+Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri decentraliziranih metodah
+ter bistveno krajši čas načrtovanja kot pri popolnoma centraliziranih algoritmih.
+
 Na ta način bomo analizirali ključne razlike med obema paradigmama z vidika učinkovitosti, 
 skalabilnosti in kakovosti rešitev. Centralizirani pristopi praviloma zagotavljajo bolj 
 optimalne rešitve, vendar slabše skalirajo z naraščajočim številom agentov, medtem ko 
 decentralizirani pristopi omogočajo boljšo razširljivost, vendar pogosto na račun kakovosti 
 rešitev.
 
-Repozitorij z izvorno kodo projekta je na voljo na našem github repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
+Repozitorij z izvorno kodo projekta je na voljo na našem GitHub repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
 Stern et al.~\cite{stern2019multiagent} definirajo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF)
  kot trojico
@@ -257,9 +265,9 @@ kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$~\c
 Po Okamuri~\cite{okumura2023lacam} se mora agent izogibati naslednjim vrstam konfliktov:
 
 \begin{itemize}
-    \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. vertex conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
+    \item \textbf{Vozliščni konflikt:} Do vozliščnega konflikta (ang. \textit{vertex conflict}) pride, če nameravata $ \pi_i $ in $ \pi_j $ zasedeti isto 
     vozlišče v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t] $.~\cite{stern2019multiagent}
-    \item \textbf{Zamenjalni konflikt:} Do zamenjalnega konflikta (ang. swap conflict) pride, če nameravata $ \pi_i $ in $ \pi_j $ zamenjati svoji
+    \item \textbf{Zamenjalni konflikt:} Do zamenjalnega konflikta (ang. \textit{swap conflict}) pride, če nameravata $ \pi_i $ in $ \pi_j $ zamenjati svoji
     poziciji v istem trenutku, torej obstaja časovni korak $t$, da velja $ \pi_i[t] = \pi_j[t+1] \wedge \pi_i[t+1] = \pi_j[t] $~\cite{stern2019multiagent}.
 \end{itemize}
 
@@ -267,6 +275,12 @@ Po Okamuri~\cite{okumura2023lacam} se mora agent izogibati naslednjim vrstam kon
 \noindent 
 Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
  $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer agent doseže cilj.~\cite{okumura2023lacam}
+
+Članek je organiziran na naslednji način: v razdelku \textit{Sorodna dela} povzamemo izbrane
+centralizirane in decentralizirane pristope MAPF, v razdelku \textit{Uvedba lokalnih vodij}
+predstavimo naš pristop \textit{Local Leaders}, v razdelku \textit{Eksperiment in analiza rezultatov}
+opišemo eksperimentalno okolje in metrike ter analiziramo rezultate, na koncu pa v
+\textit{Zaključku} strnemo ugotovitve in predlagamo nadaljnje delo.
  
 \section{Sorodna dela}
 
@@ -295,7 +309,7 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 \subsection{Decentralizirani pristopi}
 
 
-	\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop za \textit{lifelong} MAPF, ki 
+	\textit{Follower}~\cite{andreychuk2024follower} je decentraliziran pristop za neprekinjeni (ang. \textit{lifelong}) MAPF, ki 
     kombinira (i) hevristični planer (npr. A* nad statičnimi ovirami), ki generira »razpršene« poti z namenom 
     zmanjšanja zasičenosti ozkih grl, in (ii) naučeno politiko sledenja, ki lokalno reagira na druge agente in 
     se izogiba trkom. Izvajanje je povsem lokalno (brez centralnega koordinatorja), zato metoda dobro skalira, 
@@ -304,22 +318,23 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
     primerjajo s centraliziranima LaCAM/PBS in z našim hibridnim pristopom z lokalnimi vodji.
 
 	\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
-    predlaga decentralizirano reševanje \textit{lifelong} MAPF pri delni opazljivosti: vsak agent iz lokalnih opazovanj 
-    zgradi intrinzični (lokalni) MDP in na njem izvaja MCTS, ki ga dodatno usmerja nevronska politika. S simulacijami v 
+    predlaga decentralizirano reševanje neprekinjenega (ang. \textit{lifelong}) MAPF pri delni opazljivosti: vsak agent iz lokalnih opazovanj 
+    zgradi intrinzični (lokalni) Markovski odločitveni proces (ang. \textit{Markov Decision Process}, MDP) in na njem izvaja 
+    Monte Carlo drevesno iskanje (ang. \textit{Monte Carlo Tree Search}, MCTS), ki ga dodatno usmerja nevronska politika. S simulacijami v 
     drevesu agenti ocenjujejo kratkoročne interakcije z bližnjimi agenti, koordinacija pa nastaja implicitno (brez 
-    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. delo utemeljuje našo 
+    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. Delo utemeljuje našo 
     izbiro decentraliziranih primerjalnih metod na POGEMA (delna opazljivost) in je neposredno relevantno za komponento 
-    MATS-LP v naši primerjavi, kjer želimo videti, ali »lookahead« (MCTS) izboljša pretočnost in robustnost glede na 
+    MATS-LP v naši primerjavi, kjer želimo videti, ali pogled vnaprej (ang. \textit{lookahead}) z MCTS izboljša pretočnost in robustnost glede na 
     bolj reaktivne politike.
 
 	\textit{PRIMAL2}~\cite{damani2021primal2} je zgodnje, vplivno delo, ki pokaže, da je mogoče MAPF reševati z 
-    decentraliziranimi politikami na osnovi lokalnih opazovanj, naučenimi s kombinacijo \textit{imitation learning} 
-    (iz centraliziranih planerjev) in \textit{reinforcement learning}. Pristop zelo dobro skali, vendar pogosto žrtvuje 
+    decentraliziranimi politikami na osnovi lokalnih opazovanj, naučenimi s kombinacijo posnemovalnega učenja
+    (ang. \textit{imitation learning}) iz centraliziranih planerjev in okrepitvenega učenja (ang. \textit{reinforcement learning}). Pristop zelo dobro skali, vendar pogosto žrtvuje 
     optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. PRIMAL2 
     uporabljamo kot kontekst za interpretacijo rezultatov učenih decentraliziranih metod (Follower/MATS-LP/SCRIMP): če 
-    pri njih opazimo slabši SoC, je to pričakovan trade-off, ki ga literatura že izpostavlja.
+    pri njih opazimo slabši SoC, je to pričakovan kompromis, ki ga literatura že izpostavlja.
 
-	\textit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo transformer arhitekture in 
+	\textit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo arhitekture Transformer (ang. \textit{Transformer}) in 
     pozornostnega mehanizma, kar omogoča učinkovitejšo koordinacijo tudi pri zelo omejenem vidnem polju. S tem pristop 
     preseže omejitve povsem nekomunikacijskih lokalnih politik, hkrati pa ohrani decentralizirano izvajanje in dobro skalabilnost. 
     SCRIMP služi kot motivacija za naš »hibridni« pogled (lokalni vodje): kaže, da lahko 
@@ -331,7 +346,7 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uvaja koncept 
 \textit{lokalnih vodij}. Gre za algoritem \textit{Local Leaders}, ki združuje prednosti
 centraliziranega in decentraliziranega pristopa. Algoritem deluje lokalno, na ravni agenta, 
-brez vnaprejšnjega načrtovanja in deluje v petih korakih~(sl.~\ref{fig:flowchart}).
+brez vnaprejšnjega načrtovanja in deluje v petih korakih (Slika~\ref{fig:flowchart}).
 
 
 
@@ -397,11 +412,8 @@ Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centr
 algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
 decentraliziranih pristopih.
 
-Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med
-kakovostjo rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani
-pristopi posebej. Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri
-decentraliziranih metodah ter bistveno krajši čas načrtovanja kot pri popolnoma
-centraliziranih algoritmih.
+V nadaljevanju pristop ovrednotimo eksperimentalno in ga primerjamo z izbranimi
+centraliziranimi in decentraliziranimi metodami.
 
 \section{Eksperiment in analiza rezultatov}
 
@@ -417,7 +429,7 @@ zbirko zemljevidov, ki zagotavlja reprezentativne testne scenarije.
 
 \subsection{Metrike}
 
-\textbf{Sum-of-Costs (SoC)} je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
+\textbf{Vsota stroškov (SoC; ang. \textit{sum of costs})} je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
 \[
     \text{SoC} = \sum_{i=1}^{k} |\pi_i|,
 \]
@@ -428,7 +440,7 @@ rešitev.
 SoC je ena izmed najpogosteje uporabljenih metrik v MAPF literaturi~\cite{stern2019multiagent}, kar omogoča neposredno primerjavo z obstoječimi deli. 
 Metrika meri skupni strošek kot vsoto dolžin poti vseh agentov in s tem neposredno zajame celostno učinkovitost sistema.
 
-Metrika je še posebej primerna za one-shot scenarije, saj minimizacija SoC ustreza cilju minimizacije skupne porabe časa oziroma virov. Hkrati 
+Metrika je še posebej primerna za enkratne (ang. \textit{one-shot}) scenarije, saj minimizacija SoC ustreza cilju minimizacije skupne porabe časa oziroma virov. Hkrati 
 kaznuje neučinkovite poti posameznih agentov, kar spodbuja iskanje globalno učinkovitih rešitev. SoC bomo zato uporabili za vrednotenje algoritmov 
 LaCAM in PBS na zbirki MovingAI.
 
@@ -449,21 +461,21 @@ morda bistveno zavlačuje celotno skupino. Z vključitvijo obeh metrik tako dobi
 
 \vspace{0.5em}
 \noindent
-\textbf{Stopnja uspeha (Success Rate)} meri delež instanc, pri katerih vsi
+\textbf{Stopnja uspeha} (ang. \textit{success rate}) meri delež instanc, pri katerih vsi
 agenti uspešno dosežejo svoje cilje znotraj predvidenega časovne
 omejitve~\cite{skrynnik2025pogema}. 
 
-Stopnja uspeha je primarna metrika platforme POGEMA in skupaj s pretokom (ang.\ throughput) tvori osnovo za vrednotenje na tej platformi~\cite{skrynnik2025pogema}. 
+Stopnja uspeha je primarna metrika platforme POGEMA in skupaj s pretočnostjo (ang. \textit{throughput}) tvori osnovo za vrednotenje na tej platformi~\cite{skrynnik2025pogema}. 
 Zasnovana je posebej za vrednotenje decentraliziranih metod v delno opazljivih okoljih. Metrika je za naš eksperiment ključna, saj za razliko od SoC in makespana meri tudi 
 robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši kljub omejenim lokalnim opazovanjem.
 
 \vspace{0.5em}
 \noindent
-\textbf{Pretok (Throughput)} meri povprečno število agentov, ki na 
+\textbf{Pretok / pretočnost} (ang. \textit{throughput}) meri povprečno število agentov, ki na 
 časovni korak dosežejo svoja ciljna vozlišča~\cite{skrynnik2025pogema}. 
 Skupaj s stopnjo uspeha tvori osnovo za vrednotenje na platformi 
 POGEMA~\cite{skrynnik2025pogema}. 
-Metrika je še posebej primerna za lifelong oziroma zvezne scenarije, 
+Metrika je še posebej primerna za neprekinjene (ang. \textit{lifelong}) oziroma zvezne scenarije, 
 kjer agenti po dosegu cilja prejmejo novo nalogo, saj odraža 
 dolgotrajno zmogljivost sistema pri visokih obremenitvah. 
 Za razliko od makespana, ki meri trajanje posamezne instance, pretok 
@@ -486,13 +498,13 @@ kjer se razlike med rešitvami najbolj pokažejo.
 Uporabljamo tri glavne tipe okolij:
 
 \begin{itemize}
-    \item \textbf{Odprte mreže} (\textit{random grids}) – okolja z malo ovirami, kjer 
+    \item \textbf{Odprte mreže} (ang. \textit{random grids}) – okolja z malo ovirami, kjer 
     je večina konfliktov posledica visoke gostote agentov.
     
-    \item \textbf{Labirinti} (\textit{mazes}) – okolja z ozkimi prehodi in številnimi lokalnimi ozkimi 
+    \item \textbf{Labirinti} (ang. \textit{mazes}) – okolja z ozkimi prehodi in številnimi lokalnimi ozkimi 
     grli, kjer je koordinacija agentov bistveno zahtevnejša.
     
-    \item \textbf{Skladiščni scenariji} (\textit{warehouse maps}) – realistične postavitve, podobne 
+    \item \textbf{Skladiščni scenariji} (ang. \textit{warehouse maps}) – realistične postavitve, podobne 
     robotiziranim skladiščem, kjer se agenti pogosto srečujejo na križiščih in v ozkih hodnikih.
 \end{itemize}
 
@@ -563,16 +575,16 @@ Slika~\ref{fig:planning_time} razkrije eno ključnih razlik med pristopi.
 Na MovingAI LaCAM porabi manj kot $1$\,ms za manjše instance in do 128\,ms
 za 32 agentov na skladiščnih zemljevidih. PBS je le malce počasnejši:
 0{,}3--20\,ms za vse scenarije, torej blizu LaCAM, a bistveno hitrejši od
-Local Leaders, ki deluje \textit{online} (A* za vsakega agenta pri vsakem
+Local Leaders, ki deluje sproti (ang. \textit{online}; A* za vsakega agenta pri vsakem
 koraku) in porabi 44--961\,ms za naključne ter 188--3203\,ms za skladiščne
 scenarije. PBS tako ponuja najboljše razmerje med kakovostjo rešitve in
-hitrostjo med vsemi tremi one-shot algoritmi.
+hitrostjo med vsemi tremi enkratnimi (ang. \textit{one-shot}) algoritmi.
 
 Desni panel primerja čas epizode na POGEMA. Tu je razlika dramatična:
 MATS-LP potrebuje 48\,s (8 agentov) do 416\,s (32 agentov) za eno epizodo
 512 korakov. Local Leaders opravi isto epizodo v 0{,}26--0{,}97\,s, kar je
 $\mathbf{100}\text{--}\mathbf{400\times}$ hitreje. Follower (naučena RL
-politika) leži med njima s 2--7\,s na epizodo.
+politika okrepitvenega učenja; ang. \textit{reinforcement learning}, RL) leži med njima s 2--7\,s na epizodo.
 
 \subsection{Stopnja uspeha in pretočnost na POGEMA}
 
@@ -580,7 +592,7 @@ politika) leži med njima s 2--7\,s na epizodo.
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig4_success_rate.pdf}
     \caption{Levo: stopnja uspeha LaCAM, PBS in Local Leaders na MovingAI
-    one-shot scenarijih. Desno: lifelong pretočnost MATS-LP, Local Leaders
+    enkratnih (ang. \textit{one-shot}) scenarijih. Desno: pretočnost v neprekinjenih (ang. \textit{lifelong}) scenarijih MATS-LP, Local Leaders
     in Follower na POGEMA (naključni zemljevidi, 0\,\% ovir).}
     \label{fig:success}
 \end{figure}
@@ -594,7 +606,7 @@ prednjači, ozkih hodnikov ne rešuje reaktivno, ampak z optimalnim
 iskanjem, ki zagotovi pot za vsakega agenta. To je primarna prednost PBS
 pred Local Leaders v gostih labirintnih scenarijih.
 
-Desni panel prikazuje lifelong pretočnost (cilji/korak) na POGEMA.
+Desni panel prikazuje pretočnost v neprekinjenih (ang. \textit{lifelong}) scenarijih (cilji/korak) na POGEMA.
 Rezultati prikazujejo C++ implementacijo Local Leaders, ki je po pretočnosti
 primerljiva s Python različico, a bistveno hitrejša pri izvedbi.
 MATS-LP doseže 0{,}61 (8 agentov), 1{,}18 (16) in 2{,}26 (32 agentov).
@@ -607,7 +619,7 @@ kar je 97--101\,\% pretočnosti MATS-LP. Follower dosega nižje vrednosti
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig5_throughput_comparison.pdf}
-    \caption{Lifelong pretočnost MATS-LP, Local Leaders in Follower na naključnih
+    \caption{Pretočnost v neprekinjenih (ang. \textit{lifelong}) scenarijih MATS-LP, Local Leaders in Follower na naključnih
     zemljevidih pri 0\,\% (levo) in 30\,\% (desno) gostoti ovir. Rezultati
     Local Leaders so iz C++ implementacije. Pri 30\,\% ovirah Local Leaders
     ostaja konkurenčen pri manjšem številu agentov, a zaostaja pri 32 agentih.}
@@ -651,13 +663,13 @@ PBS doseže razmerje $0{,}888$ pri 16 agentih, Local Leaders pa $0{,}960$
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig7_throughput_by_maptype.pdf}
-    \caption{Lifelong pretočnost MATS-LP, Local Leaders in Follower po tipu
+    \caption{Pretočnost v neprekinjenih (ang. \textit{lifelong}) scenarijih MATS-LP, Local Leaders in Follower po tipu
     zemljevida (naključni, labirint, skladišče). Na skladiščnih zemljevidih
     Local Leaders dosega do $10\times$ višjo pretočnost kot MATS-LP.}
     \label{fig:maptype}
 \end{figure}
 
-Slika~\ref{fig:maptype} primerja lifelong pretočnost MATS-LP, Local Leaders in
+Slika~\ref{fig:maptype} primerja pretočnost v neprekinjenih (ang. \textit{lifelong}) scenarijih MATS-LP, Local Leaders in
 Follower na vseh treh tipih zemljevidov. Na naključnih zemljevidih so si
 algoritmi po pretočnosti blizu. Na labirintih pa vodi MATS-LP (0{,}906 pri 32 agentih), Local
 Leaders pa doseže 0{,}672 (pri 32 agentih), kar je boljše od Followerja. Na
@@ -681,14 +693,14 @@ $\sim$ primerljivo, \textbf{-} slabo, \textbf{-{}-} zelo slabo / N/A.}
 \toprule
 \textbf{Metrika} & \textbf{LaCAM} & \textbf{PBS} & \textbf{LL} & \textbf{MATS-LP} & \textbf{Follower} \\
 \midrule
-SoC (one-shot)            & $\sim$ & $+$    & $+$    & --   & -- \\
-Makespan (one-shot)       & $+$    & $+$    & $+$    & --   & -- \\
+SoC (enkratni)            & $\sim$ & $+$    & $+$    & --   & -- \\
+Makespan (enkratni)       & $+$    & $+$    & $+$    & --   & -- \\
 Čas načrtov. (MovingAI)   & $++$   & $+$    & $-$    & --   & -- \\
-Uspešnost (random)        & $++$   & $++$   & $++$   & --   & -- \\
-Uspešnost (maze)          & $++$   & $++$   & $-$    & --   & -- \\
+Uspešnost (naključni)     & $++$   & $++$   & $++$   & --   & -- \\
+Uspešnost (labirinti)     & $++$   & $++$   & $-$    & --   & -- \\
 Pretočnost (0\,\% ovire)  & --     & --     & $\sim$ & $+$  & $\sim$ \\
 Pretočnost (30\,\% ovire) & --     & --     & $\sim$ & $+$  & $\sim$ \\
-Pretočnost (warehouse)    & --     & --     & $++$   & $-$  & -- \\
+Pretočnost (skladišče)    & --     & --     & $++$   & $-$  & -- \\
 Čas epizode (POGEMA)      & --     & --     & $++$   & $-$  & $+$ \\
 \bottomrule
 \end{tabular}
@@ -701,7 +713,7 @@ zataji pri 33--50\,\%), z SoC, ki je $\approx 9$--$11\,\%$ nižji kot pri
 LaCAM, in časom načrtovanja 0{,}3--20\,ms. S tem zapolni vrzel, ki jo pušča
 Local Leaders v gostih labirintnih scenarijih, brez kompromisa pri hitrosti.
 
-Local Leaders se izkaže kot učinkovit pristop: na lifelong
+Local Leaders se izkaže kot učinkovit pristop: v neprekinjenih (ang. \textit{lifelong})
 scenarijih dosega 97--101\,\% pretočnosti MATS-LP na odprtih naključnih
 okoljih, na skladiščnih okoljih pa ga $\approx 8$--$10\times$ prekaša, pri čemer je
 100--400$\times$ hitrejši od MATS-LP po času epizode. Dvofazna razrešitev konfliktov
