@@ -214,24 +214,19 @@ Cilj problema je načrtovati poti za množico agentov v diskretnem prostoru tako
 medsebojnim konfliktom in hkrati optimiziramo določene metrike, kot sta skupni čas izvajanja 
 (ang. \textit{makespan}) ali vsota dolžin poti (ang. \textit{sum of costs})~\cite{stern2019multiagent}.
 
-V nadaljevanju bomo primerjali centralizirane metode, katerih predstavnika sta LaCAM\cite{okumura2023lacam} in PBS\cite{li2019pbs}, 
-ki načrtujejo poti za vse agente z uporabo globalnega pogleda na problem, ter decentralizirane 
-pristope, kot sta Follower\cite{andreychuk2024follower} in MATS-LP\cite{skrynnik2023decentralized}, kjer posamezni agenti sprejemajo odločitve lokalno brez 
-centralnega nadzora in imajo pregled le nad svojo okolico.
+Obstoječe pristope delimo na centralizirane, katerih predstavnika sta LaCAM\cite{okumura2023lacam} in PBS\cite{li2019pbs},
+to so pristopi, ki načrtujejo poti za vse agente z globalnim pogledom na problem, in decentralizirane, kot sta
+Follower\cite{andreychuk2024follower} in MATS-LP\cite{skrynnik2023decentralized}, kjer agenti odločitve sprejemajo lokalno brez centralnega koordinatorja.
+Vsaka skupina nosi znane kompromise: centralizirani pristopi zagotavljajo višjo kakovost rešitev,
+a slabše skalirajo z naraščajočim številom agentov; decentralizirani dobro skalirajo, a pogosto
+na račun kakovosti. Ta kompromis je izhodišče za zasnovo algoritma \textit{Local Leaders}.
 
-Poleg primerjave obstoječih pristopov v tem delu predstavimo tudi hibridni algoritem
-\textit{Local Leaders} (lokalni vodje), pri katerem se agenti dinamično razporejajo v lokalne
-skupine, znotraj katerih izbrani vodja usklajuje premike in razrešuje konflikte po prioritetah.
-Hipoteza našega dela je, da lahko takšen hibridni pristop doseže boljše razmerje med kakovostjo
-rešitev in časom načrtovanja kot obstoječi centralizirani ali decentralizirani pristopi posebej.
-Pričakujemo nižji \textit{makespan} in višjo stopnjo uspeha kot pri decentraliziranih metodah
-ter bistveno krajši čas načrtovanja kot pri popolnoma centraliziranih algoritmih.
-
-Na ta način bomo analizirali ključne razlike med obema paradigmama z vidika učinkovitosti, 
-skalabilnosti in kakovosti rešitev. Centralizirani pristopi praviloma zagotavljajo bolj 
-optimalne rešitve, vendar slabše skalirajo z naraščajočim številom agentov, medtem ko 
-decentralizirani pristopi omogočajo boljšo razširljivost, vendar pogosto na račun kakovosti 
-rešitev.
+Glavni prispevek tega dela je hibridni algoritem \textit{Local Leaders} (lokalni vodje), pri katerem
+se agenti dinamično razporejajo v lokalne skupine, znotraj katerih izbrani vodja usklajuje premike
+in razrešuje konflikte po prioritetah. Hipoteza je, da tak pristop doseže boljše razmerje med
+kakovostjo rešitev in časom načrtovanja kot vsaka od obstoječih rešitev posebej, nižji SoC in
+višjo stopnjo uspeha kot decentralizirani pristopi, hkrati pa bistveno krajši čas načrtovanja kot
+centralizirani algoritmi.
 
 Repozitorij z izvorno kodo projekta je na voljo na našem GitHub repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
@@ -284,9 +279,10 @@ opišemo eksperimentalno okolje in metrike ter analiziramo rezultate, na koncu p
  
 \section{Sorodna dela}
 
-V tem razdelku izpostavimo ključna dela s področja več-agentnega iskanja poti, 
-ki dopolnjujejo in razširjajo pogled iz uvoda. Pri vsakem delu na kratko povemo,
-kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
+V tem razdelku izpostavimo ključna dela s področja več-agentnega iskanja poti,
+ki so motivirala zasnovo algoritma \textit{Local Leaders} ali zagotavljajo referenčne točke za
+njegovo vrednotenje. Pri vsakem delu na kratko povemo, kaj je njegova glavna ideja in v čem
+informira naš pristop.
 
 \subsection{Centralizirani pristopi}
 
@@ -294,17 +290,18 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
 	\textit{EECBS}~\cite{li2021eecbs} je nadgradnja klasičnega CBS, ki ohrani dvonivojsko iskanje, hkrati pa z
     \textit{Explicit Estimation Search} in uteževanjem omogoča nadzorovano suboptimalnost (uporabnik nastavi 
     kompromis med kakovostjo in časom). Avtorji poročajo o bistveno boljši skalabilnosti na večjih instancah 
-    ob majhni, dokazljivo omejeni degradaciji kakovosti rešitve. EECBS uporabimo kot referenčno izhodišče za 
-    razumevanje kompromisa »hitrost vs. kvaliteta« pri centraliziranih metodah; njegove ideje utemeljijo, zakaj 
-    v evalvaciji poleg kakovosti (SoC/makespan) spremljamo tudi čas izvajanja in skalabilnost.
+    ob majhni, dokazljivo omejeni degradaciji kakovosti rešitve. EECBS izpostavi kompromis »hitrost vs.\ kakovost« 
+    pri centraliziranih metodah in utemeljuje, zakaj smo v zasnovi \textit{Local Leaders} ciljali na suboptimalno,
+    a hitro lokalno načrtovanje; prav tako pojasnjuje, zakaj v evalvaciji poleg kakovosti (SoC/makespan) spremljamo tudi čas
+    izvajanja in skalabilnost.
 
 
 	\textit{CBSH2}~\cite{li2019disjoint} izboljša CBS z močnejšimi hevristikami in tehniko \textit{disjoint splitting}, 
     ki z uvedbo pozitivnih omejitev zmanjša podvajanje iskanja in s tem velikost iskalnega drevesa. Rezultat je 
-    hitrejše reševanje in boljša skalabilnost ob ohranjeni rešitveni kakovosti tipične za CBS-družino. CBSH2 obravnavamo 
-    kot dodatno referenco znotraj centraliziranih metod, ki pokaže, da so izboljšave pogosto posledica boljšega 
-    upravljanja konfliktov; to nam pomaga pri interpretaciji rezultatov LaCAM/PBS (kjer tudi ciljamo na učinkovitejšo 
-    obravnavo konfliktov), če opazimo razlike predvsem v času in ne v SoC.
+    hitrejše reševanje in boljša skalabilnost ob ohranjeni rešitveni kakovosti tipične za CBS-družino. 
+    CBSH2 pokaže, da so napredki centraliziranih metod pogosto posledica boljšega upravljanja
+    konfliktov; ta ugotovitev neposredno motivira dvofazno razrešitev konfliktov v \textit{Local
+    Leaders}, ki je zasnovana kot lokalna analogija te ideje, torej brez globalnega iskalnega drevesa.
 
 \subsection{Decentralizirani pristopi}
 
@@ -313,33 +310,34 @@ kaj je njegova glavna ideja in kakšen doprinos ima k našemu eksperimentu.
     kombinira (i) hevristični planer (npr. A* nad statičnimi ovirami), ki generira »razpršene« poti z namenom 
     zmanjšanja zasičenosti ozkih grl, in (ii) naučeno politiko sledenja, ki lokalno reagira na druge agente in 
     se izogiba trkom. Izvajanje je povsem lokalno (brez centralnega koordinatorja), zato metoda dobro skalira, 
-    vendar je kakovost poti odvisna od lokalnih informacij in stabilnosti naučene politike. Follower je eden 
-    naših glavnih decentraliziranih primerjalnih algoritmov; z njim ovrednotimo, kako se učeni, lokalni pristopi 
-    primerjajo s centraliziranima LaCAM/PBS in z našim hibridnim pristopom z lokalnimi vodji.
+    vendar je kakovost poti odvisna od lokalnih informacij in stabilnosti naučene politike. 
+    Follower je ena od referenčnih baseline metod za vrednotenje \textit{Local Leaders}: ker oba
+    delujeta lokalno brez centralnega koordinatorja, primerjava razkrije, koliko koordinacija z
+    vodji doda v primerjavi z naučeno politiko sledenja, brez potrebe po učenju.
 
 	\textit{Decentralized Monte Carlo Tree Search for Partially Observable Multi-agent Pathfinding}~\cite{skrynnik2024mcts} 
     predlaga decentralizirano reševanje neprekinjenega (ang. \textit{lifelong}) MAPF pri delni opazljivosti: vsak agent iz lokalnih opazovanj 
     zgradi intrinzični (lokalni) Markovski odločitveni proces (ang. \textit{Markov Decision Process}, MDP) in na njem izvaja 
     Monte Carlo drevesno iskanje (ang. \textit{Monte Carlo Tree Search}, MCTS), ki ga dodatno usmerja nevronska politika. S simulacijami v 
     drevesu agenti ocenjujejo kratkoročne interakcije z bližnjimi agenti, koordinacija pa nastaja implicitno (brez 
-    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. Delo utemeljuje našo 
-    izbiro decentraliziranih primerjalnih metod na POGEMA (delna opazljivost) in je neposredno relevantno za komponento 
-    MATS-LP v naši primerjavi, kjer želimo videti, ali pogled vnaprej (ang. \textit{lookahead}) z MCTS izboljša pretočnost in robustnost glede na 
-    bolj reaktivne politike.
+    eksplicitne komunikacije ali centralnega koordinatorja), kar vodi do dobre skalabilnosti. Delo kaže, da koordinacija z lokalnim pogledom vnaprej (MCTS) izboljša pretočnost pri delni
+    opazljivosti; \textit{Local Leaders} dosega primerljivo koordinacijo z eksplicitno hierarhijo
+    vodij, brez računsko zahtevnega drevesnega iskanja.
 
 	\textit{PRIMAL2}~\cite{damani2021primal2} je zgodnje, vplivno delo, ki pokaže, da je mogoče MAPF reševati z 
     decentraliziranimi politikami na osnovi lokalnih opazovanj, naučenimi s kombinacijo posnemovalnega učenja
-    (ang. \textit{imitation learning}) iz centraliziranih planerjev in okrepitvenega učenja (ang. \textit{reinforcement learning}). Pristop zelo dobro skali, vendar pogosto žrtvuje 
-    optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. PRIMAL2 
-    uporabljamo kot kontekst za interpretacijo rezultatov učenih decentraliziranih metod (Follower/MATS-LP/SCRIMP): če 
-    pri njih opazimo slabši SoC, je to pričakovan kompromis, ki ga literatura že izpostavlja.
+    (ang. \textit{imitation learning}) iz centraliziranih planerjev in okrepitvenega učenja (ang. \textit{reinforcement learning}). Pristop se zelo dobro skalira, vendar pogosto žrtvuje 
+    optimalnost in lahko povzroča neusklajenosti v gostih scenarijih. PRIMAL2 potrjuje, da je suboptimalnost SoC pri učenih decentraliziranih metodah pričakovan
+    kompromis; to odpira prostor za pristop z eksplicitno koordinacijo vodij, ki ne zahteva učenja
+    in si prizadeva zmanjšati ta kompromis.
 
 	\textit{SCRIMP}~\cite{wang2023scrimp} uvede eksplicitno komunikacijo med agenti z uporabo arhitekture Transformer (ang. \textit{Transformer}) in 
     pozornostnega mehanizma, kar omogoča učinkovitejšo koordinacijo tudi pri zelo omejenem vidnem polju. S tem pristop 
     preseže omejitve povsem nekomunikacijskih lokalnih politik, hkrati pa ohrani decentralizirano izvajanje in dobro skalabilnost. 
-    SCRIMP služi kot motivacija za naš »hibridni« pogled (lokalni vodje): kaže, da lahko 
-    dodaten koordinacijski signal (komunikacija ali posredno usklajevanje) izboljša pretočnost; naš pristop to doseže z lažjim 
-    mehanizmom vodij, ki ga lahko primerjamo z relacijo med čisto lokalnimi in bolj koordiniranimi pristopi.
+    SCRIMP kaže, da dodaten koordinacijski signal, bodisi eksplicitna komunikacija bodisi pozornostni
+    mehanizem, bistveno izboljšata pretočnost. \textit{Local Leaders} sledi tej ugotovitvi z
+    lažjim mehanizmom koordinacije prek vodij, ki ne zahteva niti predhodnega učenja niti
+    eksplicitne komunikacije med agenti.
 
 \section{Uvedba lokalnih vodij}
 
