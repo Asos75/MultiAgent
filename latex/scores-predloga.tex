@@ -195,7 +195,7 @@ algoritmom LaCAM ter decentraliziranima algoritmoma Follower in MATS-LP na
 standardiziranih zbirkah MovingAI in POGEMA\@. Rezultati pokažejo, da Local
 Leaders dosega primerljiv ali celo nekoliko nižji SoC kot LaCAM (do $9\,\%$
 manj pri 64 agentih), ob tem pa ohranja skoraj enako pretočnost kot MATS-LP na
-odprtih okoljih (94--96\,\%) pri do 400-kratno krajšem času izvajanja epizode.
+odprtih okoljih (97--101\,\%) in ga bistveno prekaša na skladiščnih scenarijih.
 \end{abstract}
 %%
 %% This command processes the author and affiliation and title
@@ -425,7 +425,10 @@ kadar te ni, ostane na mestu; to predstavlja implicitno pogajanje med skupinami.
 Agent, ki se ni premaknil, poveča števec zastoja; agent, ki se je premaknil,
 pa ga ponastavi na nič.
 
-\paragraph{5. Implementacija.}
+\paragraph{5. Izvedba premikov.}
+Vsi agenti hkrati izvedejo svoje potrjene premike, torej se posodobijo na svoje začasne položaje.
+
+\paragraph{6. Implementacija.}
 Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++
 (prek pybind11) za hitrejše izvajanje.
 
@@ -494,7 +497,14 @@ morda bistveno zavlačuje celotno skupino. Z vključitvijo obeh metrik tako dobi
 \noindent
 \textbf{Stopnja uspeha} (ang. \textit{success rate}) meri delež instanc, pri katerih vsi
 agenti uspešno dosežejo svoje cilje znotraj predvidenega časovne
-omejitve~\cite{skrynnik2025pogema}. 
+omejitve~\cite{skrynnik2025pogema}:
+\[
+    SR = \frac{1}{N}\sum_{n=1}^{N}
+    \mathbf{1}\!\left[\forall\,i\in A,\;\exists\;t\le T_{\max}:\pi_i[t]=t(i)\right],
+\]
+kjer je $N$ skupno število testnih instanc, $T_{\max}$ časovna omejitev, $t(i)$ ciljno
+vozlišče agenta $i$ in $\mathbf{1}[\cdot]$ indikatorska funkcija (1 kadar je pogoj
+izpolnjen, 0 sicer).
 
 Stopnja uspeha je primarna metrika platforme POGEMA in skupaj s pretočnostjo (ang. \textit{throughput}) tvori osnovo za vrednotenje na tej platformi~\cite{skrynnik2025pogema}. 
 Zasnovana je posebej za vrednotenje decentraliziranih metod v delno opazljivih okoljih. Metrika je za naš eksperiment ključna, saj za razliko od SoC in makespana meri tudi 
@@ -502,8 +512,13 @@ robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši klju
 
 \vspace{0.5em}
 \noindent
-\textbf{Pretok / pretočnost} (ang. \textit{throughput}) meri povprečno število agentov, ki na 
-časovni korak dosežejo svoja ciljna vozlišča~\cite{skrynnik2025pogema}. 
+\textbf{Pretok / pretočnost} (ang. \textit{throughput}) meri povprečno število agentov, ki na
+časovni korak dosežejo svoja ciljna vozlišča~\cite{skrynnik2025pogema}:
+\[
+    \text{throughput} = \frac{1}{T}\sum_{t=1}^{T}
+    \bigl|\{i\in A : \pi_i[t] = t(i)\}\bigr|,
+\]
+kjer je $T$ skupno število časovnih korakov epizode in $t(i)$ ciljno vozlišče agenta $i$.
 Skupaj s stopnjo uspeha tvori osnovo za vrednotenje na platformi 
 POGEMA~\cite{skrynnik2025pogema}. 
 Metrika je še posebej primerna za neprekinjene (ang. \textit{lifelong}) oziroma zvezne scenarije, 
@@ -595,10 +610,7 @@ scenarijih z ozkimi hodniki.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig3_planning_time.pdf}
-    \caption{Čas izvajanja v logaritemski skali. Levi trije paneli: čas
-    načrtovanja LaCAM, PBS in Local Leaders na MovingAI (ms). Desni panel: čas
-    celotne epizode MATS-LP vs.\ Local Leaders vs.\ Follower na POGEMA
-    (s, naključni zemljevidi, 0\,\% ovir).}
+    \caption{Čas načrtovanja LaCAM, PBS in Local Leaders na MovingAI v logaritemski skali (ms).}
     \label{fig:planning_time}
 \end{figure}
 
@@ -611,11 +623,6 @@ koraku) in porabi 44--961\,ms za naključne ter 188--3203\,ms za skladiščne
 scenarije. PBS tako ponuja najboljše razmerje med kakovostjo rešitve in
 hitrostjo med vsemi tremi enkratnimi (ang. \textit{one-shot}) algoritmi.
 
-Desni panel primerja čas epizode na POGEMA. Tu je razlika dramatična:
-MATS-LP potrebuje 48\,s (8 agentov) do 416\,s (32 agentov) za eno epizodo
-512 korakov. Local Leaders opravi isto epizodo v 0{,}26--0{,}97\,s, kar je
-$\mathbf{100}\text{--}\mathbf{400\times}$ hitreje. Follower (naučena RL
-politika okrepitvenega učenja; ang. \textit{reinforcement learning}, RL) leži med njima s 2--7\,s na epizodo.
 
 \subsection{Stopnja uspeha in pretočnost na POGEMA}
 
@@ -746,8 +753,7 @@ Local Leaders v gostih labirintnih scenarijih, brez kompromisa pri hitrosti.
 
 Local Leaders se izkaže kot učinkovit pristop: v neprekinjenih (ang. \textit{lifelong})
 scenarijih dosega 97--101\,\% pretočnosti MATS-LP na odprtih naključnih
-okoljih, na skladiščnih okoljih pa ga $\approx 8$--$10\times$ prekaša, pri čemer je
-100--400$\times$ hitrejši od MATS-LP po času epizode. Dvofazna razrešitev konfliktov
+okoljih, na skladiščnih okoljih pa ga $\approx 8$--$10\times$ prekaša. Dvofazna razrešitev konfliktov
 z vodji bistveno izboljša pretočnost v labirintih (+23\,\% pri 32 agentih) in pri
 30\,\% ovirah (0{,}51 vs.\ 0{,}90 MATS-LP pri 32 agentih). Follower, kot naučena
 politika, leži med njima, a ne uspe zaključiti epizod na skladiščnih zemljevidih.
@@ -773,10 +779,6 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
     prekaša MATS-LP za 8--10-kratnik (2{,}14 vs.\ 0{,}28 ciljev/korak pri 96
     agentih). Pri 30\,\% ovirah dosega 0{,}49--0{,}60 ciljev/korak, kar je
     bistveno boljše od osnove (bila 0{,}14--0{,}28).
-
-    \item \textbf{Hitrost}: Local Leaders je hitrejši od MATS-LP za faktor 100--400,
-    pri čemer opravi epizodo v 0{,}26--0{,}97\,s, medtem ko MATS-LP potrebuje 48--416\,s za
-    isto epizodo, kar potrjuje skalabilnost pristopa.
 
     \item \textbf{Slabosti}: Algoritem pri 32 agentih in 30\,\% ovirah zaostaja za
     MATS-LP (0{,}51 vs.\ 0{,}90), v labirintnih okoljih pa PBS ponuja zanesljivejšo

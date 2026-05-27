@@ -421,22 +421,15 @@ def fig_planning_time(
     out: Path,
     ll_cpp_rows: Optional[List[dict]] = None,
 ) -> None:
-    """Planning time / episode wall-time comparison.
-
-    Left panels (one per map type): MovingAI comp_time_ms for LaCAM vs Local Leaders.
-    Rightmost panel: POGEMA episode elapsed_s for MATS-LP vs Local Leaders vs Follower
-    on random maps with 0% obstacles.  Shows ~400× speedup of LL over MATS-LP.
-    """
+    """Planning time comparison on MovingAI (one panel per map type)."""
     algos_mv = [a for a in ["lacam", "pbs", "local-leaders"]
                 if any(r["algo"] == a for r in movingai_rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in movingai_rows)]
 
-    n_panels = len(map_types) + 1
+    n_panels = len(map_types)
     fig, axes = plt.subplots(1, n_panels, figsize=(4.5 * n_panels, 4.2))
-    axes_mv = axes[:len(map_types)]
-    ax_pogema = axes[-1]
+    axes_mv = axes if n_panels > 1 else [axes]
 
-    # MovingAI panels
     for ax, mt in zip(axes_mv, map_types):
         mt_rows = [r for r in movingai_rows if r["map_type"] == mt]
         agents = sorted({r["num_agents"] for r in mt_rows})
@@ -454,52 +447,7 @@ def fig_planning_time(
                   "Planning time (ms)" if ax is axes_mv[0] else "",
                   MAP_TYPE_TITLES[mt], log_y=True)
 
-    # POGEMA episode time panel (random maps, 0% obstacles)
-    _ll_cpp = ll_cpp_rows or []
-    pogema_algos = [a for a in ["matslp", "ll-cpp", "follower"]
-                    if any(r.get("elapsed_s") is not None
-                           for r in (matslp_rows if a == "matslp"
-                                     else _ll_cpp if a == "ll-cpp"
-                                     else follower_raw_rows))]
-    pogema_src = {
-        "matslp":        matslp_rows,
-        "ll-cpp":        _ll_cpp,
-        "follower":      follower_raw_rows,
-    }
-    agent_sets: set = set()
-    for algo in pogema_algos:
-        rand_rows = [r for r in pogema_src[algo]
-                     if r.get("map_type") == "random" and r.get("obstacle_density", 0) == 0]
-        for r in rand_rows:
-            if r.get("elapsed_s") is not None:
-                agent_sets.add(r["num_agents"])
-    agents_p = sorted(agent_sets)
-
-    if agents_p:
-        algo_vals_p, algo_errs_p = {}, {}
-        for algo in pogema_algos:
-            rand_rows = [r for r in pogema_src[algo]
-                         if r.get("map_type") == "random" and r.get("obstacle_density", 0) == 0]
-            bucket: Dict[int, list] = defaultdict(list)
-            for r in rand_rows:
-                v = r.get("elapsed_s")
-                if v is not None:
-                    bucket[r["num_agents"]].append(v)
-            algo_vals_p[algo] = [float(np.mean(bucket[n])) if bucket[n] else None for n in agents_p]
-            algo_errs_p[algo] = [float(np.std(bucket[n])) if bucket[n] else 0.0 for n in agents_p]
-
-        _grouped_bars(ax_pogema, agents_p, algo_vals_p, algo_errs_p, log_y=True)
-        _setup_ax(ax_pogema, "Number of agents", "Episode wall time (s)",
-                  "POGEMA (random, 0% obstacles)", log_y=True)
-    else:
-        ax_pogema.text(0.5, 0.5, "No POGEMA elapsed data", ha="center", va="center",
-                       transform=ax_pogema.transAxes, color="gray")
-        ax_pogema.set_title("POGEMA episode time")
-
-    fig.suptitle(
-        "Runtime: LaCAM/PBS/LL (MovingAI)  |  MATS-LP/LL-CPP/LL/Follower (POGEMA episode time)",
-        fontweight="bold", y=1.01,
-    )
+    fig.suptitle("Runtime: LaCAM / PBS / Local Leaders (MovingAI)", fontweight="bold", y=1.01)
     _save(fig, "fig3_planning_time", out)
 
 

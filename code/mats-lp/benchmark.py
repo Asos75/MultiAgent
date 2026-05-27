@@ -28,8 +28,8 @@ CONFIGS_REDUCED = [
     *[("pico_s.*_od30_na32", n, f"random_d30_a{n}") for n in [8, 16, 32]],
     # --- Mazes: 20x20 only ---
     *[("mazes-s.*_20x20", n, f"maze_20x20_a{n}") for n in [4, 8, 16, 32]],
-    # --- Warehouse: low / mid / high agent count ---
-    *[("wfi_warehouse", n, f"warehouse_a{n}") for n in [32, 96, 192]],
+    # --- Warehouse: matching Local Leaders test set ---
+    *[("wfi_warehouse", n, f"warehouse_a{n}") for n in [32, 96]],
 ]
 
 # All of the experiments we want to run: (map_name_pattern, num_agents, label)
