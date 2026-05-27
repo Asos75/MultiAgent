@@ -348,41 +348,70 @@ Glavni prispevek tega dela je predlagana nadgradnja obstoječih pristopov, ki uv
 centraliziranega in decentraliziranega pristopa. Algoritem deluje lokalno, na ravni agenta, 
 brez vnaprejšnjega načrtovanja in deluje v petih korakih (Slika~\ref{fig:flowchart}).
 
-
-
 \paragraph{1. Oblikovanje skupin.}
-Na začetku vsakega koraka, se agenti razdelijo v skupine. Pravilo za deljenje je preprosto in
-deterministično: Agent $i$ postane \textit{vodja}, če nobeden od agentov z nižjim ID-jem ne
-leži znotraj razdalje $r_{\text{leader}}$ (razdalja se izračuna po Manhattanski metriki). Procesiranje 
-agentov, od najnižjega do najvišjega ID-ja zagotovi konsistentno particijo brez dvoumnosti.
+Na začetku vsakega koraka se agenti razdelijo v lokalne skupine. Algoritem obdela agente v naraščajočem
+vrstnem redu ID-jev (od $0$ do $k-1$). Za vsakega agenta $i$ se med vsemi že identificiranimi vodji
+(to so agenti $j < i$, ki so v tej iteraciji postali vodje) poišče najbližji po Manhattanski razdalji
+znotraj polmera $r_{\text{leader}} = 17$ (vidno polje vodje). Če je tak vodja najden, se agent $i$
+pridruži skupini najbližjega vodje; sicer agent $i$ sam postane nov vodja in se doda na seznam vodij.
+Agenti, ki niso vodja, se imenujejo \textit{sledilci}. Vodja opazuje člane skupini v polmeru
+$r_{\text{leader}}$; sledilci zaznavajo sosednje agente v polmeru $r_{\text{agent}} = 11$ (vidno polje
+agenta). Ker se agenti obdelujejo v strogo naraščajočem vrstnem redu ID-jev, je particija enolično
+določena in brez dvoumnosti. Skupinska struktura se ne osvežuje pri vsakem koraku, temveč le vsakih
+$t_{\text{regroup}} = 5$ korakov (interval ponovnega združevanja skupin).
 
 \paragraph{2. Željena celica (A*).}
-Vsak agent zase neodvisno izvede algoritem A* od svojega položaja, do cilja, pri čimer gleda le
-na statične ovire. Agent na tej točki ignorira ostale agente. Rezultat tega koraka, je celica kamor se agent \textit{želi} premakniti. Agenti, ki so obstali 
-$\geq t_{\text{esc}}$ korakov preidejo v \textit{način pobega}, kjer namesto A* izberejo naključno 
-prosto sosednjo celico.
+Vsak agent neodvisno izvede algoritem A* od svojega položaja do cilja, pri čimer upošteva le statične
+ovire in ignorira položaje ostalih agentov. Rezultat je \textit{željena celica}, to je celica, v katero se
+agent želi premakniti v tem koraku. Agent se lahko tudi odloči, da ostane na istem mestu (brez premika), kar
+je vedno veljavna akcija.
+
+Uvajamo \textbf{prag pobega} $t_{\text{esc}}$ (ang.\ \textit{escape threshold}): to je celo število, ki
+določa, po koliko zaporednih korakih brez premika agent preide v \textit{način pobega}. Kadar je
+agentov števec zastoja (število zaporednih korakov, v katerih se ni premaknil) enak ali večji od
+$t_{\text{esc}}$, agent namesto A* izbere naključno prosto sosednjo celico. Kadar nobena sosednja
+celica ni prosta, agent ostane na mestu, torej je njegova \textit{željena celica} je enaka trenutnemu
+položaju. Opozorimo, da agent lahko ostane na mestu tudi zunaj načina pobega, kadar razrešitev
+konfliktov (korak~3) ne pusti nobene boljše alternative. Parameter: $t_{\text{esc}} = 1$, torej agent
+vstopi v način pobega že po enem koraku brez premika.
 
 \paragraph{3. Razrešitev konfliktov v dveh fazah.}
 Razrešitev poteka v dveh eksplicitnih fazah, ki ločita konflikte \emph{znotraj} skupin od konfliktov \emph{med} skupinami.
 
-\textbf{Faza A — znotrajskupinska razrešitev }
-Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine.
-Obdelava članov znotraj skupine poteka v naslednjem vrstnem redu:
+\textbf{Faza A — znotrajskupinska razrešitev}
+
+Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine. Obdelava članov poteka v naslednjem
+vrstnem redu:
 \begin{enumerate}
-    \item agenti v načinu pobega,
+    \item agenti v načinu pobega (višja prioriteta),
     \item preostali člani, urejeni po bližini do cilja, pri enakosti pa po ID-ju.
 \end{enumerate}
-Za vsakega člana vodja preveri \textit{vozliščni} (oba agenta želita v isto celico) in \textit{zamenjalni} konflikt (agenta menjujeta poziciji). Agent, ki pride na vrsto pozneje, se preusmeri v najboljšo prosto alternativo. Rezultat tega koraka so začasni položaji $\mathit{provisional}[i]$ vsakega agenta.
+Agenti se obdelujejo \emph{zaporedno}, vsak po vrsti. Za vsakega člana vodja preveri tako
+\textit{vozliščni} (oba agenta želita v isto celico) kot \textit{zamenjalni} konflikt (agenta menjujeta
+poziciji). Preverjanje se ponovi za vsakega člana posebej, ka pomeni, da vsak agent preverja konflikte z vsemi že
+potrjenimi premiki predhodnih članov v vrstnem redu. Agent, ki pride na vrsto pozneje, se ob konfliktu
+preusmeri v najboljšo prosto alternativo (celico, ki ni rezervirana in je čim bliže prvotni želeni
+celici); kadar take alternative ni, agent ostane na mestu. Rezultat tega koraka so \textit{začasni položaji}
+($\mathit{provisional}[i]$) vsakega agenta, to so celice celice, v katere nameravajo agenti po znotrajskupinski
+razrešitvi. Ti položaji so začasni, ker se v fazi~B še preverijo konflikti med skupinami in se lahko
+nekateri agenti dodatno preusmerijo.
 
 \textbf{Faza B — medskupinska razrešitev}
-Agenti v načinu pobega najprej dobijo globalni predprehod, ne glede na prioriteto svoje skupine.
-Nato se skupine zavežejo v skupno globalno karto premikov po sledeči prioriteti skupin:
+
+Za razrešitev konfliktov med skupinami uvajamo \textit{karto premikov} -- skupno globalno podatkovno
+strukturo, ki hrani, katero celico je kateri agent že rezerviral za tekoči korak. Pred vpisom skupin v
+karto premikov se določi naslednja prioriteta:
 \begin{enumerate}
-    \item skupine z največjim številom obtičanih agentov,
+    \item agenti v načinu pobega dobijo globalni predprehod, ne glede na skupino,
+    \item pri enakosti: skupina z večjim številom obtičanih agentov ima prednost,
     \item pri enakosti: skupina, katere vodja je bliže svojemu cilju,
     \item pri enakosti: skupina z nižjim ID-jem vodje.
 \end{enumerate}
-Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri, kar predstavlja implicitno pogajanje med dvema vodjema.
+Skladno s to prioriteto se skupin v karto premikov zavežejo po padajočem vrstnem redu prednosti. Za
+vsakega agenta se zaporedno preverita vozliščni in zamenjalni konflikt z vsemi že vpisanimi agenti, tako
+kot v fazi A se preverjanje ponovi za vsakega agenta posebej. Ko agent iz nižjeprioritene skupine zahteva
+celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri v najboljšo prosto alternativo ali,
+kadar te ni, ostane na mestu; to predstavlja implicitno pogajanje med skupinami.
 
 \begin{figure}[H]
     \centering
@@ -400,11 +429,7 @@ pa ga ponastavi na nič.
 
 \paragraph{5. Implementacija.}
 Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++
-(prek pybind11) za hitrejše izvajanje. Parametri uporabljeni za testiranje so
-$r_{\text{agent}} = 11$ (vidno polje agenta), $r_{\text{leader}} = 17$ (vidno polje vodje),
-$t_{\text{esc}} = 1$ (prag pobega) in $t_{\text{regroup}} = 5$ (interval ponovnega združevanja skupin).
-
-
+(prek pybind11) za hitrejše izvajanje.
 
 Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
 informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
@@ -423,9 +448,17 @@ in MATS-LP ter ovrednotiti predlagani pristop z lokalnimi vodji.
 
 \subsection{Eksperimentalno okolje}
 
-Za evalvacijo uporabljamo knjižnico POGEMA~\cite{skrynnik2025pogema}, ki ponuja standardizirano platformo za primerjavo MAPF algoritmov 
-v okoljih z nepopolno informacijo, z generatorjem instanc, enotnimi metrikami in protokolom izvajanja. To kombiniramo z MovingAI~\cite{stern2019multiagent} 
+Za evalvacijo uporabljamo knjižnico POGEMA~\cite{skrynnik2025pogema}, ki ponuja standardizirano platformo za primerjavo MAPF algoritmov
+v okoljih z nepopolno informacijo, z generatorjem instanc, enotnimi metrikami in protokolom izvajanja. To kombiniramo z MovingAI~\cite{stern2019multiagent}
 zbirko zemljevidov, ki zagotavlja reprezentativne testne scenarije.
+
+Eksperimenti so razdeljeni v dve skupini glede na način delovanja: na zbirkah MovingAI izvajamo
+\textit{enkratne} (ang.\ \textit{one-shot}) eksperimente, kjer vsak agent po dosegu cilja
+ustavi (\texttt{on\_target=finish}), ter merimo SoC, makespan in stopnjo uspeha. Na zbirkah
+POGEMA pa izvajamo \textit{neprekinjene} (ang.\ \textit{lifelong}) eksperimente, kjer agent po
+dosegu cilja prejme novo nalogo (\texttt{on\_target=restart}); pretočnost merimo z metriko
+\texttt{LifeLongAverageThroughputMetric} iz knjižnice POGEMA, kar zagotavlja neposredno
+primerljivost med algoritmi Local Leaders, MATS-LP in Follower.
 
 \subsection{Metrike}
 
