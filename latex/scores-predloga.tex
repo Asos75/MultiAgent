@@ -188,11 +188,11 @@
 \begin{abstract}
 V tem delu obravnavamo problem več-agentnega iskanja poti (MAPF) in predlagamo
 nov hibridni algoritem \textit{Local Leaders}, ki združuje prednosti centraliziranega
-in decentraliziranega pristopa. Algoritem agente dinamično razporeja v lokalne
+in decentraliziranega pristopa, za reševanje lifelong MAPF problemov. Algoritem agente dinamično razporeja v lokalne
 skupine, znotraj katerih vodja koordinira gibanje s prioritetno razrešitvijo
 konfliktov in algoritmom A*. Predlagani pristop primerjamo s centraliziranim
 algoritmom LaCAM ter decentraliziranima algoritmoma Follower in MATS-LP na
-standardiziranih zbirkah MovingAI in POGEMA\@. Rezultati pokažejo, da Local
+standardiziranih zbirkah MovingAI in POGEMA\@. Rezultati kažejo, da Local
 Leaders dosega primerljiv ali celo nekoliko nižji SoC kot LaCAM (do $9\,\%$
 manj pri 64 agentih), ob tem pa ohranja skoraj enako pretočnost kot MATS-LP na
 odprtih okoljih (97--101\,\%) in ga bistveno prekaša na skladiščnih scenarijih.
@@ -204,8 +204,7 @@ odprtih okoljih (97--101\,\%) in ga bistveno prekaša na skladiščnih scenariji
 
 \section{Uvod}
 
-V tem članku obravnavamo problem večagentnega iskanja poti (ang. \textit{Multi-Agent Path Finding}, MAPF), 
-ki se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
+Problem večagentnega iskanja poti (ang. \textit{Multi-Agent Path Finding}, MAPF), se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
 inteligentni transportni sistemi in drugi logistični sistemi. Gre za temeljni problem koordinacije 
 več avtonomnih enot v skupnem prostoru, kjer mora vsak agent doseči svoj cilj brez trkov z 
 drugimi agenti ali ovirami.
@@ -219,7 +218,7 @@ to so pristopi, ki načrtujejo poti za vse agente z globalnim pogledom na proble
 Follower\cite{andreychuk2024follower} in MATS-LP\cite{skrynnik2023decentralized}, kjer agenti odločitve sprejemajo lokalno brez centralnega koordinatorja.
 Vsaka skupina nosi znane kompromise: centralizirani pristopi zagotavljajo višjo kakovost rešitev,
 a slabše skalirajo z naraščajočim številom agentov; decentralizirani dobro skalirajo, a pogosto
-na račun kakovosti. Ta kompromis je izhodišče za zasnovo algoritma \textit{Local Leaders}.
+na račun kakovosti. Ta kompromis je izhodišče za zasnovo našega algoritma \textit{Local Leaders}.
 
 Glavni prispevek tega dela je hibridni algoritem \textit{Local Leaders} (lokalni vodje), pri katerem
 se agenti dinamično razporejajo v lokalne skupine, znotraj katerih izbrani vodja usklajuje premike
@@ -281,8 +280,7 @@ opišemo eksperimentalno okolje in metrike ter analiziramo rezultate, na koncu p
 
 V tem razdelku izpostavimo ključna dela s področja več-agentnega iskanja poti,
 ki so motivirala zasnovo algoritma \textit{Local Leaders} ali zagotavljajo referenčne točke za
-njegovo vrednotenje. Pri vsakem delu na kratko povemo, kaj je njegova glavna ideja in v čem
-informira naš pristop.
+njegovo vrednotenje.
 
 \subsection{Centralizirani pristopi}
 
@@ -347,21 +345,20 @@ centraliziranega in decentraliziranega pristopa. Algoritem deluje lokalno, na ra
 brez vnaprejšnjega načrtovanja in deluje v petih korakih (Slika~\ref{fig:flowchart}).
 
 \paragraph{1. Oblikovanje skupin.}
-Na začetku vsakega koraka se agenti razdelijo v lokalne skupine. Algoritem obdela agente v naraščajočem
-vrstnem redu ID-jev (od $0$ do $k-1$). Za vsakega agenta $i$ se med vsemi že identificiranimi vodji
+Na začetku vsakega koraka oz. vsakih $t_{\text{regroup}} = 5$ korakov se agenti razdelijo v disjunktne skupine. Algoritem obdela agente v naraščajočem
+vrstnem redu ID-jev (od $0$ do $k-1$), ki so agentom dodeljeni na začetku algoritma in se v nadlaje ne spreminjajo. Za vsakega agenta $i$ se med vsemi že identificiranimi vodji
 (to so agenti $j < i$, ki so v tej iteraciji postali vodje) poišče najbližji po Manhattanski razdalji
 znotraj polmera $r_{\text{leader}} = 17$ (vidno polje vodje). Če je tak vodja najden, se agent $i$
-pridruži skupini najbližjega vodje; sicer agent $i$ sam postane nov vodja in se doda na seznam vodij.
-Agenti, ki niso vodja, se imenujejo \textit{sledilci}. Vodja opazuje člane skupini v polmeru
-$r_{\text{leader}}$; sledilci zaznavajo sosednje agente v polmeru $r_{\text{agent}} = 11$ (vidno polje
+pridruži njegovi skupini; sicer pa agent $i$ sam postane vodja.
+Agenti, ki niso vodja, se imenujejo \textit{sledilci}. Vodja opazuje člane skupine v polmeru
+$r_{\text{leader}}$, sledilci pa zaznavajo sosednje agente v polmeru $r_{\text{agent}} = 11$ (vidno polje
 agenta). Ker se agenti obdelujejo v strogo naraščajočem vrstnem redu ID-jev, je particija enolično
-določena in brez dvoumnosti. Skupinska struktura se ne osvežuje pri vsakem koraku, temveč le vsakih
-$t_{\text{regroup}} = 5$ korakov (interval ponovnega združevanja skupin).
+določena in brez dvoumnosti.
 
-\paragraph{2. Željena celica (A*).}
+\paragraph{2. Izračun željenih celic (A*).}
 Vsak agent neodvisno izvede algoritem A* od svojega položaja do cilja, pri čimer upošteva le statične
 ovire in ignorira položaje ostalih agentov. Rezultat je \textit{željena celica}, to je celica, v katero se
-agent želi premakniti v tem koraku. Agent se lahko tudi odloči, da ostane na istem mestu (brez premika), kar
+agent želi premakniti v tem koraku. Agent se lahko prav tako odloči, da ostane na istem mestu (brez premika), kar
 je vedno veljavna akcija.
 
 Uvajamo \textbf{prag pobega} $t_{\text{esc}}$ (ang.\ \textit{escape threshold}): to je celo število, ki
@@ -381,18 +378,14 @@ Razrešitev poteka v dveh eksplicitnih fazah, ki ločita konflikte \emph{znotraj
 Vsak vodja neodvisno razrešuje konflikte znotraj svoje skupine. Obdelava članov poteka v naslednjem
 vrstnem redu:
 \begin{enumerate}
-    \item agenti v načinu pobega (višja prioriteta),
+    \item agenti v načinu pobega,
     \item preostali člani, urejeni po bližini do cilja, pri enakosti pa po ID-ju.
 \end{enumerate}
-Agenti se obdelujejo \emph{zaporedno}, vsak po vrsti. Za vsakega člana vodja preveri tako
-\textit{vozliščni} (oba agenta želita v isto celico) kot \textit{zamenjalni} konflikt (agenta menjujeta
-poziciji). Preverjanje se ponovi za vsakega člana posebej, ka pomeni, da vsak agent preverja konflikte z vsemi že
-potrjenimi premiki predhodnih članov v vrstnem redu. Agent, ki pride na vrsto pozneje, se ob konfliktu
+Za vsakega člana skupine vodja preveri tako \textit{vozliščne} (dva agenta želita v isto celico) kot tudi \textit{zamenjalne} konflikte (agenta menjujeta
+poziciji). Preverjanje se ponovi za vsakega člana posebej, kar pomeni, da vsak agent preverja konflikte z vsemi že
+potrjenimi premiki predhodnih članov. Agent, ki pride na vrsto pozneje, se ob konfliktu
 preusmeri v najboljšo prosto alternativo (celico, ki ni rezervirana in je čim bliže prvotni želeni
-celici); kadar take alternative ni, agent ostane na mestu. Rezultat tega koraka so \textit{začasni položaji}
-($\mathit{provisional}[i]$) vsakega agenta, to so celice celice, v katere nameravajo agenti po znotrajskupinski
-razrešitvi. Ti položaji so začasni, ker se v fazi~B še preverijo konflikti med skupinami in se lahko
-nekateri agenti dodatno preusmerijo.
+celici). Kadar take alternative ni, agent ostane na mestu. Rezultat tega koraka so željeni položaji vsakega agenta. Ti položaji so začasni, ker se v fazi~B še preverijo konflikti med skupinami in se lahko nekateri agenti dodatno preusmerijo.
 
 \textbf{Faza B — medskupinska razrešitev}
 
@@ -400,16 +393,14 @@ Za razrešitev konfliktov med skupinami uvajamo \textit{karto premikov} -- skupn
 strukturo, ki hrani, katero celico je kateri agent že rezerviral za tekoči korak. Pred vpisom skupin v
 karto premikov se določi naslednja prioriteta:
 \begin{enumerate}
-    \item agenti v načinu pobega dobijo globalni predprehod, ne glede na skupino,
-    \item pri enakosti: skupina z večjim številom obtičanih agentov ima prednost,
-    \item pri enakosti: skupina, katere vodja je bliže svojemu cilju,
-    \item pri enakosti: skupina z nižjim ID-jem vodje.
+    \item agenti v načinu pobega, ne glede na skupino,
+    \item skupina z večjim številom obtičanih agentov,
+    \item skupina, katere vodja je bliže svojemu cilju,
+    \item skupina z nižjim ID-jem vodje.
 \end{enumerate}
-Skladno s to prioriteto se skupin v karto premikov zavežejo po padajočem vrstnem redu prednosti. Za
-vsakega agenta se zaporedno preverita vozliščni in zamenjalni konflikt z vsemi že vpisanimi agenti, tako
-kot v fazi A se preverjanje ponovi za vsakega agenta posebej. Ko agent iz nižjeprioritene skupine zahteva
-celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri v najboljšo prosto alternativo ali,
-kadar te ni, ostane na mestu; to predstavlja implicitno pogajanje med skupinami.
+Skladno s to prioriteto se skupine zavežejo v karto premikov. Za vsakega agenta se zaporedno preverita vozliščni in zamenjalni konflikt z vsemi že vpisanimi agenti, tako
+kot v fazi A. Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri v najboljšo prosto alternativo ali,
+kadar te ni, ostane na mestu.
 
 \begin{figure}[H]
     \centering
@@ -788,9 +779,8 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
 Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
 kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
 potrjujemo za odprta, gosta in skladiščna okolja. Dvofazna razrešitev konfliktov z
-vodji se je izkazala kot soliden pristop. Za scenarije z ozkimi hodniki bo potrebno
-razviti zanesljivejši mehanizem razrešitve zastojev, npr.\ kratkovidno kooperativno
-načrtovanje med sosednjimi vodji.
+vodji se je izkazala kot soliden pristop. Za scenarije z ozkimi hodniki pa bo potrebno
+razviti zanesljivejši mehanizem razrešitve zastojev.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
