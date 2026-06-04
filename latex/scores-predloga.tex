@@ -426,8 +426,8 @@ decentraliziranih pristopih.
 \section{Eksperiment}
 
 V tem poglavju bomo predstavili metodologijo vrednotenja in primerjanja izbranih algoritmov za problem večagentnega iskanja poti.
-Cilj eksperimentalnega dela je primerjati centralizirane pristope, kot sta LaCAM in PBS, z decentraliziranimi pristopi Follower 
-in MATS-LP ter ovrednotiti predlagani pristop z lokalnimi vodji.
+Cilj eksperimentalnega dela je primerjati algoritem z lokalnimi vodji z centraliziranimi algoritmi, LaCAM in PBS, ter z decentraliziranimi pristopi Follower 
+in MATS-LP.
 
 \subsection{Eksperimentalno okolje}
 
@@ -435,9 +435,10 @@ Za evalvacijo uporabljamo knjižnico POGEMA~\cite{skrynnik2025pogema}, ki ponuja
 v okoljih z nepopolno informacijo preko generatorja instanc, enotnih metrik in protokola izvajanja. To kombiniramo z MovingAI~\cite{stern2019multiagent}
 zbirko zemljevidov, ki zagotavlja reprezentativne testne scenarije.
 
-Eksperimenti so razdeljeni v dve skupini glede na način delovanja: na zbirkah MovingAI izvajamo enkratne (ang.\ \textit{one-shot}) eksperimente, kjer se vsak agent po dosegu cilja
-ustavi (\texttt{on\_target=finish}), ter merimo SoC, makespan in stopnjo uspeha. Na zbirkah
-POGEMA pa izvajamo neprekinjene (lifelong) eksperimente, kjer agent po
+Eksperimenti so razdeljeni v dve skupini glede na način delovanja: na zbirkah MovingAI izvajamo enkratne (one-shot) eksperimente, kjer vsak agent po dosegu cilja
+ustavi (\texttt{on\_target=finish}), ter merimo SoC, makespan in stopnjo uspeha, tu algoritem Local 
+Leaders primerjamo z centraliziranimi algoritmi. Na zbirkah
+POGEMA pa, algoritem primerjamo z decentraliziranimi algoritmi, in izvajamo \textit{neprekinjene} (ang.\ \textit{lifelong}) eksperimente, kjer agent po
 dosegu cilja prejme novo nalogo (\texttt{on\_target=restart}); prepustnost merimo z metriko
 \texttt{LifeLongAverageThroughputMetric} iz knjižnice POGEMA, kar zagotavlja neposredno
 primerljivost med algoritmi Local Leaders, MATS-LP in Follower.
@@ -457,12 +458,12 @@ Metrika meri skupni strošek kot vsoto dolžin poti vseh agentov in s tem neposr
 
 Metrika je še posebej primerna za enkratne (one-shot) scenarije, saj minimizacija SoC ustreza cilju minimizacije skupne porabe časa oziroma virov. Hkrati 
 kaznuje neučinkovite poti posameznih agentov, kar spodbuja iskanje globalno učinkovitih rešitev. SoC bomo zato uporabili za vrednotenje algoritmov 
-LaCAM in PBS na zbirki MovingAI.
+Local Leaders z LaCAM in PBS na zbirki MovingAI.
 
 \vspace{0.5em}
 \noindent
 \textbf{Makespan} je čas, ki ga porabi najdaljša pot med vsemi agenti, torej
-maksimum nad vsemi $|\pi_i|$~\cite{stern2019multiagent}:
+največji med vsemi $|\pi_i|$~\cite{stern2019multiagent}:
 \[
     \text{makespan} = \max_{i \in \{1,\dots,k\}} |\pi_i|.
 \]
@@ -500,8 +501,6 @@ robustnost algoritma oziroma njegovo sposobnost, da instanco v celoti reši klju
     \bigl|\{i\in A : \pi_i[t] = t(i)\}\bigr|,
 \]
 kjer je $T$ skupno število časovnih korakov epizode in $t(i)$ ciljno vozlišče agenta $i$.
-Skupaj s stopnjo uspeha tvori osnovo za vrednotenje na platformi 
-POGEMA~\cite{skrynnik2025pogema}. 
 Metrika je še posebej primerna za neprekinjene oziroma zvezne scenarije, 
 kjer agenti po dosegu cilja prejmejo novo nalogo, saj odraža 
 dolgotrajno zmogljivost sistema pri visokih obremenitvah. 
@@ -512,33 +511,38 @@ daljše časovno obdobje.
 \vspace{0.5em}
 \noindent
 
-\subsubsection{Testne instance}
+\subsection{Testne instance}
 
 Po začetni validaciji implementacij smo zasnovali lasten eksperiment, ki primerja centralizirane,
 decentralizirane in hibridni pristop z lokalnimi vodji. Namen eksperimenta je preveriti ali lahko uvedba
 lokalnih vodij izboljša razmerje med kakovostjo rešitev in časom načrtovanja.
 
-Experimente izvajamo na standardiziranih zemljevidih iz zbirk MovingAI in POGEMA, na različnih velikostih 
-zemljevidov, gostotah agentov in scenarijih. Tu so najbolj zanimivi scenariji z visoko gostoto agentov, 
+Eksperimente izvajamo na standardiziranih zemljevidih iz zbirk MovingAI in POGEMA, na različnih velikostih
+zemljevidov, gostotah agentov in scenarijih. Tu so najbolj zanimivi scenariji z visoko gostoto agentov,
 kjer se razlike med rešitvami najbolj pokažejo.
 
 Uporabljamo tri glavne tipe okolij:
 
 \begin{itemize}
-    \item \textbf{Odprte mreže} (ang. \textit{random grids}) – okolja z malo ovirami, kjer 
+    \item \textbf{Odprte mreže} (ang. \textit{random grids}) – okolja z malo ovirami, kjer
     je večina konfliktov posledica visoke gostote agentov.
-    
-    \item \textbf{Labirinti} (ang. \textit{mazes}) – okolja z ozkimi prehodi in številnimi lokalnimi ozkimi 
+    Na zbirkah MovingAI testiramo mreže velikosti $32\times32$ in $64\times64$ pri
+    10\,\% gostoti ovir (8--64 agentov), na zbirki POGEMA mreže $20\times20$ pri
+    0\,\% in 30\,\% gostoti ovir (8--32 agentov).
+
+    \item \textbf{Labirinti} (ang. \textit{mazes}) – okolja z ozkimi prehodi in številnimi lokalnimi ozkimi
     grli, kjer je koordinacija agentov bistveno zahtevnejša.
-    
-    \item \textbf{Skladiščni scenariji} (ang. \textit{warehouse maps}) – realistične postavitve, podobne 
+    Na zbirkah MovingAI testiramo labirinte $32\times32$ z različnima širinama hodnikov
+    (2 in 4 celice, 4--16 agentov), na zbirki POGEMA labirinte $20\times20$ (4--32 agentov).
+
+    \item \textbf{Skladiščni scenariji} (ang. \textit{warehouse maps}) – realistične postavitve, podobne
     robotiziranim skladiščem, kjer se agenti pogosto srečujejo na križiščih in v ozkih hodnikih.
+    Na zbirkah MovingAI testiramo skladišča velikosti $10\times20$ in $20\times40$ (8--32 agentov),
+    na zbirki POGEMA standardni zemljevid \textit{wfi\_warehouse} (32--96 agentov).
 \end{itemize}
 
-Za vsako vrsto okolja izvajamo eksperimente pri različnih številih agentov (od 20 do 1000 agentov, odvisno od 
-velikosti zemljevida), z različnimi konfiguracijami. Vsaka konfiguracija se izvede večkrat z različnimi scenariji, 
-ki vključujejo začetne in ciljne pozicije agentov, rezultati pa se povprečijo, da zmanjšamo vpliv posameznih 
-naključnih primerov.
+Vsaka konfiguracija se izvede s 25 različnimi semeni, ki določajo začetne in ciljne pozicije agentov;
+rezultati se povprečijo čez vsa semena, da zmanjšamo vpliv posameznih naključnih primerov.
 
 \section{Analiza rezultatov}
 
@@ -551,7 +555,7 @@ tipih zemljevidov pri različnih številih agentov.
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig1_soc_comparison.pdf}
     \caption{Vsota stroškov (SoC): LaCAM, PBS in Local Leaders na naključnih, labirintnih
-    in skladiščnih zemljevidih. Napake kažejo standardno deviacijo čez 3 semena.}
+    in skladiščnih zemljevidih. Napake kažejo standardno deviacijo čez 25 semen.}
     \label{fig:soc}
 \end{figure}
 
