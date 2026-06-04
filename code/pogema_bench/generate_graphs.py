@@ -472,12 +472,14 @@ def fig_success_rate(
     algos_mv = [a for a in ["lacam", "pbs", "local-leaders"]
                 if any(r["algo"] == a for r in movingai_rows)]
     map_types = [mt for mt in MAP_TYPE_ORDER if any(r["map_type"] == mt for r in movingai_rows)]
-    n_panels = len(map_types) + 1
+    n_panels = len(map_types)
 
     fig, axes = plt.subplots(1, n_panels, figsize=(4.2 * n_panels, 4.2))
+    if n_panels == 1:
+        axes = [axes]
 
     # MovingAI panels: one-shot success rate
-    for ax, mt in zip(axes[:len(map_types)], map_types):
+    for ax, mt in zip(axes, map_types):
         mt_rows = [r for r in movingai_rows if r["map_type"] == mt]
         agents = sorted({r["num_agents"] for r in mt_rows})
         algo_vals = {}
@@ -489,47 +491,8 @@ def fig_success_rate(
         ax.axhline(1.0, color="#ccc", linewidth=0.8, zorder=1)
         _setup_ax(ax, "Number of agents", "Success rate", MAP_TYPE_TITLES[mt])
 
-    # POGEMA panel: lifelong throughput — MATS-LP, LL-CPP, LL-Python, Follower
-    ax_pogema = axes[-1]
-    _ll_cpp = ll_cpp_rows or []
-    pogema_algos = [a for a in ["matslp", "ll-cpp", "follower"]
-                    if any(r.get("throughput") is not None
-                           for r in (matslp_rows if a == "matslp"
-                                     else _ll_cpp if a == "ll-cpp"
-                                     else follower_rows))]
-    pogema_src = {
-        "matslp":        matslp_rows,
-        "ll-cpp":        _ll_cpp,
-        "follower":      follower_rows,
-    }
-
-    agent_sets: set = set()
-    for algo in pogema_algos:
-        rand_rows = [r for r in pogema_src[algo]
-                     if r.get("map_type") == "random" and r.get("obstacle_density", 0) == 0]
-        d = agg_throughput_by_agents(rand_rows, algo, density=0)
-        agent_sets |= set(d.keys())
-    agents_p = sorted(agent_sets)
-
-    if agents_p:
-        algo_vals_p, algo_errs_p = {}, {}
-        for algo in pogema_algos:
-            rand_rows = [r for r in pogema_src[algo]
-                         if r.get("map_type") == "random" and r.get("obstacle_density", 0) == 0]
-            d = agg_throughput_by_agents(rand_rows, algo, density=0)
-            algo_vals_p[algo] = [d.get(n, {}).get("mean") for n in agents_p]
-            algo_errs_p[algo] = [d.get(n, {}).get("std", 0.0) for n in agents_p]
-
-        _grouped_bars(ax_pogema, agents_p, algo_vals_p, algo_errs_p)
-        _setup_ax(ax_pogema, "Number of agents", "Throughput (goals / timestep)",
-                  "POGEMA lifelong\n(random, 0% obstacles)")
-    else:
-        ax_pogema.text(0.5, 0.5, "No POGEMA data", ha="center", va="center",
-                       transform=ax_pogema.transAxes, color="gray")
-        ax_pogema.set_title("POGEMA throughput")
-
     fig.suptitle(
-        "Success Rate (MovingAI: LaCAM/PBS/LL)  |  Throughput (POGEMA lifelong: MATS-LP/LL-CPP/LL/Follower)",
+        "Success Rate (MovingAI: LaCAM/PBS/LL)",
         fontweight="bold", y=1.01,
     )
     _save(fig, "fig4_success_rate", out)
