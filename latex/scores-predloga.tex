@@ -37,7 +37,7 @@
 \documentclass[sigconf,nonacm]{acmart}
 %% NOTE that a single column version may be required for 
 %% submission and peer review. This can be done by changing
-%% the \doucmentclass[...]{acmart} in this template to 
+%% the \documentclass[...]{acmart} in this template to 
 %% \documentclass[manuscript,screen]{acmart}
 %% 
 %% To ensure 100% compatibility, please check the white list of
@@ -69,7 +69,7 @@
 \acmConference[SCORES'22]{Student Computing Research Symposium}{October 6,
 2022}{Ljubljana, Slovenia}
 %
-%  Uncomment \acmBooktitle if th title of the proceedings is different
+%  Uncomment \acmBooktitle if the title of the proceedings is different
 %  from ``Proceedings of ...''!
 %
 %\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
@@ -90,7 +90,7 @@
 %% files in BibTeX format.
 %%
 %% You can then either use BibTeX with the ACM-Reference-Format style,
-%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% or BibLaTeX with the acmnumeric or acmauthoryear styles, that include
 %% support for advanced citation of software artefact from the
 %% biblatex-software package, also separately available on CTAN.
 %%
@@ -132,7 +132,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Optimizacija več-agentnega iskanja poti z uvedbo lokalnih vodij}
+\title{Optimizacija večagentnega iskanja poti z uvedbo lokalnih vodij}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -183,15 +183,15 @@
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{centralizirano načrtovanje poti, distribuirano načrtovanje poti, usklajevanje agentov, lokalni vodje, več-agentno iskanje poti}
+\keywords{centralizirano načrtovanje poti, decentralizirano načrtovanje poti, usklajevanje agentov, lokalni vodje, večagentno iskanje poti}
 
 \begin{abstract}
-V tem delu obravnavamo problem več-agentnega iskanja poti (ang. \textit{Multi-Agent Path Finding, MAPF}) in predlagamo
+V tem delu obravnavamo problem večagentnega iskanja poti (ang. \textit{Multi-Agent Path Finding, MAPF}) in predlagamo
 nov hibridni algoritem \textit{Local Leaders}, ki združuje prednosti centraliziranega
-in decentraliziranega pristopa, za reševanje neprekinjenih (ang. \textit{lifelong}) MAPF problemov. Algoritem agente dinamično razporeja v lokalne
+in decentraliziranega pristopa za reševanje neprekinjenih (ang. \textit{lifelong}) MAPF problemov. Algoritem agente dinamično razporeja v lokalne
 skupine, znotraj katerih vodja koordinira gibanje s prioritetno razrešitvijo
 konfliktov in algoritmom A*. Predlagani pristop primerjamo s centraliziranima
-algoritmoma LaCAM in PBS, ter decentraliziranima algoritmoma Follower in MATS-LP na
+algoritmoma LaCAM in PBS ter decentraliziranima algoritmoma Follower in MATS-LP na
 standardiziranih zbirkah MovingAI in POGEMA\@. Rezultati kažejo, da Local
 Leaders dosega primerljiv ali celo nekoliko nižji SoC (ang. \textit{Sum of Costs}) kot LaCAM (do $9\,\%$
 manj pri 64 agentih), ob tem pa ohranja skoraj enako prepustnost kot MATS-LP na
@@ -204,7 +204,7 @@ odprtih okoljih (97--101\,\%) in ga bistveno prekaša na skladiščnih scenariji
 
 \section{Uvod}
 
-Problem večagentnega iskanja poti, se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
+Problem večagentnega iskanja poti se v praksi pojavlja v številnih domenah, kot so robotizirana skladišča, avtonomna vozila, 
 inteligentni transportni sistemi in drugi logistični sistemi. Gre za temeljni problem koordinacije 
 več avtonomnih enot v skupnem prostoru, kjer mora vsak agent doseči svoj cilj brez trkov z 
 drugimi agenti ali ovirami.
@@ -229,7 +229,7 @@ centralizirani algoritmi.
 
 Repozitorij z izvorno kodo projekta je na voljo na našem GitHub repozitoriju~\footnote{\url{https://github.com/Asos75/MultiAgent}}.
 
-Stern et al.~\cite{stern2019multiagent} definirajo problem več-agentnega iskanja poti (Multi-Agent Path Finding - MAPF)
+Stern et al.~\cite{stern2019multiagent} definirajo problem večagentnega iskanja poti (Multi-Agent Path Finding - MAPF)
  kot trojico
 \[
 \langle G, s, t \rangle,
@@ -252,11 +252,11 @@ pa v njegovo ciljno vozlišče.
 \noindent Naj bo $\pi_i[t]\in V$ položaj agenta $i$ v diskretnem času $t\in\mathbb{N}_{\ge 0}$. Pri vsakem koraku $t$ se agent $i$ lahko 
 premakne v sosednje vozlišče ali ostane na trenutnem, kar formalno zapišemo kot
 \[\pi_i[t+1]\in\mathrm{neigh}(\pi_i[t])\cup\{\pi_i[t]\},\]
-kjer je $\mathrm{neigh}(v)$ množica vozlišč, sosednjih vozlišču $v\in V$~\cite{okumura2023lacam}.
+kjer je $\mathrm{neigh}(v)$ množica vozlišč, ki so sosednja vozlišču $v\in V$~\cite{okumura2023lacam}.
 
 \vspace{0.5em}
 \noindent 
-Okamura~\cite{okumura2023lacam} definira vrste konfliktov, ki se lahko pojavijo med načrtovanjem poti, in jih mora algoritem upoštevati. Agent
+Okumura~\cite{okumura2023lacam} definira vrste konfliktov, ki se lahko pojavijo med načrtovanjem poti, in jih mora algoritem upoštevati. Agent
 se mora izogibati naslednjim vrstam konfliktov:
 
 \begin{itemize}
@@ -269,7 +269,7 @@ se mora izogibati naslednjim vrstam konfliktov:
 \vspace{0.5em}
 \noindent 
 Rešitev MAPF za instance, omenjene zgoraj, je množica brezkonfliktnih poti
- $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer agent doseže cilj.~\cite{okumura2023lacam}
+ $\{\pi_1,\ldots,\pi_k\}$ takih, da obstaja časovni korak $T \in \mathbb{N}_{\ge 0}$, kjer vsak agent doseže cilj.~\cite{okumura2023lacam}
 
 Članek je organiziran na naslednji način: v razdelku \textit{Sorodna dela} povzamemo izbrane
 centralizirane in decentralizirane pristope MAPF, v razdelku \textit{Uvedba lokalnih vodij}
@@ -279,7 +279,7 @@ opišemo eksperimentalno okolje in metrike ter analiziramo rezultate, na koncu p
  
 \section{Sorodna dela}
 
-V tem razdelku izpostavimo ključna dela s področja več-agentnega iskanja poti,
+V tem razdelku izpostavimo ključna dela s področja večagentnega iskanja poti,
 ki so motivirala zasnovo algoritma \textit{Local Leaders} ali zagotavljajo referenčne točke za
 njegovo vrednotenje.
 
@@ -341,7 +341,7 @@ brez vnaprejšnjega načrtovanja in deluje v petih korakih (Slika~\ref{fig:flowc
 
 \paragraph{1. Oblikovanje skupin.}
 Na začetku vsakega koraka oz. vsakih $t_{\text{regroup}} = 5$ korakov se agenti razdelijo v disjunktne skupine. Algoritem obdela agente v naraščajočem
-vrstnem redu ID-jev (od $0$ do $k-1$), ki so agentom dodeljeni na začetku algoritma in se v nadlaje ne spreminjajo. Za vsakega agenta $i$ se med vsemi že identificiranimi vodji
+vrstnem redu ID-jev (od $0$ do $k-1$), ki so agentom dodeljeni na začetku algoritma in se nadalje ne spreminjajo. Za vsakega agenta $i$ se med vsemi že identificiranimi vodji
 (to so agenti $j < i$, ki so v tej iteraciji postali vodje) poišče najbližji po Manhattanski razdalji
 znotraj polmera $r_{\text{leader}} = 17$ (vidno polje vodje). Če je tak vodja najden, se agent $i$
 pridruži njegovi skupini; sicer pa agent $i$ sam postane vodja.
@@ -350,9 +350,9 @@ $r_{\text{leader}}$, sledilci pa zaznavajo sosednje agente v polmeru $r_{\text{a
 agenta). Ker se agenti obdelujejo v strogo naraščajočem vrstnem redu ID-jev, je particija enolično
 določena in brez dvoumnosti.
 
-\paragraph{2. Izračun željenih celic (A*).}
-Vsak agent neodvisno izvede algoritem A* od svojega položaja do cilja, pri čimer upošteva le statične
-ovire in ignorira položaje ostalih agentov. Rezultat je \textit{željena celica}, to je celica, v katero se
+\paragraph{2. Izračun želenih celic (A*).}
+Vsak agent neodvisno izvede algoritem A* od svojega položaja do cilja, pri čemer upošteva le statične
+ovire in ignorira položaje ostalih agentov. Rezultat je \textit{želena celica}, to je celica, v katero se
 agent želi premakniti v tem koraku. Agent se lahko prav tako odloči, da ostane na istem mestu (brez premika), kar
 je vedno veljavna akcija.
 
@@ -360,9 +360,9 @@ Uvajamo \textbf{prag pobega} $t_{\text{esc}}$ (ang.\ \textit{escape threshold}):
 določa, po koliko zaporednih korakih brez premika agent preide v \textit{način pobega}. Kadar je
 agentov števec zastoja (število zaporednih časovnih korakov, v katerih se ni premaknil) enak ali večji od
 $t_{\text{esc}}$, agent namesto A* izbere naključno prosto sosednjo celico. Kadar nobena sosednja
-celica ni prosta, agent ostane na mestu, torej je njegova \textit{željena celica} enaka trenutnemu
+celica ni prosta, agent ostane na mestu, torej je njegova \textit{želena celica} enaka trenutnemu
 položaju. Opozorimo, da agent lahko ostane na mestu tudi zunaj načina pobega, kadar razrešitev
-konfliktov (korak~3) ne pusti nobene boljše alternative. Parameter: $t_{\text{esc}} = 1$, torej agenta nastavi v način pobega že po enem koraku brez premika.
+konfliktov (korak~3) ne pusti nobene boljše alternative. Parameter: $t_{\text{esc}} = 1$, torej agent preide v način pobega že po enem koraku brez premika.
 
 \paragraph{3. Razrešitev konfliktov v dveh fazah.}
 Razrešitev poteka v dveh fazah, ki ločita konflikte \emph{znotraj} skupin od konfliktov \emph{med} skupinami.
@@ -380,7 +380,7 @@ Za vsakega člana skupine vodja preveri tako \textit{vozliščne} (dva agenta ž
 poziciji). Preverjanje se ponovi za vsakega člana posebej, kar pomeni, da vsak agent preverja konflikte z vsemi že
 potrjenimi premiki predhodnih članov. Agent, ki pride na vrsto pozneje, se ob konfliktu
 preusmeri v najboljšo prosto alternativo (celico, ki ni rezervirana in je čim bliže prvotni želeni
-celici). Kadar take alternative ni, agent ostane na mestu. Rezultat tega koraka so željeni položaji vsakega agenta. Ti položaji so začasni, ker se v fazi~B še preverijo konflikti med skupinami in se lahko nekateri agenti dodatno preusmerijo.
+celici). Kadar take alternative ni, agent ostane na mestu. Rezultat tega koraka so želeni položaji vsakega agenta. Ti položaji so začasni, ker se v fazi~B še preverijo konflikti med skupinami in se lahko nekateri agenti dodatno preusmerijo.
 
 \textbf{Faza B — medskupinska razrešitev}
 
@@ -394,14 +394,14 @@ karto premikov se določi naslednja prioriteta:
     \item skupina z nižjim ID-jem vodje.
 \end{enumerate}
 Skladno s to prioriteto se skupine zavežejo v karto premikov. Za vsakega agenta se zaporedno preverita vozliščni in zamenjalni konflikt z vsemi že vpisanimi agenti, tako
-kot v fazi A. Ko agent iz nižjeprioritene skupine zahteva celico, ki jo je višjeprioritena skupina že zavzela, se agent preusmeri v najboljšo prosto alternativo ali,
+kot v fazi A. Ko agent iz nižjeprioritetne skupine zahteva celico, ki jo je višjeprioritetna skupina že zavzela, se agent preusmeri v najboljšo prosto alternativo ali,
 kadar te ni, ostane na mestu.
 
 \paragraph{4. Posodobitev števca zastoja.}
 Agent, ki se ni premaknil, poveča števec zastoja, medtem ko ga agent, ki se je premaknil, ponastavi na nič.
 
 \paragraph{5. Izvedba premikov.}
-Vsi agenti hkrati izvedejo svoje potrjene premike, torej se premaknejo v svoje željene celice, ki so bile potrjene v fazi~B.
+Vsi agenti hkrati izvedejo svoje potrjene premike, torej se premaknejo v svoje želene celice, ki so bile potrjene v fazi~B.
 
 \begin{figure}[H]
     \centering
@@ -414,10 +414,10 @@ Vsi agenti hkrati izvedejo svoje potrjene premike, torej se premaknejo v svoje �
 
 
 \paragraph{6. Implementacija.}
-Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI, ter v C++
+Algoritem je implementiran v Pythonu za integracijo z okoljem POGEMA in MovingAI ter v C++
 (prek pybind11) za hitrejše izvajanje.
 
-Lokalni vodja nima globalnega pogleda nad celotnim okoljem, temveč razpolaga le z
+Lokalni vodja nima globalnega pogleda na celotno okolje, temveč razpolaga le z
 informacijami o agentih znotraj svoje skupine in njihove neposredne okolice.
 Na ta način se bistveno zmanjša kompleksnost načrtovanja v primerjavi s centraliziranimi
 algoritmi, hkrati pa se ohrani višja stopnja koordinacije kot pri popolnoma
@@ -426,7 +426,7 @@ decentraliziranih pristopih.
 \section{Eksperiment}
 
 V tem poglavju bomo predstavili metodologijo vrednotenja in primerjanja izbranih algoritmov za problem večagentnega iskanja poti.
-Cilj eksperimentalnega dela je primerjati algoritem z lokalnimi vodji z centraliziranimi algoritmi, LaCAM in PBS, ter z decentraliziranimi pristopi Follower 
+Cilj eksperimentalnega dela je primerjati algoritem z lokalnimi vodji z centraliziranimi algoritmi LaCAM in PBS ter z decentraliziranimi pristopi Follower 
 in MATS-LP.
 
 \subsection{Eksperimentalno okolje}
@@ -435,17 +435,17 @@ Za evalvacijo uporabljamo knjižnico POGEMA~\cite{skrynnik2025pogema}, ki ponuja
 v okoljih z nepopolno informacijo preko generatorja instanc, enotnih metrik in protokola izvajanja. To kombiniramo z MovingAI~\cite{stern2019multiagent}
 zbirko zemljevidov, ki zagotavlja reprezentativne testne scenarije.
 
-Eksperimenti so razdeljeni v dve skupini glede na način delovanja: na zbirkah MovingAI izvajamo enkratne (one-shot) eksperimente, kjer vsak agent po dosegu cilja
-ustavi (\texttt{on\_target=finish}), ter merimo SoC, makespan in stopnjo uspeha, tu algoritem Local 
+Eksperimenti so razdeljeni v dve skupini glede na način delovanja: na zbirkah MovingAI izvajamo enkratne (one-shot) eksperimente, kjer se vsak agent po dosegu cilja
+ustavi (\texttt{on\_target=finish}) ter merimo SoC, makespan in stopnjo uspeha, tu algoritem Local 
 Leaders primerjamo z centraliziranimi algoritmi. Na zbirkah
-POGEMA pa, algoritem primerjamo z decentraliziranimi algoritmi, in izvajamo \textit{neprekinjene} (ang.\ \textit{lifelong}) eksperimente, kjer agent po
+POGEMA pa algoritem primerjamo z decentraliziranimi algoritmi in izvajamo \textit{neprekinjene} (ang.\ \textit{lifelong}) eksperimente, kjer agent po
 dosegu cilja prejme novo nalogo (\texttt{on\_target=restart}); prepustnost merimo z metriko
 \texttt{LifeLongAverageThroughputMetric} iz knjižnice POGEMA, kar zagotavlja neposredno
 primerljivost med algoritmi Local Leaders, MATS-LP in Follower.
 
 \subsection{Metrike}
 
-\textbf{Vsota stroškov (SoC) je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
+\textbf{Vsota stroškov (SoC)} je vsota časovnih korakov, ki jih vsi agenti porabijo za dosego svojih ciljnih vozlišč~\cite{stern2019multiagent}:
 \[
     \text{SoC} = \sum_{i=1}^{k} |\pi_i|,
 \]
@@ -478,7 +478,7 @@ morda bistveno zavlačuje celotno skupino. Z vključitvijo obeh metrik tako dobi
 \vspace{0.5em}
 \noindent
 \textbf{Stopnja uspeha} (ang. \textit{success rate}) meri delež instanc, pri katerih vsi
-agenti uspešno dosežejo svoje cilje znotraj predvidenega časovne
+agenti uspešno dosežejo svoje cilje znotraj predvidene časovne
 omejitve~\cite{skrynnik2025pogema}:
 \[
     SR = \frac{1}{N}\sum_{n=1}^{N}
@@ -555,7 +555,7 @@ tipih zemljevidov pri različnih številih agentov.
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig1_soc_comparison.pdf}
     \caption{Vsota stroškov (SoC): LaCAM, PBS in Local Leaders na naključnih, labirintnih
-    in skladiščnih zemljevidih. Napake kažejo standardno deviacijo čez 25 semen.}
+    in skladiščnih zemljevidih. Napake kažejo standardni odklon čez 25 semen.}
     \label{fig:soc}
 \end{figure}
 
@@ -618,7 +618,7 @@ hitrostjo med vsemi tremi one-shot algoritmi.
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig4_success_rate.pdf}
     \caption{Levo: stopnja uspeha LaCAM, PBS in Local Leaders na MovingAI
     enkratnih scenarijih. Desno: prepustnost v lifelong scenarijih MATS-LP, Local Leaders
-    in Follower na POGEMA (naključni zemljevidi, 0\,\% ovir).}
+    in Follower na POGEMA.}
     \label{fig:success}
 \end{figure}
 
@@ -626,8 +626,8 @@ Slika~\ref{fig:success} prikazuje dve dimenziji primerjave. V levem delu so
 stopnje uspeha na MovingAI: na naključnih in skladiščnih zemljevidih vsi
 trije algoritmi dosežejo 100\,\% pri vseh gostotah agentov. Na labirintnih
 zemljevidih LaCAM in PBS vedno uspeta, medtem ko Local Leaders dosega le
-67\,\% (8 agentov) oziroma 50\,\% (16 agentov). PBS tukaj izrazito
-prednjači, ozkih hodnikov ne rešuje reaktivno, ampak z optimalnim
+67\,\% (8 agentov) oziroma 50\,\% (16 agentov). PBS je tukaj najboljši, saj
+ozkih hodnikov ne rešuje reaktivno, ampak z optimalnim
 iskanjem, ki zagotovi pot za vsakega agenta. To je primarna prednost PBS
 pred Local Leaders v gostih labirintnih scenarijih.
 
@@ -639,28 +639,29 @@ Local Leaders je tik zadaj: 0{,}59, 1{,}18 in 2{,}28,
 kar je 97--101\,\% prepustnosti MATS-LP. Follower dosega nižje vrednosti
 (0{,}36, 0{,}76, 1{,}41).
 
-\subsection{Primerjava prepustnosti pri 30\,\% ovirah}
+\subsection{Primerjava prepustnosti pri 0\,\% in 30\,\% ovir}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig5_throughput_comparison.pdf}
-    \caption{prepustnost v neprekinjenih scenarijih MATS-LP, Local Leaders in Follower na naključnih
+    \caption{Prepustnost v neprekinjenih scenarijih MATS-LP, Local Leaders in Follower na naključnih
     zemljevidih pri 0\,\% (levo) in 30\,\% (desno) gostoti ovir. Rezultati
-    Local Leaders so iz C++ implementacije. Pri 30\,\% ovirah Local Leaders
-    ostaja konkurenčen pri manjšem številu agentov, a zaostaja pri 32 agentih.}
+    Local Leaders so iz C++ implementacije. Follower nima podatkov za 30\,\% gostoto ovir
+    (vrednoten le na MovingAI zemljevidih brez parametra gostote).}
     \label{fig:throughput}
 \end{figure}
 
 Slika~\ref{fig:throughput} kaže, kako gostota ovir vpliva na vsak algoritem.
-Pri 0\,\% ovirah so vse tri krivulje blizu skupaj in dobro skalirajo z
-naraščajočim številom agentov. Pri 30\,\% ovirah se slika nekoliko spremeni:
-MATS-LP ohranja razumno prepustnost (0{,}36--0{,}90), Follower je pri 32
-agentih primerljiv z MATS-LP (0{,}94). Local Leaders s posodobitvijo parametrov
-($t_{\text{esc}} = 1$) in dvofazno razrešitvijo konfliktov bistveno izboljša prepustnost
-pri gostih ovirah: pri 8 agentih doseže 0{,}49 (vs.\ MATS-LP 0{,}36), pri 16 agentih
-0{,}60, pri 32 agentih pa 0{,}51 (vs.\ MATS-LP 0{,}90). Agresivnejši mehanizem pobega
-in posredovanje vodje znotraj skupin učinkoviteje razrešujeta ciklične zastoje v ozkih
-hodnikih, čeprav je pri visokem številu agentov MATS-LP še vedno boljši.
+Pri 0\,\% ovirah sta stolpca MATS-LP in Local Leaders praktično identična
+(0{,}59 in 0{,}59 pri 8 agentih, 1{,}18 in 1{,}18 pri 16, 2{,}26 in 2{,}28 pri 32),
+medtem ko Follower dosega bistveno nižje vrednosti (0{,}19 pri 8, 0{,}41 pri 16
+in 0{,}76 pri 32 agentih).
+Pri 30\,\% ovirah MATS-LP ohranja razumno prepustnost (0{,}36 / 0{,}68 / 0{,}90 za 8, 16, 32 agentov).
+Local Leaders z $t_{\text{esc}} = 1$ in dvofazno razrešitvijo konfliktov
+doseže 0{,}49 (vs.\ MATS-LP 0{,}36) pri 8 agentih in 0{,}60 (vs.\ 0{,}68) pri 16,
+pri 32 agentih pa zaostaja: 0{,}51 proti 0{,}90. Mehanizem pobega in posredovanje
+vodje učinkoviteje razrešujeta zastoje v redkejših okoljih,
+pri visoki gostoti agentov in 30\,\% ovirah pa MATS-LP ohranja prednost.
 
 \subsection{SoC overhead razmerje}
 
@@ -683,12 +684,12 @@ $0{,}888$ (8 agentov) in $0{,}913$ (32 agentov). Na labirintnih zemljevidih
 PBS doseže razmerje $0{,}888$ pri 16 agentih, Local Leaders pa $0{,}960$
 (le pri uspešnih instancah), PBS je tu boljši, ker rešuje vse instance.
 
-\subsection{prepustnost po tipu zemljevida}
+\subsection{Prepustnost po tipu zemljevida}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{../code/pogema_bench/results/graphs/fig7_throughput_by_maptype.pdf}
-    \caption{prepustnost v neprekinjenih scenarijih MATS-LP, Local Leaders in Follower po tipu
+    \caption{Prepustnost v neprekinjenih scenarijih MATS-LP, Local Leaders in Follower po tipu
     zemljevida (naključni, labirint, skladišče). Na skladiščnih zemljevidih
     Local Leaders dosega do $10\times$ višjo prepustnost kot MATS-LP.}
     \label{fig:maptype}
@@ -723,9 +724,9 @@ Makespan (enkratni)       & $+$    & $+$    & $+$    & --   & -- \\
 Čas načrtov. (MovingAI)   & $++$   & $+$    & $-$    & --   & -- \\
 Uspešnost (naključni)     & $++$   & $++$   & $++$   & --   & -- \\
 Uspešnost (labirinti)     & $++$   & $++$   & $-$    & --   & -- \\
-prepustnost (0\,\% ovire)  & --     & --     & $\sim$ & $+$  & $\sim$ \\
-prepustnost (30\,\% ovire) & --     & --     & $\sim$ & $+$  & $\sim$ \\
-prepustnost (skladišče)    & --     & --     & $++$   & $-$  & -- \\
+Prepustnost (0\,\% ovire)  & --     & --     & $\sim$ & $+$  & $\sim$ \\
+Prepustnost (30\,\% ovire) & --     & --     & $\sim$ & $+$  & $\sim$ \\
+Prepustnost (skladišče)    & --     & --     & $++$   & $-$  & -- \\
 Čas epizode (POGEMA)      & --     & --     & $++$   & $-$  & $+$ \\
 \bottomrule
 \end{tabular}
@@ -749,18 +750,18 @@ politika, leži med njima, a ne uspe zaključiti epizod na skladiščnih zemljev
 \section{Zaključek}
 
 V tem delu smo predstavili algoritem \textit{Local Leaders}, ki je naš pristop za 
-reševanje problema večagentnega iskanja poti. Ta temelju na dinamičnem oblikovanju 
+reševanje problema večagentnega iskanja poti. Ta temelji na dinamičnem oblikovanju 
 hierarhije lokalnih skupin z vodji, neodvisnem načrtovanju z algoritmom A* in reševanju 
 konfliktov z uporabo prioritet, s tem da se načrtovanje izvaja sproti.
 
 Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
 
 \begin{itemize}
-    \item \textbf{Kakovost rešitev}: Local Leaders premaga LaCAM v metriki Soc,
+    \item \textbf{Kakovost rešitev}: Local Leaders premaga LaCAM v metriki SoC
     (do $9\,\%$ manj) in dosega primerljiv makespan na naključnih in skladiščnih,
     kar je za lokalni algoritem presenetljivo.
     
-    \item \textbf{prepustnost}: Na odprtih (0\,\% ovir) naključnih okoljih dosega
+    \item \textbf{Prepustnost}: Na odprtih (0\,\% ovir) naključnih okoljih dosega
     Local Leaders 97--101\,\% prepustnosti MATS-LP. Na labirintih doseže 0{,}672
     pri 32 agentih (+23\,\% v primerjavi z osnovno različico). Na skladiščnih okoljih
     prekaša MATS-LP za 8--10-kratnik (2{,}14 vs.\ 0{,}28 ciljev/korak pri 96
@@ -774,9 +775,9 @@ Naši eksperimenti na zbirkah MovingAI in POGEMA so pokazali:
 
 Našo hipotezo, da hibridni pristop z lokalnimi vodji doseže boljše razmerje med časom načrtovanja in
 kakovostjo pridobljenih rešitev kot obstoječi centralizirani ali decentralizirani pristopi,
-potrjujemo za odprta, gosta in skladiščna okolja. Dvofazna razrešitev konfliktov z
-vodji se je izkazala kot soliden pristop. Za scenarije z ozkimi hodniki pa bo potrebno
-razviti zanesljivejši mehanizem razrešitve zastojev.
+potrjujemo za skladiščna okolja. Dvofazna razrešitev konfliktov z
+vodji se je izkazala kot soliden pristop. Za naključne scenarije in labirinte pa se je izkazal za
+manj robustnega, kar kaže na potrebo po nadaljnjem izboljšanju mehanizma razreševanja konfliktov v teh scenarijih.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{bibliografija}
